@@ -1,0 +1,31 @@
+<!-- icons/unfold.svg -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Background -->
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#4B7BEC"/>
+      <stop offset="1" stop-color="#3A63D0"/>
+    </linearGradient>
+  </defs>
+  <rect x="32" y="32" width="448" height="448" rx="96" fill="url(#g)"/>
+
+  <!-- L-shape (90°) -->
+  <g stroke="#FFFFFF" stroke-linecap="round" stroke-width="34" opacity="0.9">
+    <!-- horizontal -->
+    <line x1="140" y1="372" x2="360" y2="372"/>
+    <!-- vertical -->
+    <line x1="140" y1="372" x2="140" y2="172"/>
+  </g>
+
+  <!-- Shorter diagonals (70% length of original) -->
+  <!-- 30° -->
+  <line x1="326" y1="306" x2="140" y2="372"
+        stroke="#FFFFFF" stroke-width="28" stroke-linecap="round" opacity="0.2"/>
+  <!-- 60° -->
+  <line x1="273" y1="217" x2="140" y2="372"
+        stroke="#FFFFFF" stroke-width="28" stroke-linecap="round" opacity="0.2"/>
+
+  <!-- Rim highlight -->
+  <rect x="32" y="32" width="448" height="448" rx="96"
+        fill="none" stroke="#FFFFFF" stroke-opacity="0.18" stroke-width="8"/>
+</svg>

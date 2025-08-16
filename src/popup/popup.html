@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html data-i18n-lang>
+	<head>
+		<meta charset="utf-8"/>
+		<meta name="viewport" content="width=device-width, initial-scale=1"/>
+		<title data-i18n="extensionName"></title>
+		<link rel="stylesheet" href="popup.css"/>
+	</head>
+	<body>
+		<header class="header">
+			<div class="title"><h1 data-i18n="popup_mode"></h1></div>
+			<div id="switch" class="switch" role="switch" aria-checked="false">
+				<div class="track"><div class="knob"></div></div>
+			</div>
+		</header>
+		<header class="header">
+			<div class="title"><h1 data-i18n="popup_autoRefresh"></h1></div>
+			<div id="toggle-autoRefresh" class="switch" role="switch" aria-checked="false">
+				<div class="track"><div class="knob"></div></div>
+			</div>
+		</header>
+		<header class="header">
+			<div class="title"><h1 data-i18n="popup_urlRedirect"></h1></div>
+			<div id="toggle-urlRedirect" class="switch" role="switch" aria-checked="false">
+				<div class="track"><div class="knob"></div></div>
+			</div>
+		</header>
+		<section class="panel">
+			<div class="actions">
+				<div class="button-row" id="main-action-row">
+					<button id="btnDeny"></button>
+					<button id="btnAllow"></button>
+					<button id="btnOptions" data-i18n="popup_settings"></button>
+				</div>
+                <div class="status-row">
+					<small id="status-deny" class="status-text"></small>
+					<small id="status-allow" class="status-text"></small>
+				</div>
+			</div>
+		</section>
+
+		<script src="../common/env.js"></script>
+		<script src="../common/constants.js"></script>
+		<script src="../common/utils.js"></script>
+		<script src="../common/store.js"></script>
+		<script src="../common/manifest.js"></script>
+		<script src="utils.js"></script>
+		<script src="storage.js"></script>
+		<script src="ui.js"></script>
+		<script src="main.js"></script>
+	</body>
+</html>

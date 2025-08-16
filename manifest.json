@@ -1,0 +1,67 @@
+{
+    "manifest_version": 2,
+    "name": "__MSG_extensionName__",
+    "version": "1.0",
+    "description": "__MSG_extensionDescription__",
+    "default_locale": "en",
+    "permissions": [
+        "<all_urls>",
+        "storage",
+        "tabs",
+        "webRequest",
+        "webRequestBlocking",
+        "webNavigation",
+        "sessions",
+        "alarms"
+    ],
+    "background": {
+        "scripts": [
+            "src/common/env.js",
+            "src/common/constants.js",
+            "src/common/utils.js",
+            "src/common/hntrie.js",
+            "src/common/rule-compiler.js",
+            "src/common/cache.js",
+            "src/bg/stateManager.js",
+            "src/bg/userAgent-inject.js",
+            "src/bg/url-redirect.js",
+            "src/bg/net.js",
+            "src/bg/controller.js",
+            "src/bg/entry.js"
+        ],
+        "persistent": true
+    },
+    "icons": {
+        "96": "res/icons/icon96.png"
+    },
+    "browser_action": {
+        "default_icon": {
+            "96": "res/icons/icon96.png"
+        },
+        "default_title": "__MSG_extensionName__",
+        "default_popup": "src/popup/popup.html"
+    },
+    "options_ui": {
+        "page": "src/options/options.html",
+        "open_in_tab": true
+    },
+    "content_scripts": [{
+            "matches": ["<all_urls>"],
+            "js": ["src/common/env.js", "src/common/utils.js", "src/common/constants.js", "src/content/detector.js"],
+            "run_at": "document_start",
+            "all_frames": true,
+            "match_about_blank": true
+        }
+    ],
+    "browser_specific_settings": {
+        "gecko": {
+            "id": "@unfold.jsp",
+            "strict_min_version": "58.0"
+        },
+        "gecko_android": {
+            "id": "@unfold.jsp",
+            "strict_min_version": "113.0"
+        }
+    },
+    "incognito": "spanning"
+}

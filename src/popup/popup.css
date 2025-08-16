@@ -1,0 +1,145 @@
+:root {
+    --bg-color: #fff;
+    --text-color: #1f1f1f;
+    --header-border-color: rgba(0, 0, 0, .1);
+    --button-border-color: rgba(0, 0, 0, .15);
+    --switch-track-bg: #ccc;
+    --switch-track-on-bg: #22c55e;
+    --switch-knob-bg: #fff;
+    --status-text-color: #10B981;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --bg-color: #2b2b2b;
+        --text-color: #f0f0f0;
+        --header-border-color: rgba(255, 255, 255, .15);
+        --button-border-color: rgba(255, 255, 255, .2);
+        --switch-track-bg: #555;
+    }
+}
+
+body {
+    font-family: system-ui, -apple-system, Segoe UI, Roboto, Noto Sans, sans-serif;
+    margin: 0;
+    padding: 0;
+    min-width: 320px; 
+    width: 320px; 
+    background-color: var(--bg-color);
+    color: var(--text-color);
+}
+
+.header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 12px 8px;
+    border-bottom: 1px solid var(--header-border-color);
+}
+
+.title h1 {
+    font-size: 15px;
+    margin: 0;
+    line-height: 1.2;
+}
+
+.switch {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+}
+
+.switch .track {
+    width: 48px;
+    height: 26px;
+    background: var(--switch-track-bg);
+    border-radius: 999px;
+    position: relative;
+    transition: background .18s;
+}
+
+.switch.on .track {
+    background: var(--switch-track-on-bg);
+}
+
+.switch .knob {
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 20px;
+    height: 20px;
+    background: var(--switch-knob-bg);
+    border-radius: 50%;
+    transition: left .18s;
+}
+
+.switch.on .knob {
+    left: 25px;
+}
+
+.panel {
+    padding: 12px;
+}
+
+.actions {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.button-row {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+
+.button-row.settings-only #btnOptions {
+    grid-column: 1 / -1; 
+}
+
+.actions button {
+    width: 100%;
+    font-size: 0.95rem;
+    padding: 10px;
+    border-radius: 10px;
+    border: 1px solid var(--button-border-color);
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+    min-height: 48px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.actions button:disabled {
+    opacity: .5;
+    cursor: not-allowed;
+}
+
+.actions button:active:not(:disabled) {
+    transform: translateY(1px);
+}
+
+.status-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-top: -4px;
+    margin-bottom: 4px;
+}
+
+.status-text {
+    font-size: 12px;
+    opacity: 0;
+    text-align: center;
+    min-height: 16px;
+    transition: opacity 0.2s;
+    color: var(--status-text-color);
+}
+
+.status-text.visible {
+    opacity: 0.9;
+}

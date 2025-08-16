@@ -1,0 +1,236 @@
+{
+    "extensionName": {
+        "message": "unFold"
+    },
+    "extensionDescription": {
+        "message": "Automatically switches websites between desktop and mobile layouts on foldable devices by injecting User-Agent and redirecting URLs."
+    },
+    "popup_mode": {
+        "message": "Mode"
+    },
+    "popup_autoRefresh": {
+        "message": "Auto Refresh"
+    },
+    "popup_urlRedirect": {
+        "message": "URL Redirect"
+    },
+    "popup_addToDenylist": {
+        "message": "+ Add to Denylist"
+    },
+    "popup_removeFromDenylist": {
+        "message": "- Remove from Denylist"
+    },
+    "popup_addToAllowlist": {
+        "message": "+ Add to Allowlist"
+    },
+    "popup_removeFromAllowlist": {
+        "message": "- Remove from Allowlist"
+    },
+    "popup_settings": {
+        "message": "Settings"
+    },
+    "options_title": {
+        "message": "unFold"
+    },
+    "options_mainSettings": {
+        "message": "Settings"
+    },
+    "options_mode": {
+        "message": "Mode"
+    },
+    "options_modeOff": {
+        "message": "Off"
+    },
+    "options_modeAutoDeny": {
+        "message": "Auto (Denylist Mode)"
+    },
+    "options_modeAutoAllow": {
+        "message": "Auto (Allowlist Mode)"
+    },
+    "options_modeAlways": {
+        "message": "Always Desktop"
+    },
+    "options_modeDesc_off": {
+        "message": "Disables all features like User-Agent injection and redirection."
+    },
+    "options_modeDesc_autoDeny": {
+        "message": "Automatically switches to desktop mode when unfolded. Sites in the Denylist will be excluded."
+    },
+    "options_modeDesc_autoAllow": {
+        "message": "Switches to desktop mode when unfolded, but ONLY for sites in the Allowlist."
+    },
+    "options_modeDesc_always": {
+        "message": "Forces desktop mode on all sites, regardless of the screen's state (except for sites in the Denylist)."
+    },
+    "options_autoRefresh": {
+        "message": "Auto Refresh on Fold/Unfold"
+    },
+    "options_urlRedirect": {
+        "message": "URL Redirection"
+    },
+    "options_advanced": {
+        "message": "Advanced"
+    },
+    "options_desktopUA": {
+        "message": "Desktop User-Agent"
+    },
+    "options_resetDefault": {
+        "message": "Reset to Default"
+    },
+    "options_threshold": {
+        "message": "Unfolded Screen Threshold (px)"
+    },
+    "options_thresholdDesc": {
+        "message": "The standard for determining the folded state. The default value is optimized for the Galaxy Fold series."
+    },
+    "options_saveSettings": {
+        "message": "Save Settings"
+    },
+    "options_tab_main": {
+        "message": "Main"
+    },
+    "options_tab_redirect": {
+        "message": "Redirect"
+    },
+    "options_tab_denylist": {
+        "message": "Denylist"
+    },
+    "options_tab_allowlist": {
+        "message": "Allowlist"
+    },
+    "options_redirect_remoteRules": {
+        "message": "Remote Rules"
+    },
+    "options_redirect_autoUpdate": {
+        "message": "Auto-update interval"
+    },
+    "options_redirect_autoUpdateOff": {
+        "message": "Off"
+    },
+    "options_redirect_autoUpdate3h": {
+        "message": "Every 3 hours"
+    },
+    "options_redirect_autoUpdate6h": {
+        "message": "Every 6 hours"
+    },
+    "options_redirect_autoUpdate12h": {
+        "message": "Every 12 hours"
+    },
+    "options_redirect_autoUpdate24h": {
+        "message": "Every 24 hours"
+    },
+    "options_redirect_autoUpdate3d": {
+        "message": "Every 3 days"
+    },
+    "options_redirect_autoUpdate7d": {
+        "message": "Every 7 days"
+    },
+    "options_redirect_lastUpdated": {
+        "message": "Last updated: $TIMESTAMP$",
+        "placeholders": {
+            "timestamp": {
+                "content": "$1",
+                "example": "2025-08-15 00:00"
+            }
+        }
+    },
+    "options_redirect_lastUpdatedNever": {
+        "message": "Last updated: Never"
+    },
+    "options_redirect_update": {
+        "message": "Update"
+    },
+    "options_redirect_customRules": {
+        "message": "Custom Rules"
+    },
+    "options_redirect_customRulesDesc": {
+        "message": "Provide rules for sites that require more than a User-Agent change. Uses regular expressions."
+    },
+    "options_redirect_customDesktop": {
+        "message": "Custom Desktop Mode Rules"
+    },
+    "options_redirect_customMobile": {
+        "message": "Custom Mobile Mode Rules"
+    },
+    "options_redirect_saveCustom": {
+        "message": "Save Custom Rules"
+    },
+    "options_denylistDesc": {
+        "message": "Hosts in this list will not have their User-Agent changed, effectively keeping them in mobile mode."
+    },
+    "options_allowlistDesc": {
+        "message": "When in \"Auto (Allowlist Mode)\", User-Agent injection will ONLY apply to hosts in this list."
+    },
+    "options_saveList": {
+        "message": "Save List"
+    },
+    "options_savedStatus": {
+        "message": "Saved."
+    },
+    "options_captureFolded": {
+        "message": "Set as Folded Width"
+    },
+    "options_captureUnfolded": {
+        "message": "Set as Unfolded Width"
+    },
+    "options_calcThreshold": {
+        "message": "Suggest Threshold"
+    },
+    "options_resetCaptures": {
+        "message": "Reset Captures"
+    },
+    "options_cal_folded": {
+        "message": "Folded"
+    },
+    "options_cal_unfolded": {
+        "message": "Unfolded"
+    },
+    "options_debugMode": {
+        "message": "Debug Mode"
+    },
+    "options_debugModeDesc": {
+        "message": "Show detailed logs in the browser console for troubleshooting."
+    },
+    "options_rules_use": {
+        "message": "Remote Rules"
+    },
+    "options_rules_name": {
+        "message": "Name"
+    },
+    "options_rules_type": {
+        "message": "Type"
+    },
+    "options_rules_header_updated": {
+        "message": "Updated"
+    },
+    "options_rules_status_updating": {
+        "message": "Updating..."
+    },
+    "options_rules_status_updated": {
+        "message": "All lists are up-to-date."
+    },
+    "options_rules_status_updateFailed": {
+        "message": "Update failed for $COUNT$ list(s).",
+        "placeholders": {
+            "count": {
+                "content": "$1",
+                "example": "1"
+            }
+        }
+    },
+    "options_rules_status_success": {
+        "message": "Success."
+    },
+    "options_rules_status_removed": {
+        "message": "Removed."
+    },
+    "options_rules_status_downloading": {
+        "message": "Downloading..."
+    },
+    "options_rules_status_removing": {
+        "message": "Removing..."
+    },
+    "options_zoomLevel": {
+        "message": "Page Zoom Level (%)"
+    }
+}
