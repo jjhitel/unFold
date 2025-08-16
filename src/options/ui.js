@@ -23,10 +23,9 @@
         document.querySelector('.tab[data-tab="url"]').style.display = showUrl ? '' : 'none';
         document.querySelector('.tab[data-tab="denylist"]').style.display = showDeny ? '' : 'none';
         document.querySelector('.tab[data-tab="allowlist"]').style.display = showAllow ? '' : 'none';
-        const curTab = (location.hash || '#main').replace(/^#/, '');
-        const currentTabButton = document.querySelector(`button.tab[data-tab="${curTab}"]`);
-        if (currentTabButton && currentTabButton.style.display === 'none') {
-            window.__fdActivateTab('main');
+        const curTabButton = document.querySelector('.tab.active');
+        if (curTabButton && curTabButton.style.display === 'none') {
+            window.activateTab('main');
         }
     };
     async function displayLastUpdated() {
@@ -118,8 +117,6 @@
             tdUse.appendChild(cb);
             cb.addEventListener('change', () => FD.toggleRemoteRule(item, cb.checked));
             const tdName = tr.insertCell();
-
-            // Refactored code to avoid unsafe innerHTML
             const ruleNameDiv = document.createElement('div');
             ruleNameDiv.className = 'rule-name';
             ruleNameDiv.textContent = item.name;
@@ -128,7 +125,6 @@
             ruleDescDiv.textContent = item.desc || '';
             tdName.appendChild(ruleNameDiv);
             tdName.appendChild(ruleDescDiv);
-
             const tdType = tr.insertCell();
             tdType.textContent = (item.kind === 'mobile') ? 'Mobile' : 'Desktop';
             const tdUpd = tr.insertCell();
