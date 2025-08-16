@@ -1,15 +1,12 @@
-(function () {
-    'use strict';
+'use strict';
+import { initPopupUI } from './ui.js';
 
-    const boot = () => {
-        if (FD && FD.popup && FD.popup.initPopupUI) {
-            FD.popup.initPopupUI();
-        }
-    };
+const boot = () => {
+    initPopupUI();
+};
 
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', boot);
-    } else {
-        boot();
-    }
-})();
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', boot);
+} else {
+    boot();
+}

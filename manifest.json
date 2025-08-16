@@ -15,20 +15,7 @@
         "alarms"
     ],
     "background": {
-        "scripts": [
-            "src/common/env.js",
-            "src/common/constants.js",
-            "src/common/utils.js",
-            "src/common/hntrie.js",
-            "src/common/rule-compiler.js",
-            "src/common/cache.js",
-            "src/bg/stateManager.js",
-            "src/bg/userAgent-inject.js",
-            "src/bg/url-redirect.js",
-            "src/bg/net.js",
-            "src/bg/controller.js",
-            "src/bg/entry.js"
-        ],
+        "page": "src/bg/background.html",
         "persistent": true
     },
     "icons": {

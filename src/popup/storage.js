@@ -1,61 +1,61 @@
-(function () {
-    'use strict';
-    const FD_POPUP = FD.popup;
+'use strict';
+import * as popup from './utils.js';
+import { util } from '../common/utils.js';
+import { C } from '../common/constants.js';
 
-    FD_POPUP.setModeOn = async(on) => {
-        const cur = await FD_POPUP.load(['mode', 'lastNonOffMode']);
-        let mode = cur.mode || 'autoDeny';
-        let last = cur.lastNonOffMode || (mode !== 'off' ? mode : 'autoDeny');
+export async function setModeOn(on) {
+    const cur = await popup.load(['mode', 'lastNonOffMode']);
+    let mode = cur.mode || C.DEFAULT_MODE;
+    let last = cur.lastNonOffMode || (mode !== 'off' ? mode : C.DEFAULT_MODE);
 
-        if (on) {
-            const newMode = (last === 'off') ? 'autoDeny' : last;
-            await FD_POPUP.save({
-                mode: newMode,
-                lastNonOffMode: newMode
-            });
-        } else {
-            if (mode !== 'off')
-                last = mode;
-            await FD_POPUP.save({
-                mode: 'off',
-                lastNonOffMode: last
-            });
-        }
-    };
-
-    FD_POPUP.addCurrentHostToList = async(listKey) => {
-        const info = await FD_POPUP.getActiveHttpTab();
-        if (!info)
-            return false;
-
-        const cur = await FD_POPUP.load([listKey]);
-        const text = String(cur[listKey] || '').trim();
-        const lines = text ? text.split(/\r?\n/) : [];
-        lines.push(info.host);
-
-        const final = FD.util.normalizeList(lines.join('\n')).join('\n');
-        await FD_POPUP.save({
-            [listKey]: final
+    if (on) {
+        const newMode = (last === 'off') ? C.DEFAULT_MODE : last;
+        await popup.save({
+            mode: newMode,
+            lastNonOffMode: newMode
         });
-        return true;
-    };
-
-    FD_POPUP.removeCurrentHostFromList = async(listKey) => {
-        const info = await FD_POPUP.getActiveHttpTab();
-        if (!info)
-            return false;
-
-        const cur = await FD_POPUP.load([listKey]);
-        const text = String(cur[listKey] || '').trim();
-        const lines = text ? text.split(/\r?\n/) : [];
-
-        const hostLower = info.host.toLowerCase();
-        const finalLines = lines.filter(line => line.trim().toLowerCase() !== hostLower);
-
-        const final = finalLines.join('\n');
-        await FD_POPUP.save({
-            [listKey]: final
+    } else {
+        if (mode !== 'off')
+            last = mode;
+        await popup.save({
+            mode: 'off',
+            lastNonOffMode: last
         });
-        return true;
-    };
-})();
+    }
+};
+
+export async function addCurrentHostToList(listKey) {
+    const info = await popup.getActiveHttpTab();
+    if (!info)
+        return false;
+
+    const cur = await popup.load([listKey]);
+    const text = String(cur[listKey] || '').trim();
+    const lines = text ? text.split(/\r?\n/) : [];
+    lines.push(info.host);
+
+    const final = util.normalizeList(lines.join('\n')).join('\n');
+    await popup.save({
+        [listKey]: final
+    });
+    return true;
+};
+
+export async function removeCurrentHostFromList(listKey) {
+    const info = await popup.getActiveHttpTab();
+    if (!info)
+        return false;
+
+    const cur = await popup.load([listKey]);
+    const text = String(cur[listKey] || '').trim();
+    const lines = text ? text.split(/\r?\n/) : [];
+
+    const hostLower = info.host.toLowerCase();
+    const finalLines = lines.filter(line => line.trim().toLowerCase() !== hostLower);
+
+    const final = finalLines.join('\n');
+    await popup.save({
+        [listKey]: final
+    });
+    return true;
+};

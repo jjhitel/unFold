@@ -1,22 +1,25 @@
-(function () {
-    'use strict';
-    const stateManager = FD.state;
-    const { log, extractHostname } = FD.util;
-    const UA_HEADER = 'user-agent';
-    function setOrAddUAHeader(headers, ua) {
-        const uaHeader = headers.find(h => h.name.toLowerCase() === UA_HEADER);
-        if (uaHeader) {
-            uaHeader.value = ua;
-        } else {
-            headers.push({
-                name: 'User-Agent',
-                value: ua
-            });
-        }
+'use strict';
+import { StateManager } from './stateManager.js';
+import { util } from '../common/utils.js';
+
+const { extractHostname } = util;
+const UA_HEADER = 'user-agent';
+
+function setOrAddUAHeader(headers, ua) {
+    const uaHeader = headers.find(h => h.name.toLowerCase() === UA_HEADER);
+    if (uaHeader) {
+        uaHeader.value = ua;
+    } else {
+        headers.push({
+            name: 'User-Agent',
+            value: ua
+        });
     }
-    function generateContentScript(ua) {
-        const rv = (ua.match(/rv:(\d+)/) || [])[1] || '0';
-        return `
+}
+
+function generateContentScript(ua) {
+    const rv = (ua.match(/rv:(\d+)/) || [])[1] || '0';
+    return `
       (function(){
         try {
           const UA = ${JSON.stringify(ua)};
@@ -36,39 +39,34 @@
         } catch(e) {}
       })();
     `;
-    }
-    async function onBeforeSendHeaders(details) {
-        const { tabId, url } = details;
-        const state = stateManager.getState();
-        if (state.mode === 'off')
-            return {};
-        const host = extractHostname(url);
-        const isDesktop = (state.mode === 'always') || stateManager.isDesktopPreferred(tabId);
-        if (!isDesktop)
-            return {};
-        if (state.mode === 'autoAllow' && !stateManager.isHostInAllowlist(host))
-            return {};
-        if (state.mode !== 'autoAllow' && stateManager.isHostInDenylist(host))
-            return {};
-        const headers = details.requestHeaders || [];
-        setOrAddUAHeader(headers, state.desktopUA);
-        try {
-            if (tabId !== browser.tabs.TAB_ID_NONE) {
-                await browser.tabs.executeScript(tabId, {
-                    allFrames: true,
-                    runAt: 'document_start',
-                    matchAboutBlank: true,
-                    code: generateContentScript(state.desktopUA)
-                });
-            }
-        } catch (e) {}
-        return {
-            requestHeaders: headers
-        };
-    }
-    if (!globalThis.FD)
-        globalThis.FD = {};
-    if (!FD.net)
-        FD.net = {};
-    FD.net.onBeforeSendHeaders = onBeforeSendHeaders;
-})();
+}
+
+export async function onBeforeSendHeaders(details) {
+    const { tabId, url } = details;
+    const state = StateManager.getState();
+    if (state.mode === 'off')
+        return {};
+    const host = extractHostname(url);
+    const isDesktop = (state.mode === 'always') || StateManager.isDesktopPreferred(tabId);
+    if (!isDesktop)
+        return {};
+    if (state.mode === 'autoAllow' && !StateManager.isHostInAllowlist(host))
+        return {};
+    if (state.mode !== 'autoAllow' && StateManager.isHostInDenylist(host))
+        return {};
+    const headers = details.requestHeaders || [];
+    setOrAddUAHeader(headers, state.desktopUA);
+    try {
+        if (tabId !== browser.tabs.TAB_ID_NONE) {
+            await browser.tabs.executeScript(tabId, {
+                allFrames: true,
+                runAt: 'document_start',
+                matchAboutBlank: true,
+                code: generateContentScript(state.desktopUA)
+            });
+        }
+    } catch (e) {}
+    return {
+        requestHeaders: headers
+    };
+}

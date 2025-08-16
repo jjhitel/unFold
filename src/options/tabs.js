@@ -1,49 +1,42 @@
-(function () {
-    'use strict';
+'use strict';
 
-    function activateTab(name) {
+export function activateTab(name) {
 
-        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-        document.querySelectorAll('.tabpanel').forEach(p => p.hidden = true);
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tabpanel').forEach(p => p.hidden = true);
 
-        const tabToActivate = document.querySelector(`.tab[data-tab="${name}"]`);
-        const panelToShow = document.getElementById(`tab-${name}`);
+    const tabToActivate = document.querySelector(`.tab[data-tab="${name}"]`);
+    const panelToShow = document.getElementById(`tab-${name}`);
 
-        if (tabToActivate && panelToShow) {
-            if (tabToActivate.style.display === 'none') {
-
-                activateTab('main');
-                return;
-            }
-            tabToActivate.classList.add('active');
-            panelToShow.hidden = false;
-        } else {
-
-            document.querySelector('.tab[data-tab="main"]')?.classList.add('active');
-            document.getElementById('tab-main')?.removeAttribute('hidden');
+    if (tabToActivate && panelToShow) {
+        if (tabToActivate.style.display === 'none') {
+            activateTab('main');
+            return;
         }
-
-        try {
-            history.replaceState(null, '', '#' + name);
-        } catch (e) {}
+        tabToActivate.classList.add('active');
+        panelToShow.hidden = false;
+    } else {
+        document.querySelector('.tab[data-tab="main"]')?.classList.add('active');
+        document.getElementById('tab-main')?.removeAttribute('hidden');
     }
 
-    window.activateTab = activateTab;
+    try {
+        history.replaceState(null, '', '#' + name);
+    } catch (e) {}
+}
 
-    document.querySelector('.tabs')?.addEventListener('click', (e) => {
-        const btn = e.target.closest('.tab');
-        if (btn) {
-            e.preventDefault();
-            const name = btn.getAttribute('data-tab') || 'main';
-            activateTab(name);
-        }
-    });
+document.querySelector('.tabs')?.addEventListener('click', (e) => {
+    const btn = e.target.closest('.tab');
+    if (btn) {
+        e.preventDefault();
+        const name = btn.getAttribute('data-tab') || 'main';
+        activateTab(name);
+    }
+});
 
-    (function init() {
-        const hash = (location.hash || '#main').replace(/^#/, '');
-        const validTabs = ['main', 'url', 'denylist', 'allowlist'];
-        const initialTab = validTabs.includes(hash) ? hash : 'main';
-        activateTab(initialTab);
-    })();
-
+(function init() {
+    const hash = (location.hash || '#main').replace(/^#/, '');
+    const validTabs = ['main', 'url', 'denylist', 'allowlist'];
+    const initialTab = validTabs.includes(hash) ? hash : 'main';
+    activateTab(initialTab);
 })();

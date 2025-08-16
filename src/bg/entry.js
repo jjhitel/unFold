@@ -1,35 +1,36 @@
-(async function () {
-    'use strict';
-    const stateManager = FD.state;
-    const { log } = FD.util;
-    const { registerListeners, unregisterListeners } = FD.net;
-    const C = FD.constants;
+'use strict';
+import { initialize as initializeStateManager, StateManager } from './stateManager.js';
+import { util } from '../common/utils.js';
+import { registerListeners, unregisterListeners } from './net.js';
+import { createUpdateAlarm, updateAllBadges } from './controller.js';
 
-    async function boot() {
-        await stateManager.initialize();
-        await FD.updateAllBadges();
-        await FD.createUpdateAlarm();
+const { log } = util;
 
-        log('unFold background script booted.');
-        const state = stateManager.getState();
-        if (state.mode !== 'off') {
+async function boot() {
+    await initializeStateManager();
+    await updateAllBadges();
+    await createUpdateAlarm();
+
+    log('unFold background script booted.');
+    const state = StateManager.getState();
+    if (state.mode !== 'off') {
+        registerListeners();
+    }
+}
+
+browser.storage.onChanged.addListener((changes, area) => {
+    if (area === 'local' && changes.mode) {
+        const mode = changes.mode.newValue;
+        const oldMode = changes.mode.oldValue;
+        if (mode === 'off' && oldMode !== 'off') {
+            unregisterListeners();
+        } else if (mode !== 'off' && oldMode === 'off') {
             registerListeners();
         }
     }
+    if (area === 'local' && changes.autoUpdatePeriod) {
+        createUpdateAlarm();
+    }
+});
 
-    browser.storage.onChanged.addListener((changes, area) => {
-        if (area === 'local' && changes.mode) {
-            const mode = changes.mode.newValue;
-            if (mode === 'off') {
-                unregisterListeners();
-            } else {
-                registerListeners();
-            }
-        }
-        if (area === 'local' && changes.autoUpdatePeriod) {
-            FD.createUpdateAlarm();
-        }
-    });
-
-    boot();
-})();
+boot();
