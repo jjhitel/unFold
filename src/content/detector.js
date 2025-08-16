@@ -65,5 +65,10 @@
             if (!document.hidden)
                 debouncedSend();
         });
+        browser.runtime.onMessage.addListener((msg) => {
+            if (msg.type === C.MSG_VIEWPORT_CHECK) {
+                send();
+            }
+        });
     } catch (e) {}
 })();

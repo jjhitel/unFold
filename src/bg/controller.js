@@ -135,6 +135,16 @@
         }) => {
         await stateManager.loadInitialTabState(tabId);
         await updateBadge(tabId);
+        try {
+            const tab = await browser.tabs.get(tabId);
+            if (tab && tab.url && tab.url.startsWith('http')) {
+                await browser.tabs.sendMessage(tabId, {
+                    type: C.MSG_VIEWPORT_CHECK
+                });
+            }
+        } catch (e) {
+            log('Failed to send viewport check message', e);
+        }
     });
 
     browser.tabs.onUpdated.addListener(async(tabId, changeInfo, tab) => {
@@ -178,6 +188,7 @@
             return;
         switch (msg.type) {
         case C.MSG_VIEWPORT_UPDATE:
+        case C.MSG_VIEWPORT_CHECK:
             if (sender.tab) {
                 FD.net.onViewportMessage(msg, sender);
             }
