@@ -33,7 +33,7 @@
         const lines = text ? text.split(/\r?\n/) : [];
         lines.push(info.host);
 
-        const final = FD_POPUP.dedup(lines).join('\n');
+        const final = FD.util.normalizeList(lines.join('\n')).join('\n');
         await FD_POPUP.save({
             [listKey]: final
         });
