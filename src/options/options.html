@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html data-i18n-lang>
+	<head>
+		<meta charset="utf-8"/>
+		<meta name="viewport" content="width=device-width, initial-scale=1"/>
+		<title data-i18n="options_title"></title>
+		<link rel="stylesheet" href="options.css"/>
+	</head>
+	<body>
+		<div class="fd-titlebar">
+			<img id="ext-icon" alt="unFold icon"/>
+			<div class="fd-title" data-i18n="options_title"></div>
+		</div>
+		<nav class="tabs" role="tablist" aria-label="Settings tabs">
+			<button class="tab active" data-tab="main" role="tab" data-i18n="options_tab_main"></button>
+			<button class="tab" data-tab="url" role="tab" data-i18n="options_tab_redirect"></button>
+			<button class="tab" data-tab="denylist" role="tab" data-i18n="options_tab_denylist"></button>
+			<button class="tab" data-tab="allowlist" role="tab" data-i18n="options_tab_allowlist"></button>
+		</nav>
+		<section id="tab-main" class="tabpanel">
+			<h2 data-i18n="options_mainSettings"></h2>
+			<div class="row">
+				<label for="mode" data-i18n="options_mode"></label>
+				<select id="mode">
+					<option value="off" data-i18n="options_modeOff"></option>
+					<option value="autoDeny" data-i18n="options_modeAutoDeny"></option>
+					<option value="autoAllow" data-i18n="options_modeAutoAllow"></option>
+					<option value="always" data-i18n="options_modeAlways"></option>
+				</select>
+                <div id="mode-description" class="description"></div>
+			</div>
+			<div class="row">
+				<div class="checkbox-list">
+					<label class="check"><input type="checkbox" id="autoRefresh"/><span data-i18n="options_autoRefresh"></span></label>
+					<label class="check"><input type="checkbox" id="urlRedirect"/><span data-i18n="options_urlRedirect"></span></label>
+				</div>
+			</div>
+			<details id="advanced" class="row">
+				<summary data-i18n="options_advanced"></summary>
+				<div class="row">
+					<label for="ua" data-i18n="options_desktopUA"></label>
+					<input id="ua" type="text" spellcheck="false"/>
+					<button id="resetUA" type="button" data-i18n="options_resetDefault"></button>
+				</div>
+				<div class="row">
+					<label for="threshold" data-i18n="options_threshold"></label>
+					<input id="threshold" type="number" min="0" step="1" inputmode="numeric"/>
+                    <div class="small" data-i18n="options_thresholdDesc"></div>
+					<button id="resetThreshold" type="button" data-i18n="options_resetDefault"></button>
+				</div>
+                <div class="small" id="cal-status"></div>
+				<div class="adv-grid">
+					<button type="button" id="captureFolded" data-i18n="options_captureFolded"></button>
+					<button type="button" id="captureUnfolded" data-i18n="options_captureUnfolded"></button>
+					<button type="button" id="calcThreshold" data-i18n="options_calcThreshold"></button>
+					<button type="button" id="resetCaptures" data-i18n="options_resetCaptures"></button>
+				</div>
+                <div class="row" id="zoomLevelRow">
+					<label for="zoomLevel" data-i18n="options_zoomLevel"></label>
+					<input id="zoomLevel" type="number" min="50" step="10" inputmode="numeric"/>
+                    <div class="small" id="zoomLevelDesc"></div>
+				</div>
+				<hr>
+				<div class="row">
+					<label class="check">
+						<input type="checkbox" id="debugMode"/>
+						<span data-i18n="options_debugMode"></span>
+					</label>
+					<div class="small" data-i18n="options_debugModeDesc"></div>
+				</div>
+			</details>
+			<div class="row">
+				<button id="save" type="button" data-i18n="options_saveSettings"></button>
+				<div id="status" class="small"></div>
+			</div>
+			<div class="center">
+                <a id="gitLink" href="https://github.com/jjhitel/unFold" target="_blank"><svg width="36" height="36" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55-.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg></a>
+                <div id="version-display" class="small"></div>
+			</div>
+		</section>
+
+		<section id="tab-url" class="tabpanel" hidden>
+            <h2 data-i18n="options_tab_redirect"></h2>
+            <p class="small" data-i18n="options_redirect_customRulesDesc"></p>
+			<div class="remote-block">
+				<div class="table-responsive">
+					<table id="remote-rules-table">
+						<colgroup>
+							<col style="width: 10%;">
+							<col style="width: 50%;">
+							<col style="width: 20%;">
+							<col style="width: 20%;">
+						</colgroup>
+						<thead>
+							<tr>
+								<th data-i18n="options_rules_use"></th>
+								<th data-i18n="options_rules_name"></th>
+								<th data-i18n="options_rules_type"></th>
+								<th data-i18n="options_rules_header_updated"></th>
+							</tr>
+						</thead>
+						<tbody id="remote-rules"></tbody>
+					</table>
+				</div>
+                <div class="button-container-right">
+					<div class="update-controls">
+						<small id="status-remote"></small>
+						<div class="row-auto">
+							<label for="autoUpdatePeriod" data-i18n="options_redirect_autoUpdate" style="white-space: nowrap;"></label>
+							<select id="autoUpdatePeriod">
+								<option value="0" data-i18n="options_redirect_autoUpdateOff"></option>
+								<option value="180" data-i18n="options_redirect_autoUpdate3h"></option>
+								<option value="360" data-i18n="options_redirect_autoUpdate6h"></option>
+								<option value="720" data-i18n="options_redirect_autoUpdate12h"></option>
+								<option value="1440" data-i18n="options_redirect_autoUpdate24h"></option>
+								<option value="4320" data-i18n="options_redirect_autoUpdate3d"></option>
+								<option value="10080" data-i18n="options_redirect_autoUpdate7d"></option>
+							</select>
+						</div>
+						<button id="btn-remote-update" type="button" data-i18n="options_redirect_update"></button>
+					</div>
+					<small id="last-updated"></small>
+				</div>
+			</div>
+            <hr>
+            <details class="row">
+                <summary data-i18n="options_redirect_customRules"></summary>
+                <div class="row">
+                    <label for="desktopRegexText" data-i18n="options_redirect_customDesktop"></label>
+                    <textarea id="desktopRegexText" rows="6" spellcheck="false" placeholder="/^https?:\/\/m\.example\.com\/(.*)$/ -> https://www.example.com/$1"></textarea>
+                </div>
+                <div class="row">
+                    <label for="mobileRegexText" data-i18n="options_redirect_customMobile"></label>
+                    <textarea id="mobileRegexText" rows="6" spellcheck="false" placeholder="/^https?:\/\/www\.example\.com\/(.*)$/ -> https://m.example.com/$1"></textarea>
+                </div>
+                <div class="row">
+                    <button id="btn-url-save" type="button" data-i18n="options_redirect_saveCustom"></button>
+                    <span id="status-url" class="status small"></span>
+                </div>
+            </details>
+		</section>
+
+		<section id="tab-denylist" class="tabpanel" hidden>
+            <h2 data-i18n="options_tab_denylist"></h2>
+            <p class="small" data-i18n="options_denylistDesc"></p>
+			<div class="row">
+				<textarea id="denylistText" rows="10" placeholder="example.com&#10;*.wikipedia.org"></textarea>
+			</div>
+			<div class="row">
+				<button id="save-denylist" type="button" data-i18n="options_saveList"></button>
+				<div id="status-denylist" class="small"></div>
+			</div>
+		</section>
+
+		<section id="tab-allowlist" class="tabpanel" hidden>
+            <h2 data-i18n="options_tab_allowlist"></h2>
+            <p class="small" data-i18n="options_allowlistDesc"></p>
+			<div class="row">
+				<textarea id="allowlistText" rows="10" placeholder="example.com&#10;*.google.com"></textarea>
+			</div>
+			<div class="row">
+				<button id="save-allowlist" type="button" data-i18n="options_saveList"></button>
+				<div id="status-allowlist" class="small"></div>
+			</div>
+		</section>
+		
+		<script src="../common/env.js"></script>
+        <script src="../common/constants.js"></script>
+		<script src="../common/utils.js"></script>
+		<script src="../common/store.js"></script>
+		<script src="../common/manifest.js"></script>
+        <script src="../common/cache.js"></script>
+		<script src="storage.js"></script>
+		<script src="ui.js"></script>
+		<script src="utils.js"></script>
+		<script src="main.js"></script>
+		<script src="tabs.js"></script>
+	</body>
+</html>

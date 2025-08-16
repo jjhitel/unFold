@@ -1,0 +1,16 @@
+[{
+        "id": "fold-kr-mobile",
+        "name": "Fold-KR Mobile",
+        "kind": "mobile",
+        "desc": "Redirect rules for mobile-side URLs.",
+        "url": "https://raw.githubusercontent.com/jjhitel/Fold-KR/refs/heads/main/fold-kr-mobile.txt",
+        "updated": ""
+    }, {
+        "id": "fold-kr-desktop",
+        "name": "Fold-KR Desktop",
+        "kind": "desktop",
+        "desc": "Redirect rules for desktop-side URLs.",
+        "url": "https://raw.githubusercontent.com/jjhitel/Fold-KR/refs/heads/main/fold-kr-desktop.txt",
+        "updated": ""
+    }
+]

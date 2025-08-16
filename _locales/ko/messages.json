@@ -1,0 +1,236 @@
+{
+    "extensionName": {
+        "message": "unFold"
+    },
+    "extensionDescription": {
+        "message": "폴더블 스마트폰에서 화면 상태에 따라 웹사이트 레이아웃을 자동으로 전환합니다. 사용자 에이전트 주입 및 URL 리디렉션을 통해 최적의 경험을 제공합니다."
+    },
+    "popup_mode": {
+        "message": "모드"
+    },
+    "popup_autoRefresh": {
+        "message": "자동 새로고침"
+    },
+    "popup_urlRedirect": {
+        "message": "URL 리디렉션"
+    },
+    "popup_addToDenylist": {
+        "message": "+ 이 사이트 제외"
+    },
+    "popup_removeFromDenylist": {
+        "message": "- 이 사이트 제외 안함"
+    },
+    "popup_addToAllowlist": {
+        "message": "+ 이 사이트 허용"
+    },
+    "popup_removeFromAllowlist": {
+        "message": "- 이 사이트 허용 안함"
+    },
+    "popup_settings": {
+        "message": "설정"
+    },
+    "options_title": {
+        "message": "unFold"
+    },
+    "options_mainSettings": {
+        "message": "설정"
+    },
+    "options_mode": {
+        "message": "모드"
+    },
+    "options_modeOff": {
+        "message": "끄기"
+    },
+    "options_modeAutoDeny": {
+        "message": "자동 (제외 모드)"
+    },
+    "options_modeAutoAllow": {
+        "message": "자동 (허용 모드)"
+    },
+    "options_modeAlways": {
+        "message": "항상 데스크톱"
+    },
+    "options_modeDesc_off": {
+        "message": "사용자 에이전트 변경, 리디렉션 등 모든 기능을 끕니다."
+    },
+    "options_modeDesc_autoDeny": {
+        "message": "화면을 펼치면 자동으로 데스크톱 모드로 전환합니다. 제외 목록에 있는 사이트는 모바일 모드로 유지됩니다."
+    },
+    "options_modeDesc_autoAllow": {
+        "message": "화면을 펼치면 허용 목록에 있는 사이트만 데스크톱 모드로 전환합니다."
+    },
+    "options_modeDesc_always": {
+        "message": "화면 상태와 관계없이 항상 데스크톱 모드를 강제합니다. (제외 목록 사이트 제외)"
+    },
+    "options_autoRefresh": {
+        "message": "접기/펼 때 자동 새로고침"
+    },
+    "options_urlRedirect": {
+        "message": "URL 리디렉션"
+    },
+    "options_advanced": {
+        "message": "고급"
+    },
+    "options_desktopUA": {
+        "message": "데스크톱 사용자 에이전트"
+    },
+    "options_resetDefault": {
+        "message": "기본값으로 재설정"
+    },
+    "options_threshold": {
+        "message": "폴딩 상태 판단 기준 (px)"
+    },
+    "options_thresholdDesc": {
+        "message": "기본값은 갤럭시 폴드 시리즈에 최적화되어 있습니다."
+    },
+    "options_saveSettings": {
+        "message": "설정 저장"
+    },
+    "options_tab_main": {
+        "message": "메인"
+    },
+    "options_tab_redirect": {
+        "message": "리디렉션"
+    },
+    "options_redirect_autoUpdate": {
+        "message": "자동 업데이트 주기"
+    },
+    "options_redirect_autoUpdateOff": {
+        "message": "사용 안 함"
+    },
+    "options_redirect_autoUpdate3h": {
+        "message": "3시간마다"
+    },
+    "options_redirect_autoUpdate6h": {
+        "message": "6시간마다"
+    },
+    "options_redirect_autoUpdate12h": {
+        "message": "12시간마다"
+    },
+    "options_redirect_autoUpdate24h": {
+        "message": "24시간마다"
+    },
+    "options_redirect_autoUpdate3d": {
+        "message": "3일마다"
+    },
+    "options_redirect_autoUpdate7d": {
+        "message": "7일마다"
+    },
+    "options_redirect_lastUpdated": {
+        "message": "마지막 업데이트: $TIMESTAMP$",
+        "placeholders": {
+            "timestamp": {
+                "content": "$1",
+                "example": "2025-08-15 00:00"
+            }
+        }
+    },
+    "options_redirect_lastUpdatedNever": {
+        "message": "마지막 업데이트: 없음"
+    },
+    "options_tab_denylist": {
+        "message": "제외 목록"
+    },
+    "options_tab_allowlist": {
+        "message": "허용 목록"
+    },
+    "options_redirect_remoteRules": {
+        "message": "원격 규칙"
+    },
+    "options_redirect_update": {
+        "message": "업데이트"
+    },
+    "options_redirect_customRules": {
+        "message": "사용자 지정 규칙"
+    },
+    "options_redirect_customRulesDesc": {
+        "message": "단순히 사용자 에이전트 변경만으로 부족한 사이트를 위해 규칙을 추가합니다. 정규식을 사용합니다."
+    },
+    "options_redirect_customDesktop": {
+        "message": "데스크톱 모드 규칙"
+    },
+    "options_redirect_customMobile": {
+        "message": "모바일 모드 규칙"
+    },
+    "options_redirect_saveCustom": {
+        "message": "사용자 지정 규칙 저장"
+    },
+    "options_denylistDesc": {
+        "message": "이 목록의 호스트에는 사용자 에이전트를 변경하지 않아 항상 모바일 모드로 유지됩니다."
+    },
+    "options_allowlistDesc": {
+        "message": "'자동 (허용 목록 모드)'에서는 이 목록의 호스트에만 기능이 적용됩니다."
+    },
+    "options_saveList": {
+        "message": "목록 저장"
+    },
+    "options_savedStatus": {
+        "message": "저장됨."
+    },
+    "options_captureFolded": {
+        "message": "현재 폭을 접었을 때로 설정"
+    },
+    "options_captureUnfolded": {
+        "message": "현재 폭을 펼쳤을 때로 설정"
+    },
+    "options_calcThreshold": {
+        "message": "기준 자동 계산"
+    },
+    "options_resetCaptures": {
+        "message": "측정값 초기화"
+    },
+    "options_cal_folded": {
+        "message": "접힘"
+    },
+    "options_cal_unfolded": {
+        "message": "펼침"
+    },
+    "options_debugMode": {
+        "message": "디버그 모드"
+    },
+    "options_debugModeDesc": {
+        "message": "문제 해결을 위해 브라우저 콘솔에 상세 로그를 표시합니다."
+    },
+    "options_rules_use": {
+        "message": "원격 규칙"
+    },
+    "options_rules_name": {
+        "message": "이름"
+    },
+    "options_rules_type": {
+        "message": "종류"
+    },
+    "options_rules_header_updated": {
+        "message": "최종 수정"
+    },
+    "options_rules_status_updating": {
+        "message": "업데이트 중..."
+    },
+    "options_rules_status_updated": {
+        "message": "모든 목록이 최신 상태입니다."
+    },
+    "options_rules_status_updateFailed": {
+        "message": "$COUNT$개 목록 업데이트 실패.",
+        "placeholders": {
+            "count": {
+                "content": "$1",
+                "example": "1"
+            }
+        }
+    },
+    "options_rules_status_success": {
+        "message": "성공."
+    },
+    "options_rules_status_removed": {
+        "message": "제거됨."
+    },
+    "options_rules_status_downloading": {
+        "message": "다운로드 중..."
+    },
+    "options_rules_status_removing": {
+        "message": "제거 중..."
+    },
+    "options_zoomLevel": {
+        "message": "페이지 확대 배율 (%)"
+    }
+}
