@@ -41,7 +41,7 @@ async function updateCheckedRemoteRules() {
         log('No remote rules selected. Skipping update.');
         return;
     }
-    const catalogURL = browser.runtime.getURL('src/options/rules.json');
+    const catalogURL = browser.runtime.getURL('rules.json');
     const catalog = await fetch(catalogURL).then(r => r.json()).catch(() => []);
     if (catalog.length === 0) {
         log('Failed to load remote rules catalog.');

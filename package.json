@@ -1,0 +1,26 @@
+{
+    "name": "unfold",
+    "version": "1.0.0",
+    "description": "**unFold** is a Firefox extension for foldable Android devices, designed to automatically switch websites between their mobile and desktop layouts as you fold and unfold your screen.",
+    "main": "index.js",
+    "scripts": {
+        "dev": "vite",
+        "build": "vite build"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/jjhitel/unFold.git"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "GPLv3",
+    "type": "commonjs",
+    "bugs": {
+        "url": "https://github.com/jjhitel/unFold/issues"
+    },
+    "homepage": "https://github.com/jjhitel/unFold#readme",
+    "devDependencies": {
+        "vite": "^7.1.2",
+        "vite-plugin-web-extension": "^4.4.5"
+    }
+}

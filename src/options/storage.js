@@ -118,7 +118,7 @@ export const saveRemoteSelections = (arr) => uiStore.set({
 
 export async function loadRemoteCatalog() {
     try {
-        const response = await fetch(browser.runtime.getURL('src/options/rules.json'));
+        const response = await fetch(browser.runtime.getURL('rules.json'));
         return await response.json();
     } catch (e) {
         console.error('[FD] Failed to load remote catalog:', e);
