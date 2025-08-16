@@ -19,7 +19,7 @@ It intelligently injects a desktop User-Agent when the screen is unfolded to mak
 
 ## 🚀 Installation
 
-1.  Download the latest `.xpi` file from the [Releases](https://github.com/jjhitel/Foldexible/releases) page.
+1.  Download the latest `.xpi` file from the [Releases](https://github.com/jjhitel/unFold/releases) page.
 2.  Open Firefox on your Android device.
 3.  Go to `Settings` -> `Add-ons`.
 4.  Tap the `Install Add-on from file` button and select the `.xpi` file you downloaded.
