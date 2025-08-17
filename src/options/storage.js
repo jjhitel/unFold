@@ -68,12 +68,12 @@ export async function saveSingleSetting(key, value) {
     browser.runtime.sendMessage({
         type: C.MSG_SETTINGS_UPDATE
     }).catch(() => {});
-    showSaved('status');
+    showSaved();
 };
 
 async function saveAndShow(data, statusId) {
     await uiStore.set(data);
-    showSaved(statusId);
+    showSaved();
 }
 
 export const saveUrlRules = () => {
@@ -96,16 +96,16 @@ export const saveUrlRules = () => {
     saveAndShow({
         [C.KEY_DESKTOP_RULES]: util.normalizeList(desktopText).join('\n'),
         [C.KEY_MOBILE_RULES]: util.normalizeList(mobileText).join('\n')
-    }, 'status-url');
+    });
 };
 
 export const saveDenylist = () => saveAndShow({
     [C.KEY_DENYLIST]: util.normalizeList($id('denylistText').value).join('\n')
-}, 'status-denylist');
+});
 
 export const saveAllowlist = () => saveAndShow({
     [C.KEY_ALLOWLIST]: util.normalizeList($id('allowlistText').value).join('\n')
-}, 'status-allowlist');
+});
 
 export function bindStorageMirror() {
     browser.storage.onChanged.addListener((changes, area) => {
@@ -136,6 +136,9 @@ export async function toggleRemoteRule(ruleMeta, checked) {
     const sel = await loadRemoteSelections();
     const next = checked ? [...new Set([...sel, ruleMeta.id])] : sel.filter(id => id !== ruleMeta.id);
     await saveRemoteSelections(next);
+
+    showSaved();
+
     browser.runtime.sendMessage({
         type: C.MSG_UPDATE_REMOTE_RULES
     }).catch(() => {});

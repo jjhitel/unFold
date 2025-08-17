@@ -28,8 +28,27 @@ body {
 
 h1, h2 {
     font-size: 24px;
-    margin: 0 0 16px;
+    margin: 0;
     font-weight: 600;
+}
+
+.header-with-status {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 0 0 16px;
+}
+
+.status-indicator {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--status-text-color, #10B981);
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
+}
+
+.status-indicator.visible {
+    opacity: 1;
 }
 
 .row {

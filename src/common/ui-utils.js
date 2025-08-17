@@ -3,17 +3,21 @@ import { util } from './utils.js';
 import { uiStore } from './store.js';
 import { C } from './constants.js';
 
-export function showSaved(id, message, ms = 1500) {
-    const el = util.$id(id);
+export function showSaved() {
+    const activePanel = document.querySelector('.tabpanel:not([hidden])');
+    if (!activePanel)
+        return;
+
+    const el = activePanel.querySelector('.status-indicator');
     if (!el)
         return;
-    const originalText = el.textContent;
 
-    el.textContent = message || browser.i18n.getMessage("options_savedStatus") || 'Saved.';
+    el.textContent = browser.i18n.getMessage("options_savedStatus") || 'Saved.';
+    el.classList.add('visible');
+
     setTimeout(() => {
-        if (el)
-            el.textContent = originalText;
-    }, ms);
+        el.classList.remove('visible');
+    }, 1500);
 };
 
 export function setSmallStatus(id, msg, ms = 2000) {
@@ -94,6 +98,7 @@ async function saveSetting(key, value) {
         await browser.runtime.sendMessage({
             type: C.MSG_SETTINGS_UPDATE
         });
+        showSaved();
     } catch (e) {
         util.log(`[FD] Failed to save setting ${key}:`, e);
     }
