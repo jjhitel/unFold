@@ -19,6 +19,10 @@ function setOrAddUAHeader(headers, ua) {
 
 function generateContentScript(ua) {
     const rv = (ua.match(/rv:(\d+)/) || [])[1] || '0';
+    const isWin = /Windows NT/i.test(ua);
+    const isLinux = /Linux|X11/i.test(ua);
+    const platform = isWin ? "Win32" : (isLinux ? "Linux x86_64" : "Linux x86_64");
+    const oscpu = isWin ? "Windows NT 10.0; Win64; x64" : "X11; Linux x86_64";
     return `
       (function(){
         try {
@@ -26,14 +30,14 @@ function generateContentScript(ua) {
           const def = (obj, key, val) => { try { Object.defineProperty(obj, key, { get: () => val, configurable: true }); } catch(e){} };
           def(Navigator.prototype, "userAgent", UA);
           def(Navigator.prototype, "appVersion", "5.0 (" + UA + ")");
-          def(Navigator.prototype, "platform", "Linux x86_64");
+          def(Navigator.prototype, "platform", ${JSON.stringify(platform)});
           def(Navigator.prototype, "vendor", "");
-          def(Navigator.prototype, "oscpu", "X11; Linux x86_64");
+          def(Navigator.prototype, "oscpu", ${JSON.stringify(oscpu)});
           def(Navigator.prototype, "product", "Gecko");
           def(Navigator.prototype, "productSub", "20100101");
           def(Navigator.prototype, "maxTouchPoints", 0);
           if (!("userAgentData" in Navigator.prototype)) {
-            const uad = { brands: [{ brand: "Firefox", version: "${rv}" }], mobile: false, platform: "Linux" };
+            const uad = { brands: [{ brand: "Firefox", version: "${rv}" }], mobile: false, platform: ${JSON.stringify(isWin ? "Windows" : "Linux")} };
             def(Navigator.prototype, "userAgentData", uad);
           }
         } catch(e) {}
