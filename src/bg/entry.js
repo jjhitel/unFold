@@ -4,6 +4,7 @@ import { initialize as initializeStateManager, StateManager, getTargetHostPatter
 import { util } from '../common/utils.js';
 import { registerListeners, unregisterListeners } from './net.js';
 import { createUpdateAlarm, updateAllBadges } from './controller.js';
+import { Cache } from '../common/cache.js';
 
 const { log, debounce } = util;
 
@@ -17,6 +18,7 @@ async function refreshListeners() {
 }
 
 async function boot() {
+    await Cache.cleanup();
     await initializeStateManager();
     await updateAllBadges();
     await createUpdateAlarm();

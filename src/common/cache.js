@@ -52,5 +52,29 @@ export const Cache = {
         } catch (e) {
             console.error(`[FD Cache] Failed to remove item for key: ${key}`, e);
         }
+    },
+
+    async cleanup() {
+        try {
+            const allItems = await browser.storage.local.get(null);
+            const now = Date.now();
+            const keysToRemove = [];
+
+            for (const key in allItems) {
+                if (key.startsWith(CACHE_PREFIX)) {
+                    const item = allItems[key];
+                    if (!item.expires || now > item.expires + DEFAULT_TTL) {
+                        keysToRemove.push(key);
+                    }
+                }
+            }
+
+            if (keysToRemove.length > 0) {
+                await browser.storage.local.remove(keysToRemove);
+                util.log(`Cache cleanup: Removed ${keysToRemove.length} expired items.`);
+            }
+        } catch (e) {
+            console.error('[FD Cache] Cleanup failed:', e);
+        }
     }
 };
