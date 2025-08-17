@@ -119,7 +119,13 @@ export function initUIBindings() {
     $id('autoRefresh')?.addEventListener('change', (e) => saveSingleSetting('autoRefresh', e.target.checked));
     $id('urlRedirect')?.addEventListener('change', (e) => saveSingleSetting('urlRedirect', e.target.checked));
     $id('debugMode')?.addEventListener('change', (e) => saveSingleSetting('debugMode', e.target.checked));
-    $id('ua')?.addEventListener('change', (e) => saveSingleSetting('desktopUA', e.target.value));
+    $id('ua')?.addEventListener('change', debounce(async(e) => {
+            const val = String(e.target.value || '').trim();
+            await Promise.all([
+                    saveSingleSetting('desktopUA', val),
+                    saveSingleSetting('uaDynamic', false)
+                ]);
+        }, 200));
     $id('threshold')?.addEventListener('change', (e) => saveSingleSetting('threshold', Number(e.target.value)));
     $id('zoomLevel')?.addEventListener('change', (e) => saveSingleSetting('zoomLevel', Number(e.target.value)));
     $id('autoUpdatePeriod')?.addEventListener('change', (e) => saveSingleSetting('autoUpdatePeriod', Number(e.target.value)));
