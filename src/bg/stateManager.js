@@ -7,7 +7,6 @@ import { HNTrieContainer } from '../common/hntrie.js';
 const { log, normalizeList, debounce, deepEqual } = util;
 let _prevDenyText = null, _prevAllowText = null;
 let _prevDesktopRulesText = null, _prevMobileRulesText = null;
-updateLists
 
 const denylistTrie = new HNTrieContainer();
 const allowlistTrie = new HNTrieContainer();
@@ -185,7 +184,7 @@ function toBool(v, fallback = false) {
 async function refreshGeneralSettings(settings) {
     try {
         const s = settings || await browser.storage.local.get(null);
-        const { ua: dynamicUA, major: currentVersion } = await buildDynamicDesktopUA();
+        const { ua: dynamicUA, version: currentVersion } = await buildDynamicDesktopUA();
         const defaults = {
             [C.KEY_MODE]: C.DEFAULT_MODE,
             [C.KEY_THRESHOLD]: C.DEFAULT_THRESHOLD,
@@ -237,9 +236,8 @@ async function refreshGeneralSettings(settings) {
                 });
             }
         } else {
-            if (!hasCustomUA && state.desktopUA) {
+            if (!hasCustomUA && storedUA) {
                 await browser.storage.local.set({
-                    [C.KEY_DESKTOP_UA]: state.desktopUA,
                     [C.KEY_UA_DYNAMIC]: false
                 });
             }
@@ -286,30 +284,37 @@ export async function initialize() {
 const handleStorageChange = debounce((changes, area) => {
     if (area !== 'local')
         return;
+
     const listKeys = ['denylistText', 'allowlistText'];
     const ruleKeys = ['desktopRegexText', 'mobileRegexText', 'desktopRedirectRule', 'mobileRedirectRule'];
     const changedKeys = Object.keys(changes);
+
     let settingsChanged = false;
     let listsChanged = false;
     let rulesChanged = false;
+
     for (const key of changedKeys) {
         if (listKeys.includes(key)) {
             listsChanged = true;
         } else if (ruleKeys.includes(key)) {
             rulesChanged = true;
         } else {
-            state[key] = changes[key].newValue;
             settingsChanged = true;
         }
     }
+
     if (settingsChanged) {
         if (globalThis.FD_ENV)
             globalThis.FD_ENV.DEBUG = state.debugMode;
         log('General settings updated selectively from storage change');
+        refreshGeneralSettings();
     }
-    if (listsChanged)
+    if (listsChanged) {
         updateLists();
-    if (rulesChanged)
+    }
+    if (rulesChanged) {
         updateRules();
+    }
 }, 250);
+
 browser.storage.onChanged.addListener(handleStorageChange);
