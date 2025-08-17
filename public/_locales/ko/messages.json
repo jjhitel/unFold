@@ -232,5 +232,11 @@
     },
     "options_liteMode": {
         "message": "라이트 모드"
+    },
+    "notification_reloadBlocked_title": {
+        "message": "자동 새로고침 차단됨"
+    },
+    "notification_reloadBlocked_message": {
+        "message": "페이지에 수정 중인 양식이 있어 새로고침이 차단되었습니다."
     }
 }

@@ -14,12 +14,36 @@
     };
 
     try {
-        if (window.top !== window)
+        if (window.top !== window) {
             return;
+        }
 
-        const C = globalThis.FD?.constants || {
+        let isFormDirty = false;
+
+        const C = {
             MSG_VIEWPORT_UPDATE: "FOLD_DESKTOP_VIEWPORT",
-            MSG_VIEWPORT_CHECK: "FOLD_DESKTOP_VIEWPORT_CHECK"
+            MSG_VIEWPORT_CHECK: "FOLD_DESKTOP_VIEWPORT_CHECK",
+            MSG_FORM_DIRTY_STATUS: "FD_FORM_DIRTY_STATUS",
+        };
+
+        const setDirty = () => {
+            if (!isFormDirty) {
+                isFormDirty = true;
+                browser.runtime.sendMessage({
+                    type: C.MSG_FORM_DIRTY_STATUS,
+                    isDirty: true
+                }).catch(() => {});
+            }
+        };
+
+        const setClean = () => {
+            if (isFormDirty) {
+                isFormDirty = false;
+                browser.runtime.sendMessage({
+                    type: C.MSG_FORM_DIRTY_STATUS,
+                    isDirty: false
+                }).catch(() => {});
+            }
         };
 
         const readW = () => {
@@ -65,6 +89,7 @@
         window.addEventListener("orientationchange", debouncedSend, {
             passive: true
         });
+
         window.addEventListener("pageshow", (e) => {
             if (e.persisted)
                 setTimeout(send, 60);
@@ -75,6 +100,24 @@
         document.addEventListener("visibilitychange", () => {
             if (!document.hidden)
                 debouncedSend();
+        });
+
+        document.addEventListener('input', (e) => {
+            if (e.target.matches('input, textarea, [contenteditable]')) {
+                setDirty();
+            }
+        }, {
+            capture: true,
+            passive: true
+        });
+
+        document.addEventListener('submit', setClean, {
+            capture: true,
+            passive: true
+        });
+        window.addEventListener('beforeunload', setClean, {
+            capture: true,
+            passive: true
         });
 
         browser.runtime.onMessage.addListener((msg) => {

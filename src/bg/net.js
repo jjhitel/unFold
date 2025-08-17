@@ -9,6 +9,45 @@ const { log } = util;
 export const RELOAD_TIMES = new Map();
 let isListenersRegistered = false;
 
+function showAlertInPage(message) {
+    if (document.getElementById('unfold-alerter-host'))
+        return;
+    const host = document.createElement('div');
+    host.id = 'unfold-alerter-host';
+    document.body.appendChild(host);
+    const shadow = host.attachShadow({
+        mode: 'open'
+    });
+    const style = document.createElement('style');
+    style.textContent = `
+        .toast {
+            position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+            padding: 12px 20px; background-color: rgba(0, 0, 0, 0.8);
+            color: white; border-radius: 20px; font-family: sans-serif;
+            font-size: 14px; z-index: 2147483647; opacity: 0;
+            transition: opacity 0.3s ease-in-out, top 0.3s ease-in-out;
+        }
+    `;
+    const toast = document.createElement('div');
+    toast.className = 'toast';
+    toast.textContent = message;
+    shadow.appendChild(style);
+    shadow.appendChild(toast);
+    requestAnimationFrame(() => {
+        toast.style.opacity = '1';
+        toast.style.top = '30px';
+    });
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.top = '20px';
+        setTimeout(() => host.remove(), 300);
+    }, 3000);
+}
+
+function isSafeToReload(tabId) {
+    return !StateManager.isFormDirty(tabId);
+}
+
 export async function onViewportMessage(msg, sender) {
     const tabId = sender.tab.id;
     const state = StateManager.getState();
@@ -23,10 +62,25 @@ export async function onViewportMessage(msg, sender) {
         const now = Date.now();
         if (now - last > 1200) {
             RELOAD_TIMES.set(tabId, now);
-            try {
-                await browser.tabs.reload(tabId);
-            } catch (e) {
-                log('Tab reload failed', e);
+            if (isSafeToReload(tabId)) {
+                try {
+                    await browser.tabs.reload(tabId);
+                } catch (e) {
+                    log('Tab reload failed', e);
+                }
+            } else {
+                log(`Auto-refresh blocked for tab ${tabId} due to a dirty form.`);
+                try {
+                    await browser.scripting.executeScript({
+                        target: {
+                            tabId: tabId
+                        },
+                        func: showAlertInPage,
+                        args: [browser.i18n.getMessage('notification_reloadBlocked_message')]
+                    });
+                } catch (e) {
+                    log('Failed to show in-page alert:', e);
+                }
             }
         }
     }

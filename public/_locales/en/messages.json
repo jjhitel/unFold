@@ -232,5 +232,11 @@
     },
     "options_liteMode": {
         "message": "Lite Mode"
+    },
+    "notification_reloadBlocked_title": {
+        "message": "Auto-Refresh Blocked"
+    },
+    "notification_reloadBlocked_message": {
+        "message": "Reload was prevented because you were editing a form on this page."
     }
 }

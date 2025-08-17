@@ -29,6 +29,7 @@ const state = {
     mobileRedirectRules: [],
     isWideByTab: new Map(),
     stickyMobileByTab: new Map(),
+    formDirtyByTab: new Map(),
     lastKnownWide: undefined,
 };
 
@@ -96,11 +97,38 @@ export const StateManager = {
             log('setTabValue(stickyMobile) failed', e);
         }
     },
+    updateFormDirty: async(tabId, isDirty) => {
+        if (isDirty) {
+            state.formDirtyByTab.set(tabId, true);
+        } else {
+            state.formDirtyByTab.delete(tabId);
+        }
+
+        try {
+            const tab = await browser.tabs.get(tabId).catch(() => null);
+            if (tab) {
+                await browser.sessions.setTabValue(tabId, 'fd_formDirty', !!isDirty);
+            }
+        } catch (e) {
+            log('setTabValue(formDirty) failed', e);
+        }
+    },
+    isFormDirty: (tabId) => {
+        return state.formDirtyByTab.get(tabId) === true;
+    },
+
     loadInitialTabState: async(tabId) => {
         try {
             const w = await browser.sessions.getTabValue(tabId, 'fd_isWide');
             if (typeof w === 'boolean')
                 state.isWideByTab.set(tabId, w);
+
+            const d = await browser.sessions.getTabValue(tabId, 'fd_formDirty');
+            if (d === true)
+                state.formDirtyByTab.set(tabId, true);
+            else
+                state.formDirtyByTab.delete(tabId);
+
             const s = await browser.sessions.getTabValue(tabId, 'fd_stickyMobile');
             if (s === true)
                 state.stickyMobileByTab.set(tabId, true);

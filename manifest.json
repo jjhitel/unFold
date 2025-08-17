@@ -33,7 +33,8 @@
         "page": "src/options/options.html",
         "open_in_tab": true
     },
-    "content_scripts": [{
+    "content_scripts": [
+        {
             "matches": [
                 "https://*/*",
                 "http://*/*"

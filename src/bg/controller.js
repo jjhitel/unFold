@@ -145,6 +145,15 @@ export async function updateAllBadges() {
     } catch {}
 }
 
+export function showNotification(id, titleKey, messageKey) {
+    browser.notifications.create(id, {
+        type: 'basic',
+        iconUrl: browser.runtime.getURL('res/icons/icon96.png'),
+        title: browser.i18n.getMessage(titleKey) || 'Notification',
+        message: browser.i18n.getMessage(messageKey) || '',
+    });
+}
+
 browser.tabs.onActivated.addListener(async({
         tabId
     }) => {
@@ -178,6 +187,7 @@ browser.tabs.onRemoved.addListener((tabId) => {
     RELOAD_TIMES.delete(tabId);
     StateManager.getState().isWideByTab.delete(tabId);
     StateManager.getState().stickyMobileByTab.delete(tabId);
+    StateManager.getState().formDirtyByTab.delete(tabId);
 });
 
 if (browser.webNavigation && browser.webNavigation.onCommitted) {
@@ -208,6 +218,11 @@ browser.runtime.onMessage.addListener((msg, sender) => {
     case C.MSG_VIEWPORT_CHECK:
         if (sender.tab) {
             onViewportMessage(msg, sender);
+        }
+        break;
+    case C.MSG_FORM_DIRTY_STATUS:
+        if (sender.tab) {
+            StateManager.updateFormDirty(sender.tab.id, msg.isDirty);
         }
         break;
     case C.MSG_OPEN_OPTIONS:
