@@ -11,25 +11,35 @@ const ALARM_NAME = 'remote-rules-update';
 
 async function fetchAndCacheRule(url) {
     const cached = await Cache.get(url);
-    if (cached)
-        return cached;
+
+    const headers = {};
+    if (cached?.lastModified)
+        headers['If-Modified-Since'] = cached.lastModified;
+    if (cached?.etag)
+        headers['If-None-Match'] = cached.etag;
+
     try {
         const res = await fetch(url, {
-            cache: 'no-cache'
+            cache: 'no-store',
+            headers
         });
+        if (res.status === 304 && cached) {
+            return cached;
+        }
         if (!res.ok)
             throw new Error(`HTTP ${res.status}`);
+
         const text = await res.text();
-        const lastModified = res.headers.get('Last-Modified') || new Date().toISOString();
         const ruleData = {
             text,
-            lastModified
+            lastModified: res.headers.get('Last-Modified') || cached?.lastModified || new Date().toISOString(),
+            etag: res.headers.get('ETag') || cached?.etag || ''
         };
         await Cache.set(url, ruleData);
         return ruleData;
     } catch (e) {
-        log(`Failed to fetch rule from ${url}`, e);
-        return null;
+        util.log(`Failed to fetch rule from ${url}`, String(e));
+        return cached || null;
     }
 }
 
