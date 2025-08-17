@@ -2,8 +2,10 @@
 import { saveSettings, saveSingleSetting, DEFAULTS, saveUrlRules, saveDenylist, saveAllowlist, loadRemoteCatalog, loadRemoteSelections, toggleRemoteRule } from './storage.js';
 import { storage, setSmallStatus } from './utils.js';
 import { activateTab } from './tabs.js';
+import { util } from '../common/utils.js';
 
 const $id = (id) => document.getElementById(id);
+const { debounce } = util;
 
 const MODE_DESCRIPTIONS = {
     off: "options_modeDesc_off",
@@ -136,7 +138,7 @@ export async function renderRemoteRulesTable() {
     }
 };
 
-browser.storage.onChanged.addListener((changes, area) => {
+const handleStorageChange = debounce((changes, area) => {
     if (area !== 'local')
         return;
     if (changes.remoteRulesLastUpdated) {
@@ -144,4 +146,6 @@ browser.storage.onChanged.addListener((changes, area) => {
         setSmallStatus('status-remote', browser.i18n.getMessage('options_rules_status_updated'));
         renderRemoteRulesTable();
     }
-});
+}, 100);
+
+browser.storage.onChanged.addListener(handleStorageChange);

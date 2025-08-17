@@ -4,7 +4,7 @@ import { compileRules } from '../common/rule-compiler.js';
 import { C } from '../common/constants.js';
 import { HNTrieContainer } from '../common/hntrie.js';
 
-const { log, normalizeList } = util;
+const { log, normalizeList, debounce } = util;
 const denylistTrie = new HNTrieContainer();
 const allowlistTrie = new HNTrieContainer();
 let denylistTrieRoot = 0;
@@ -159,7 +159,7 @@ export async function initialize() {
     await refreshAllSettings();
 }
 
-browser.storage.onChanged.addListener((changes, area) => {
+const handleStorageChange = debounce((changes, area) => {
     if (area !== 'local')
         return;
     const listKeys = ['denylistText', 'allowlistText'];
@@ -187,4 +187,6 @@ browser.storage.onChanged.addListener((changes, area) => {
         updateLists();
     if (rulesChanged)
         updateRules();
-});
+}, 250);
+
+browser.storage.onChanged.addListener(handleStorageChange);

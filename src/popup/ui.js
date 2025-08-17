@@ -95,10 +95,12 @@ async function syncAllUI() {
     await initListButtons();
 }
 
+const syncAllUIdebounced = util.debounce(syncAllUI, 50);
+
 function bindStorageMirror() {
     browser.storage.onChanged.addListener((changes, area) => {
         if (area === 'local') {
-            syncAllUI();
+            syncAllUIdebounced();
         }
     });
 }
