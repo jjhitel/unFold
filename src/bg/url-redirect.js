@@ -9,13 +9,20 @@ const REDIRECT_LIMIT = {
     maxRedirects: 5
 };
 
-function shouldRedirect(tabId, from, to) {
-    from = String(from || '').replace(/\/+$/, '');
-    to = String(to || '').replace(/\/+$/, '');
-
-    if (!from || !to || from === to) {
-        return false;
+function normalize(u) {
+    try {
+        const url = new URL(u);
+        return `${url.protocol}//${url.host}${url.pathname}`.replace(/\/+$/, '');
+    } catch {
+        return String(u || '')
+        .replace(/[?#].*$/, '')
+        .replace(/\/+$/, '');
     }
+}
+
+function shouldRedirect(tabId, from, to) {
+    from = normalize(from);
+    to = normalize(to);
 
     const now = Date.now();
     let history = REDIRECT_GUARD.get(tabId) || [];
