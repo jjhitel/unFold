@@ -18,6 +18,8 @@ const state = {
     mode: C.DEFAULT_MODE,
     threshold: C.DEFAULT_THRESHOLD,
     desktopUA: C.DEFAULT_DESKTOP_UA,
+    uaDynamic: C.DEFAULT_UA_DYNAMIC,
+    runtimeUA: C.DEFAULT_DESKTOP_UA,
     autoRefresh: C.DEFAULT_AUTO_REFRESH,
     urlRedirect: C.DEFAULT_URL_REDIRECT,
     debugMode: C.DEFAULT_DEBUG_MODE,
@@ -146,22 +148,67 @@ async function updateLists(data) {
         console.error('[FD] Failed to update lists:', e);
     }
 }
+
+async function buildDynamicDesktopUA() {
+    try {
+        const info = await browser.runtime.getBrowserInfo();
+        const v = (info?.version || '').split('.')[0] || '141';
+        return {
+            ua: `Mozilla/5.0 (X11; Linux x86_64; rv:${v}) Gecko/20100101 Firefox/${v}`,
+            major: v
+        };
+    } catch {
+        return {
+            ua: C.DEFAULT_DESKTOP_UA,
+            major: '141'
+        };
+    }
+}
+
 async function refreshGeneralSettings(settings) {
     try {
         const s = settings || await browser.storage.local.get(null);
+        const { ua: dynamicUA, major: currentMajor } = await buildDynamicDesktopUA();
         const defaults = {
             [C.KEY_MODE]: C.DEFAULT_MODE,
             [C.KEY_THRESHOLD]: C.DEFAULT_THRESHOLD,
-            [C.KEY_DESKTOP_UA]: C.DEFAULT_DESKTOP_UA,
+            [C.KEY_DESKTOP_UA]: dynamicUA,
+            [C.KEY_UA_DYNAMIC]: C.DEFAULT_UA_DYNAMIC,
+            [C.KEY_LAST_BROWSER_VERSION]: currentMajor,
             [C.KEY_AUTO_REFRESH]: C.DEFAULT_AUTO_REFRESH,
             [C.KEY_URL_REDIRECT]: C.DEFAULT_URL_REDIRECT,
             [C.KEY_DEBUG_MODE]: C.DEFAULT_DEBUG_MODE,
             [C.KEY_AUTO_UPDATE_PERIOD]: C.DEFAULT_AUTO_UPDATE_PERIOD,
             [C.KEY_ZOOM_LEVEL]: C.DEFAULT_ZOOM_LEVEL,
         };
-        for (const key in defaults) {
-            state[key] = s[key] ?? defaults[key];
+        let uaDynamic = (typeof s[C.KEY_UA_DYNAMIC] === 'boolean') ? s[C.KEY_UA_DYNAMIC] : C.DEFAULT_UA_DYNAMIC;
+        const storedUA = s[C.KEY_DESKTOP_UA];
+        if (typeof s[C.KEY_UA_DYNAMIC] !== 'boolean') {
+            if (!storedUA || storedUA === C.DEFAULT_DESKTOP_UA)
+                uaDynamic = true;
         }
+
+        state.uaDynamic = uaDynamic;
+        state.runtimeUA = dynamicUA;
+        state.mode = s[C.KEY_MODE] ?? defaults[C.KEY_MODE];
+        state.threshold = s[C.KEY_THRESHOLD] ?? defaults[C.KEY_THRESHOLD];
+        state.desktopUA = uaDynamic ? dynamicUA : (storedUA ?? dynamicUA);
+        state.debugMode = s[C.KEY_DEBUG_MODE] ?? defaults[C.KEY_DEBUG_MODE];
+        state.autoRefresh = s[C.KEY_AUTO_REFRESH] ?? defaults[C.KEY_AUTO_REFRESH];
+        state.urlRedirect = s[C.KEY_URL_REDIRECT] ?? defaults[C.KEY_URL_REDIRECT];
+        state.autoUpdatePeriod = s[C.KEY_AUTO_UPDATE_PERIOD] ?? defaults[C.KEY_AUTO_UPDATE_PERIOD];
+        state.zoomLevel = s[C.KEY_ZOOM_LEVEL] ?? defaults[C.KEY_ZOOM_LEVEL];
+
+        const last = s[C.KEY_LAST_BROWSER_VERSION];
+        const needPersistDynamic = uaDynamic && (storedUA !== dynamicUA || last !== currentMajor);
+        if (needPersistDynamic) {
+            await browser.storage.local.set({
+                [C.KEY_DESKTOP_UA]: dynamicUA,
+                [C.KEY_UA_DYNAMIC]: true,
+                [C.KEY_LAST_BROWSER_VERSION]: currentMajor
+            });
+        }
+
         if (globalThis.FD_ENV)
             globalThis.FD_ENV.DEBUG = state.debugMode;
         log('General settings refreshed');
