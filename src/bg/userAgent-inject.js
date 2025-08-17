@@ -5,16 +5,29 @@ import { util } from '../common/utils.js';
 const { extractHostname } = util;
 const UA_HEADER = 'user-agent';
 
+function headersToBag(headers) {
+    const bag = new Map();
+    for (let i = 0; i < headers.length; i++)
+        bag.set(headers[i].name.toLowerCase(), i);
+    return {
+        set(name, value) {
+            const lname = name.toLowerCase();
+            const idx = bag.get(lname);
+            if (idx != null)
+                headers[idx].value = value;
+            else {
+                headers.push({
+                    name,
+                    value
+                });
+                bag.set(lname, headers.length - 1);
+            }
+        }
+    };
+}
+
 function setOrAddUAHeader(headers, ua) {
-    const uaHeader = headers.find(h => h.name.toLowerCase() === UA_HEADER);
-    if (uaHeader) {
-        uaHeader.value = ua;
-    } else {
-        headers.push({
-            name: 'User-Agent',
-            value: ua
-        });
-    }
+    headersToBag(headers).set('User-Agent', ua);
 }
 
 function generateContentScript(ua) {
