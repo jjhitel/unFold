@@ -141,7 +141,7 @@
         "message": "Custom Rules"
     },
     "options_redirect_customRulesDesc": {
-        "message": "Provide rules for sites that require more than a User-Agent change. Uses regular expressions."
+        "message": "Provide regex rules for sites that require more than a User-Agent change. For security, redirects are only allowed within the same domain and security downgrades (HTTPS to HTTP) are blocked."
     },
     "options_redirect_customDesktop": {
         "message": "Custom Desktop Mode Rules"

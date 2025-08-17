@@ -141,7 +141,7 @@
         "message": "사용자 지정 규칙"
     },
     "options_redirect_customRulesDesc": {
-        "message": "단순히 사용자 에이전트 변경만으로 부족한 사이트를 위해 규칙을 추가합니다. 정규식을 사용합니다."
+        "message": "사용자 에이전트 변경만으로 부족한 사이트를 위해 정규식 규칙을 추가합니다. 보안을 위해 리디렉션은 동일한 도메인 내에서만 허용되며, HTTPS에서 HTTP로의 이동은 차단됩니다."
     },
     "options_redirect_customDesktop": {
         "message": "데스크톱 모드 규칙"
