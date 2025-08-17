@@ -222,9 +222,9 @@ browser.runtime.onMessage.addListener((msg, sender) => {
     }
 });
 
-browser.alarms.onAlarm.addListener((alarm) => {
+browser.alarms.onAlarm.addListener(async(alarm) => {
     if (alarm.name === ALARM_NAME) {
         log('Triggering scheduled remote rules update...');
-        updateCheckedRemoteRules();
+        await updateCheckedRemoteRules();
     }
 });
