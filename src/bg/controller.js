@@ -102,7 +102,7 @@ export async function createUpdateAlarm() {
     }
 }
 
-export async function updateBadge(tabId) {
+async function _updateBadge(tabId) {
     try {
         const state = StateManager.getState();
         if (!state)
@@ -133,6 +133,8 @@ export async function updateBadge(tabId) {
         });
     } catch (e) {}
 }
+
+export const updateBadge = util.debounce(_updateBadge, 150);
 
 export async function updateAllBadges() {
     try {
