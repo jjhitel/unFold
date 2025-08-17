@@ -38,7 +38,8 @@ export function registerListeners() {
         return;
     browser.webRequest.onBeforeSendHeaders.addListener(
         onBeforeSendHeaders, {
-        urls: ["<all_urls>"]
+        urls: ["http://*/*", "https://*/*"],
+        types: ["main_frame", "xmlhttprequest", "fetch"]
     },
         ["blocking", "requestHeaders"]);
     browser.webRequest.onBeforeRequest.addListener(
