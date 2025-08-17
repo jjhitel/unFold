@@ -4,6 +4,7 @@ import { setSmallStatus } from '../common/ui-utils.js';
 import { activateTab } from './tabs.js';
 import { util } from '../common/utils.js';
 import { uiStore } from '../common/store.js';
+import { C } from '../common/constants.js';
 
 const $id = (id) => document.getElementById(id);
 const { debounce } = util;
@@ -149,9 +150,9 @@ export function initUIBindings() {
                     saveSingleSetting('lastBrowserVersion', v)
                 ]);
         } catch {
-            $id('ua').value = DEFAULTS.desktopUA;
+            $id('ua').value = C.DEFAULT_DESKTOP_UA;
             await Promise.all([
-                    saveSingleSetting('desktopUA', DEFAULTS.desktopUA),
+                    saveSingleSetting('desktopUA', C.DEFAULT_DESKTOP_UA),
                     saveSingleSetting('uaDynamic', true)
                 ]);
         }
