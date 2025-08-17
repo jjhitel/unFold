@@ -57,8 +57,8 @@ export async function onBeforeSendHeaders(details) {
     const headers = details.requestHeaders || [];
     setOrAddUAHeader(headers, state.desktopUA);
     try {
-        if (tabId !== browser.tabs.TAB_ID_NONE) {
-            await browser.tabs.executeScript(tabId, {
+        if (details.type === 'main_frame' && details.frameId === 0 && tabId !== browser.tabs.TAB_ID_NONE) {
+            void browser.tabs.executeScript(tabId, {
                 allFrames: true,
                 runAt: 'document_start',
                 matchAboutBlank: true,
