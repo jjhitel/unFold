@@ -195,7 +195,7 @@ async function refreshGeneralSettings(settings) {
         state.uaDynamic = uaDynamic;
         state.runtimeUA = dynamicUA;
         state.mode = s[C.KEY_MODE] ?? defaults[C.KEY_MODE];
-        state.threshold = s[C.KEY_THRESHOLD] ?? defaults[C.KEY_THRESHOLD];
+        state.threshold = normalizeThreshold(s[C.KEY_THRESHOLD] ?? defaults[C.KEY_THRESHOLD]);
         state.desktopUA = uaDynamic ? dynamicUA : (storedUA ?? dynamicUA);
         state.debugMode = s[C.KEY_DEBUG_MODE] ?? defaults[C.KEY_DEBUG_MODE];
         state.autoRefresh = s[C.KEY_AUTO_REFRESH] ?? defaults[C.KEY_AUTO_REFRESH];
@@ -210,6 +210,12 @@ async function refreshGeneralSettings(settings) {
                 [C.KEY_DESKTOP_UA]: dynamicUA,
                 [C.KEY_UA_DYNAMIC]: true,
                 [C.KEY_LAST_BROWSER_VERSION]: currentVersion
+            });
+        }
+
+        if (state.threshold !== s[C.KEY_THRESHOLD]) {
+            await browser.storage.local.set({
+                [C.KEY_THRESHOLD]: state.threshold
             });
         }
 
@@ -230,6 +236,13 @@ async function refreshAllSettings() {
     await updateLists(lists);
     await updateRules(rules);
     log('All settings refreshed');
+}
+
+async function normalizeThreshold(v) {
+    const n = Number(v);
+    if (!Number.isFinite(n))
+        return C.DEFAULT_THRESHOLD;
+    return Math.max(100, Math.min(5000, Math.round(n)));
 }
 
 export async function initialize() {
@@ -265,5 +278,4 @@ const handleStorageChange = debounce((changes, area) => {
     if (rulesChanged)
         updateRules();
 }, 250);
-
 browser.storage.onChanged.addListener(handleStorageChange);

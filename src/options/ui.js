@@ -126,7 +126,10 @@ export function initUIBindings() {
                     saveSingleSetting('uaDynamic', false)
                 ]);
         }, 200));
-    $id('threshold')?.addEventListener('change', (e) => saveSingleSetting('threshold', Number(e.target.value)));
+    $id('threshold')?.addEventListener('change', debounce(async(e) => {
+            const v = Number(e.target.value);
+            await saveSingleSetting('threshold', Number.isFinite(v) ? v : Number(C.DEFAULT_THRESHOLD));
+        }, 200));
     $id('zoomLevel')?.addEventListener('change', (e) => saveSingleSetting('zoomLevel', Number(e.target.value)));
     $id('autoUpdatePeriod')?.addEventListener('change', (e) => saveSingleSetting('autoUpdatePeriod', Number(e.target.value)));
 
@@ -153,11 +156,19 @@ export function initUIBindings() {
                 ]);
         }
     });
-    $id('resetThreshold')?.addEventListener('click', () => {
-        $id('threshold').value = String(DEFAULTS.threshold);
-    });
-
     bindCaptureButtons();
+
+    const bindResetThreshold = (id) => {
+        const el = $id(id);
+        if (!el)
+            return;
+        el.addEventListener('click', async() => {
+            const def = Number(C.DEFAULT_THRESHOLD);
+            $id('threshold').value = String(def);
+            await saveSingleSetting('threshold', def);
+        });
+    };
+    bindResetThreshold('resetThreshold');
 
     updateModeDescription();
     displayLastUpdated();
