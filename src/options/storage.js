@@ -2,7 +2,7 @@
 import { uiStore } from '../common/store.js';
 import { C } from '../common/constants.js';
 import { util } from '../common/utils.js';
-import { showSaved } from './utils.js';
+import { showSaved } from '../common/ui-utils.js';
 import { refreshTabVisibility } from './ui.js';
 
 const $id = (id) => document.getElementById(id);

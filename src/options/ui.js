@@ -1,8 +1,9 @@
 'use strict';
 import { saveSettings, saveSingleSetting, DEFAULTS, saveUrlRules, saveDenylist, saveAllowlist, loadRemoteCatalog, loadRemoteSelections, toggleRemoteRule } from './storage.js';
-import { storage, setSmallStatus } from './utils.js';
+import { setSmallStatus } from '../common/ui-utils.js';
 import { activateTab } from './tabs.js';
 import { util } from '../common/utils.js';
+import { uiStore } from '../common/store.js';
 
 const $id = (id) => document.getElementById(id);
 const { debounce } = util;
@@ -40,7 +41,7 @@ async function displayLastUpdated() {
     const el = $id('last-updated');
     if (!el)
         return;
-    const res = await storage.get('remoteRulesLastUpdated');
+    const res = await uiStore.get('remoteRulesLastUpdated');
     const ts = res?.remoteRulesLastUpdated;
     if (ts) {
         const date = new Date(ts);
@@ -98,7 +99,7 @@ export async function renderRemoteRulesTable() {
     const [catalog, selected, storedData] = await Promise.all([
                 loadRemoteCatalog(),
                 loadRemoteSelections(),
-                storage.get(null)
+                uiStore.get(null)
             ]);
     for (const item of catalog) {
         const tr = tbody.insertRow();

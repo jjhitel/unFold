@@ -1,6 +1,7 @@
 'use strict';
 import { util } from '../common/utils.js';
-import * as popup from './utils.js';
+import * as uiUtils from '../common/ui-utils.js';
+import { uiStore } from '../common/store.js';
 import * as storage from './storage.js';
 import { C } from '../common/constants.js';
 
@@ -38,7 +39,7 @@ function bindSwitch(elId, storageKey, onSave) {
 
     el.addEventListener('click', async() => {
         const willOn = !el.classList.contains('on');
-        await(onSave ? onSave(willOn) : popup.save({
+        await(onSave ? onSave(willOn) : uiStore.set({
                 [storageKey]: willOn
             }));
     });
@@ -47,7 +48,7 @@ function bindSwitch(elId, storageKey, onSave) {
 async function initListButtons() {
     const btnDeny = $id('btnDeny');
     const btnAllow = $id('btnAllow');
-    const info = await popup.getActiveHttpTab();
+    const info = await uiUtils.getActiveHttpTab();
 
     if (!info) {
         if (btnDeny)
@@ -84,12 +85,12 @@ async function initListButtons() {
 }
 
 async function syncAllUI() {
-    const settings = await popup.load(['mode', 'autoRefresh', 'urlRedirect']);
+    const settings = await uiStore.get(['mode', 'autoRefresh', 'urlRedirect']);
     const mode = settings.mode || C.DEFAULT_MODE;
 
-    popup.setOn($id('switch'), mode !== 'off');
-    popup.setOn($id('toggle-autoRefresh'), settings.autoRefresh ?? true);
-    popup.setOn($id('toggle-urlRedirect'), settings.urlRedirect ?? false);
+    uiUtils.setOn($id('switch'), mode !== 'off');
+    uiUtils.setOn($id('toggle-autoRefresh'), settings.autoRefresh ?? true);
+    uiUtils.setOn($id('toggle-urlRedirect'), settings.urlRedirect ?? false);
 
     updateListButtonsVisibility(mode);
     await initListButtons();
@@ -114,7 +115,7 @@ export async function initPopupUI() {
 
     const btnOptions = $id('btnOptions');
     if (btnOptions) {
-        btnOptions.addEventListener('click', () => popup.openOptions());
+        btnOptions.addEventListener('click', () => uiUtils.openOptions());
     }
 
     bindStorageMirror();
