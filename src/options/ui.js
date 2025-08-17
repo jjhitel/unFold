@@ -207,7 +207,16 @@ export async function renderRemoteRulesTable() {
         cb.addEventListener('change', () => toggleRemoteRule(item, cb.checked));
 
         const tdName = tr.insertCell();
-        tdName.innerHTML = `<div class="rule-name">${item.name}</div><div class="rule-desc">${item.desc || ''}</div>`;
+        const nameDiv = document.createElement('div');
+        nameDiv.className = 'rule-name';
+        nameDiv.textContent = item.name;
+
+        const descDiv = document.createElement('div');
+        descDiv.className = 'rule-desc';
+        descDiv.textContent = item.desc || '';
+
+        tdName.appendChild(nameDiv);
+        tdName.appendChild(descDiv);
 
         const tdType = tr.insertCell();
         tdType.textContent = (item.kind === 'mobile') ? 'Mobile' : 'Desktop';
