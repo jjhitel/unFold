@@ -6,7 +6,7 @@
     "scripts": {
         "dev": "vite",
         "build": "node scripts/update-manifest.js && vite build",
-        "build:firefox": "npm run build && web-ext build --source-dir dist --artifacts-dir dist_zip --filename unfold-firefox-{version}.xpi"
+        "build:firefox": "npm run build && web-ext build --source-dir dist --artifacts-dir dist_zip --filename unfold-firefox-{version}.xpi --overwrite-dest"
     },
     "repository": {
         "type": "git",
