@@ -130,8 +130,28 @@ export function initUIBindings() {
     $id('zoomLevel')?.addEventListener('change', (e) => saveSingleSetting('zoomLevel', Number(e.target.value)));
     $id('autoUpdatePeriod')?.addEventListener('change', (e) => saveSingleSetting('autoUpdatePeriod', Number(e.target.value)));
 
-    $id('resetUA')?.addEventListener('click', () => {
-        $id('ua').value = DEFAULTS.desktopUA;
+    $id('resetUA')?.addEventListener('click', async() => {
+        try {
+            const info = await browser.runtime.getBrowserInfo();
+            const ver = String(info?.version || '');
+            const m = ver.match(/^(\d+)(?:\.(\d+))?/);
+            const major = m?.[1] ?? '141';
+            const minor = m?.[2] ?? '0';
+            const v = `${major}.${minor}`;
+            const dyn = `Mozilla/5.0 (X11; Linux x86_64; rv:${v}) Gecko/20100101 Firefox/${v}`;
+            $id('ua').value = dyn;
+            await Promise.all([
+                    saveSingleSetting('desktopUA', dyn),
+                    saveSingleSetting('uaDynamic', true),
+                    saveSingleSetting('lastBrowserVersion', v)
+                ]);
+        } catch {
+            $id('ua').value = DEFAULTS.desktopUA;
+            await Promise.all([
+                    saveSingleSetting('desktopUA', DEFAULTS.desktopUA),
+                    saveSingleSetting('uaDynamic', true)
+                ]);
+        }
     });
     $id('resetThreshold')?.addEventListener('click', () => {
         $id('threshold').value = String(DEFAULTS.threshold);

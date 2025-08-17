@@ -152,15 +152,19 @@ async function updateLists(data) {
 async function buildDynamicDesktopUA() {
     try {
         const info = await browser.runtime.getBrowserInfo();
-        const v = (info?.version || '').split('.')[0] || '141';
+        const ver = String(info?.version || '');
+        const m = ver.match(/^(\d+)(?:\.(\d+))?/);
+        const major = m?.[1] ?? '141';
+        const minor = m?.[2] ?? '0';
+        const v = `${major}.${minor}`;
         return {
             ua: `Mozilla/5.0 (X11; Linux x86_64; rv:${v}) Gecko/20100101 Firefox/${v}`,
-            major: v
+            version: v
         };
     } catch {
         return {
             ua: C.DEFAULT_DESKTOP_UA,
-            major: '141'
+            version: '141.0'
         };
     }
 }
@@ -168,13 +172,13 @@ async function buildDynamicDesktopUA() {
 async function refreshGeneralSettings(settings) {
     try {
         const s = settings || await browser.storage.local.get(null);
-        const { ua: dynamicUA, major: currentMajor } = await buildDynamicDesktopUA();
+        const { ua: dynamicUA, major: currentVersion } = await buildDynamicDesktopUA();
         const defaults = {
             [C.KEY_MODE]: C.DEFAULT_MODE,
             [C.KEY_THRESHOLD]: C.DEFAULT_THRESHOLD,
             [C.KEY_DESKTOP_UA]: dynamicUA,
             [C.KEY_UA_DYNAMIC]: C.DEFAULT_UA_DYNAMIC,
-            [C.KEY_LAST_BROWSER_VERSION]: currentMajor,
+            [C.KEY_LAST_BROWSER_VERSION]: currentVersion,
             [C.KEY_AUTO_REFRESH]: C.DEFAULT_AUTO_REFRESH,
             [C.KEY_URL_REDIRECT]: C.DEFAULT_URL_REDIRECT,
             [C.KEY_DEBUG_MODE]: C.DEFAULT_DEBUG_MODE,
@@ -200,12 +204,12 @@ async function refreshGeneralSettings(settings) {
         state.zoomLevel = s[C.KEY_ZOOM_LEVEL] ?? defaults[C.KEY_ZOOM_LEVEL];
 
         const last = s[C.KEY_LAST_BROWSER_VERSION];
-        const needPersistDynamic = uaDynamic && (storedUA !== dynamicUA || last !== currentMajor);
+        const needPersistDynamic = uaDynamic && (storedUA !== dynamicUA || last !== currentVersion);
         if (needPersistDynamic) {
             await browser.storage.local.set({
                 [C.KEY_DESKTOP_UA]: dynamicUA,
                 [C.KEY_UA_DYNAMIC]: true,
-                [C.KEY_LAST_BROWSER_VERSION]: currentMajor
+                [C.KEY_LAST_BROWSER_VERSION]: currentVersion
             });
         }
 
