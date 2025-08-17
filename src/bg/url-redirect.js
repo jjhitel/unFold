@@ -6,34 +6,45 @@ const { log } = util;
 const REDIRECT_GUARD = new Map();
 const REDIRECT_LIMIT = {
     windowMs: 2000,
-    max: 2
+    maxRedirects: 5
 };
 
 function shouldRedirect(tabId, from, to) {
     from = String(from || '').replace(/\/+$/, '');
     to = String(to || '').replace(/\/+$/, '');
-    if (!from || !to || from === to)
+
+    if (!from || !to || from === to) {
         return false;
-    const now = Date.now();
-    let g = REDIRECT_GUARD.get(tabId) || {
-        ts: 0,
-        count: 0,
-        lastFrom: "",
-        lastTo: ""
-    };
-    if (g.lastFrom === to && g.lastTo === from)
-        return false;
-    if (now - g.ts > REDIRECT_LIMIT.windowMs) {
-        g = {
-            ts: now,
-            count: 0
-        };
     }
-    g.count += 1;
-    g.lastFrom = from;
-    g.lastTo = to;
-    REDIRECT_GUARD.set(tabId, g);
-    return g.count <= REDIRECT_LIMIT.max;
+
+    const now = Date.now();
+    let history = REDIRECT_GUARD.get(tabId) || [];
+
+    history = history.filter(item => now - item.ts < REDIRECT_LIMIT.windowMs);
+
+    if (history.some(item => item.url === to)) {
+        log('Redirect suppressed (loop detected in history)', {
+            from: from,
+            to: to
+        });
+        return false;
+    }
+
+    if (history.length >= REDIRECT_LIMIT.maxRedirects) {
+        log('Redirect suppressed (limit exceeded)', {
+            from: from,
+            to: to
+        });
+        return false;
+    }
+
+    history.push({
+        url: to,
+        ts: now
+    });
+    REDIRECT_GUARD.set(tabId, history);
+
+    return true;
 }
 
 export async function onBeforeRequest(details) {
@@ -59,12 +70,6 @@ export async function onBeforeRequest(details) {
                 return {
                     redirectUrl: to
                 };
-            }
-            if (to && to !== url) {
-                log('Redirect suppressed (loop/limit)', {
-                    from: url,
-                    to
-                });
             }
         } catch (e) {
             log('Redirect rule error', String(e));
