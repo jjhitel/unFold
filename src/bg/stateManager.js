@@ -169,6 +169,19 @@ async function buildDynamicDesktopUA() {
     }
 }
 
+function toBool(v, fallback = false) {
+    if (typeof v === 'boolean')
+        return v;
+    if (typeof v === 'string') {
+        const s = v.trim().toLowerCase();
+        if (s === 'true')
+            return true;
+        if (s === 'false')
+            return false;
+    }
+    return fallback;
+}
+
 async function refreshGeneralSettings(settings) {
     try {
         const s = settings || await browser.storage.local.get(null);
@@ -185,18 +198,28 @@ async function refreshGeneralSettings(settings) {
             [C.KEY_AUTO_UPDATE_PERIOD]: C.DEFAULT_AUTO_UPDATE_PERIOD,
             [C.KEY_ZOOM_LEVEL]: C.DEFAULT_ZOOM_LEVEL,
         };
-        let uaDynamic = (typeof s[C.KEY_UA_DYNAMIC] === 'boolean') ? s[C.KEY_UA_DYNAMIC] : C.DEFAULT_UA_DYNAMIC;
-        const storedUA = s[C.KEY_DESKTOP_UA];
-        if (typeof s[C.KEY_UA_DYNAMIC] !== 'boolean') {
-            if (!storedUA || storedUA === C.DEFAULT_DESKTOP_UA)
-                uaDynamic = true;
+        const rawUaDyn = s[C.KEY_UA_DYNAMIC];
+        let uaDynamic = toBool(rawUaDyn, C.DEFAULT_UA_DYNAMIC);
+        const storedUA = typeof s[C.KEY_DESKTOP_UA] === 'string' ? s[C.KEY_DESKTOP_UA].trim() : '';
+
+        const keyMissing = (rawUaDyn === undefined);
+        const hasCustomUA =
+            !!storedUA &&
+            storedUA !== C.DEFAULT_DESKTOP_UA &&
+            storedUA !== dynamicUA;
+        if (keyMissing && hasCustomUA) {
+            uaDynamic = false;
         }
 
         state.uaDynamic = uaDynamic;
         state.runtimeUA = dynamicUA;
         state.mode = s[C.KEY_MODE] ?? defaults[C.KEY_MODE];
-        state.threshold = normalizeThreshold(s[C.KEY_THRESHOLD] ?? defaults[C.KEY_THRESHOLD]);
-        state.desktopUA = uaDynamic ? dynamicUA : (storedUA ?? dynamicUA);
+        state.threshold = s[C.KEY_THRESHOLD] ?? defaults[C.KEY_THRESHOLD];
+        if (uaDynamic === false && hasCustomUA) {
+            state.desktopUA = storedUA;
+        } else {
+            state.desktopUA = dynamicUA;
+        }
         state.debugMode = s[C.KEY_DEBUG_MODE] ?? defaults[C.KEY_DEBUG_MODE];
         state.autoRefresh = s[C.KEY_AUTO_REFRESH] ?? defaults[C.KEY_AUTO_REFRESH];
         state.urlRedirect = s[C.KEY_URL_REDIRECT] ?? defaults[C.KEY_URL_REDIRECT];
@@ -204,13 +227,22 @@ async function refreshGeneralSettings(settings) {
         state.zoomLevel = s[C.KEY_ZOOM_LEVEL] ?? defaults[C.KEY_ZOOM_LEVEL];
 
         const last = s[C.KEY_LAST_BROWSER_VERSION];
-        const needPersistDynamic = uaDynamic && (storedUA !== dynamicUA || last !== currentVersion);
-        if (needPersistDynamic) {
-            await browser.storage.local.set({
-                [C.KEY_DESKTOP_UA]: dynamicUA,
-                [C.KEY_UA_DYNAMIC]: true,
-                [C.KEY_LAST_BROWSER_VERSION]: currentVersion
-            });
+        if (uaDynamic) {
+            const needPersistDynamic = (storedUA !== dynamicUA) || (last !== currentVersion) || (rawUaDyn !== true);
+            if (needPersistDynamic) {
+                await browser.storage.local.set({
+                    [C.KEY_DESKTOP_UA]: dynamicUA,
+                    [C.KEY_UA_DYNAMIC]: true,
+                    [C.KEY_LAST_BROWSER_VERSION]: currentVersion
+                });
+            }
+        } else {
+            if (!hasCustomUA && state.desktopUA) {
+                await browser.storage.local.set({
+                    [C.KEY_DESKTOP_UA]: state.desktopUA,
+                    [C.KEY_UA_DYNAMIC]: false
+                });
+            }
         }
 
         if (state.threshold !== s[C.KEY_THRESHOLD]) {
@@ -221,7 +253,9 @@ async function refreshGeneralSettings(settings) {
 
         if (globalThis.FD_ENV)
             globalThis.FD_ENV.DEBUG = state.debugMode;
-        log('General settings refreshed');
+        log('General settings refreshed (UA mode:', state.uaDynamic ? 'dynamic' : 'static', ')', {
+            desktopUA: state.desktopUA
+        });
     } catch (e) {
         console.error('[FD] Failed to refresh general settings:', e);
     }

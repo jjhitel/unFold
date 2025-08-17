@@ -120,13 +120,15 @@ export function initUIBindings() {
     $id('autoRefresh')?.addEventListener('change', (e) => saveSingleSetting('autoRefresh', e.target.checked));
     $id('urlRedirect')?.addEventListener('change', (e) => saveSingleSetting('urlRedirect', e.target.checked));
     $id('debugMode')?.addEventListener('change', (e) => saveSingleSetting('debugMode', e.target.checked));
-    $id('ua')?.addEventListener('change', debounce(async(e) => {
-            const val = String(e.target.value || '').trim();
-            await Promise.all([
-                    saveSingleSetting('desktopUA', val),
-                    saveSingleSetting('uaDynamic', false)
-                ]);
-        }, 200));
+    $id('ua')?.addEventListener('change', async(e) => {
+        const val = String(e.target.value || '');
+        saveSingleSetting('desktopUA', val);
+        try {
+            await browser.storage.local.set({
+                uaDynamic: false
+            });
+        } catch {}
+    });
     $id('threshold')?.addEventListener('change', debounce(async(e) => {
             const v = Number(e.target.value);
             await saveSingleSetting('threshold', Number.isFinite(v) ? v : Number(C.DEFAULT_THRESHOLD));
@@ -144,20 +146,20 @@ export function initUIBindings() {
             const v = `${major}.${minor}`;
             const dyn = `Mozilla/5.0 (X11; Linux x86_64; rv:${v}) Gecko/20100101 Firefox/${v}`;
             $id('ua').value = dyn;
-            await Promise.all([
-                    saveSingleSetting('desktopUA', dyn),
-                    saveSingleSetting('uaDynamic', true),
-                    saveSingleSetting('lastBrowserVersion', v)
-                ]);
+            await browser.storage.local.set({
+                desktopUA: dyn,
+                uaDynamic: true,
+                lastBrowserVersion: v
+            });
         } catch {
-            $id('ua').value = C.DEFAULT_DESKTOP_UA;
-            await Promise.all([
-                    saveSingleSetting('desktopUA', C.DEFAULT_DESKTOP_UA),
-                    saveSingleSetting('uaDynamic', true)
-                ]);
+            const fallback = 'Mozilla/5.0 (X11; Linux x86_64; rv:141.0) Gecko/20100101 Firefox/141.0';
+            $id('ua').value = fallback;
+            await browser.storage.local.set({
+                desktopUA: fallback,
+                uaDynamic: true
+            });
         }
     });
-    bindCaptureButtons();
 
     const bindResetThreshold = (id) => {
         const el = $id(id);
@@ -170,6 +172,7 @@ export function initUIBindings() {
         });
     };
     bindResetThreshold('resetThreshold');
+    bindCaptureButtons();
 
     updateModeDescription();
     displayLastUpdated();
