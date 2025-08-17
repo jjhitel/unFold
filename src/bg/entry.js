@@ -1,4 +1,5 @@
 'use strict';
+import '../common/env.js';
 import { initialize as initializeStateManager, StateManager } from './stateManager.js';
 import { util } from '../common/utils.js';
 import { registerListeners, unregisterListeners } from './net.js';

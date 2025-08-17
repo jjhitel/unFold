@@ -1,4 +1,5 @@
 'use strict';
+import '../common/env.js';
 import { initPopupUI } from './ui.js';
 
 const boot = () => {

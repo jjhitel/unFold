@@ -1,4 +1,5 @@
 'use strict';
+import '../common/env.js';
 import { util } from '../common/utils.js';
 import { loadSettings, bindStorageMirror } from './storage.js';
 import { initUIBindings, renderRemoteRulesTable, refreshTabVisibility } from './ui.js';
