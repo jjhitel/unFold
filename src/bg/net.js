@@ -54,7 +54,13 @@ export async function onViewportMessage(msg, sender) {
     const vw = msg.vvWidth || msg.innerWidth || 0;
     const sw = msg.screenWidth || 0;
     const w = (vw && sw) ? Math.min(vw, sw) : (vw || sw);
-    const isNowWide = w >= state.threshold;
+
+    const prevWide = StateManager.isDesktopPreferred(tabId);
+    const HYSTERESIS_PX = 100;
+    const thresholdUp = state.threshold;
+    const thresholdDown = Math.max(100, thresholdUp - HYSTERESIS_PX);
+
+    const isNowWide = prevWide ? (w >= thresholdDown) : (w >= thresholdUp);
     const changed = StateManager.updateTabWidth(tabId, isNowWide);
 
     if (changed && state.autoRefresh && (state.mode === 'autoDeny' || state.mode === 'autoAllow')) {
