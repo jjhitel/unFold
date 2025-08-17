@@ -1,7 +1,3 @@
-/**
- * This is a lightweight redirect rule compiler inspired by uBlock Origin's filter parsing principles (pre-compilation).
- * Instead of a complex AST, it extracts only the regular expressions and substitution strings needed for unFold.
- */
 'use strict';
 import { util } from './utils.js';
 
