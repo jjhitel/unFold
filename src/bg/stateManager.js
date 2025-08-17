@@ -4,7 +4,11 @@ import { compileRules } from '../common/rule-compiler.js';
 import { C } from '../common/constants.js';
 import { HNTrieContainer } from '../common/hntrie.js';
 
-const { log, normalizeList, debounce } = util;
+const { log, normalizeList, debounce, deepEqual } = util;
+let _prevDenyText = null, _prevAllowText = null;
+let _prevDesktopRulesText = null, _prevMobileRulesText = null;
+updateLists
+
 const denylistTrie = new HNTrieContainer();
 const allowlistTrie = new HNTrieContainer();
 let denylistTrieRoot = 0;
@@ -88,28 +92,32 @@ export const StateManager = {
 async function updateRules(data) {
     try {
         const g = data || await browser.storage.local.get(['desktopRegexText', 'mobileRegexText', 'desktopRedirectRule', 'mobileRedirectRule']);
-        const desktopRulesText = (g.desktopRegexText || '') + '\n' + (g.desktopRedirectRule || '');
-        const mobileRulesText = (g.mobileRegexText || '') + '\n' + (g.mobileRedirectRule || '');
-        const desktopRules = compileRules(desktopRulesText);
-        const mobileRules = compileRules(mobileRulesText);
+        const desktopRulesText = ((g.desktopRegexText || '') + '\n' + (g.desktopRedirectRule || '')).trim();
+        const mobileRulesText = ((g.mobileRegexText || '') + '\n' + (g.mobileRedirectRule || '')).trim();
+
+        let desktopRules = state.desktopRedirectRules || [];
+        let mobileRules = state.mobileRedirectRules || [];
+
+        if (desktopRulesText !== _prevDesktopRulesText) {
+            desktopRules = compileRules(desktopRulesText);
+            state.desktopRedirectRules = desktopRules;
+            _prevDesktopRulesText = desktopRulesText;
+        }
+        if (mobileRulesText !== _prevMobileRulesText) {
+            mobileRules = compileRules(mobileRulesText);
+            state.mobileRedirectRules = mobileRules;
+            _prevMobileRulesText = mobileRulesText;
+        }
 
         const totalDesktopLines = desktopRulesText.split(/\r?\n/).filter(line => line.trim() && !line.startsWith('#')).length;
         const totalMobileLines = mobileRulesText.split(/\r?\n/).filter(line => line.trim() && !line.startsWith('#')).length;
 
         log('Redirect rules compiled', {
-            desktop: {
-                total: totalDesktopLines,
-                compiled: desktopRules.length
-            },
-            mobile: {
-                total: totalMobileLines,
-                compiled: mobileRules.length
-            }
+            desktop: desktopRules.length,
+            mobile: mobileRules.length,
+            totalDesktopLines,
+            totalMobileLines
         });
-
-        state.desktopRedirectRules = desktopRules;
-        state.mobileRedirectRules = mobileRules;
-
     } catch (e) {
         console.error('[FD] Failed to compile redirect rules:', e);
     }
@@ -117,17 +125,21 @@ async function updateRules(data) {
 async function updateLists(data) {
     try {
         const d = data || await browser.storage.local.get(['denylistText', 'allowlistText']);
-        denylistTrie.reset();
-        denylistTrieRoot = denylistTrie.createTrie();
-        const denylist = normalizeList(d.denylistText);
-        for (const host of denylist) {
-            denylistTrie.setNeedle(host).add(denylistTrieRoot);
+        const denyText = d.denylistText || '';
+        const allowText = d.allowlistText || '';
+        if (denyText !== _prevDenyText) {
+            denylistTrie.reset();
+            denylistTrieRoot = denylistTrie.createTrie();
+            for (const host of normalizeList(denyText))
+                denylistTrie.setNeedle(host).add(denylistTrieRoot);
+            _prevDenyText = denyText;
         }
-        allowlistTrie.reset();
-        allowlistTrieRoot = allowlistTrie.createTrie();
-        const allowlist = normalizeList(d.allowlistText);
-        for (const host of allowlist) {
-            allowlistTrie.setNeedle(host).add(allowlistTrieRoot);
+        if (allowText !== _prevAllowText) {
+            allowlistTrie.reset();
+            allowlistTrieRoot = allowlistTrie.createTrie();
+            for (const host of normalizeList(allowText))
+                allowlistTrie.setNeedle(host).add(allowlistTrieRoot);
+            _prevAllowText = allowText;
         }
         log('Deny/Allow Tries updated');
     } catch (e) {
