@@ -12,36 +12,51 @@ let isListenersRegistered = false;
 function showAlertInPage(message) {
     if (document.getElementById('unfold-alerter-host'))
         return;
+
     const host = document.createElement('div');
     host.id = 'unfold-alerter-host';
     document.body.appendChild(host);
     const shadow = host.attachShadow({
         mode: 'open'
     });
+
     const style = document.createElement('style');
     style.textContent = `
-        .toast {
-            position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
-            padding: 12px 20px; background-color: rgba(0, 0, 0, 0.8);
-            color: white; border-radius: 20px; font-family: sans-serif;
-            font-size: 14px; z-index: 2147483647; opacity: 0;
-            transition: opacity 0.3s ease-in-out, top 0.3s ease-in-out;
+        .banner {
+            position: fixed; top: 0; left: 0; width: 100%;
+            background-color: #FFA500;
+            color: white;
+            padding: 4px 0;
+            font-family: sans-serif; font-size: 13px; font-weight: 500;
+            z-index: 2147483647;
+            text-align: center;
+            opacity: 0;
+            transform: translateY(-100%);
+            transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
         }
     `;
-    const toast = document.createElement('div');
-    toast.className = 'toast';
-    toast.textContent = message;
+
+    const banner = document.createElement('div');
+    banner.className = 'banner';
+
+    const bannerText = document.createElement('span');
+    bannerText.className = 'banner-text';
+    bannerText.textContent = message;
+
+    banner.appendChild(bannerText);
     shadow.appendChild(style);
-    shadow.appendChild(toast);
+    shadow.appendChild(banner);
+
     requestAnimationFrame(() => {
-        toast.style.opacity = '1';
-        toast.style.top = '30px';
+        banner.style.opacity = '1';
+        banner.style.transform = 'translateY(0)';
     });
+
     setTimeout(() => {
-        toast.style.opacity = '0';
-        toast.style.top = '20px';
+        banner.style.opacity = '0';
+        banner.style.transform = 'translateY(-100%)';
         setTimeout(() => host.remove(), 300);
-    }, 3000);
+    }, 4000);
 }
 
 function isSafeToReload(tabId) {
