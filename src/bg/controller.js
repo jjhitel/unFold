@@ -68,7 +68,7 @@ async function updateCheckedRemoteRules() {
             if (!ruleData)
                 continue;
             const textKey = ruleMeta.kind === 'mobile' ? 'mobileRedirectRule' : 'desktopRedirectRule';
-            const dateKey = `${ruleMeta.id}::lastModified`;
+            const dateKey = util.getRuleLastModifiedKey(ruleMeta.id);
             await browser.storage.local.set({
                 [textKey]: ruleData.text,
                 [dateKey]: ruleData.lastModified

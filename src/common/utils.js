@@ -1,5 +1,6 @@
 'use strict';
 
+import { C } from './constants.js';
 const Utils = {};
 
 Utils.deepEqual = (a, b) => {
@@ -86,6 +87,7 @@ Utils.localizePage = () => {
 Utils.$ = (sel, root = document) => root.querySelector(sel);
 Utils.$$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
 Utils.$id = (id) => document.getElementById(id);
+Utils.getRuleLastModifiedKey = (id) => `${id}${C.KEY_RULE_LAST_MODIFIED_PREFIX}`;
 
 export {
     Utils as util

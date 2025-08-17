@@ -49,7 +49,7 @@ export async function getActiveHttpTab() {
         return {
             tab: t,
             url: t.url,
-            host: new URL(t.url).hostname
+            host: util.extractHostname(t.url)
         };
     } catch (e) {
         util.log('[FD] Failed to get active tab:', e);

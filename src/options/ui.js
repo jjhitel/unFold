@@ -206,7 +206,7 @@ export async function renderRemoteRulesTable() {
         tdType.textContent = (item.kind === 'mobile') ? 'Mobile' : 'Desktop';
 
         const tdUpd = tr.insertCell();
-        const lastModKey = `${item.id}::lastModified`;
+        const lastModKey = util.getRuleLastModifiedKey(item.id);
         const iso = storedData[lastModKey] || '';
         tdUpd.textContent = iso ? new Date(iso).toISOString().slice(0, 10) : 'N/A';
         tdUpd.title = iso;

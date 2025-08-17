@@ -21,7 +21,7 @@ export const C = {
     KEY_REMOTE_LAST_UPDATED: 'remoteRulesLastUpdated',
     KEY_ZOOM_LEVEL: 'zoomLevel',
 
-    KEY_RULE_LAST_MODIFIED: (id) => `${id}::lastModified`,
+    KEY_RULE_LAST_MODIFIED_PREFIX: '::lastModified',
 
     DEFAULT_MODE: 'autoDeny',
     DEFAULT_THRESHOLD: 600,
