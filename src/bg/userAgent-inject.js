@@ -62,12 +62,12 @@ export async function onBeforeSendHeaders(details) {
     setOrAddUAHeader(headers, state.desktopUA);
     try {
         if (details.type === 'main_frame' && details.frameId === 0 && tabId !== browser.tabs.TAB_ID_NONE) {
-            void browser.tabs.executeScript(tabId, {
+            browser.tabs.executeScript(tabId, {
                 allFrames: true,
                 runAt: 'document_start',
                 matchAboutBlank: true,
                 code: generateContentScript(state.desktopUA)
-            });
+            }).catch(() => {});
         }
     } catch (e) {}
     return {
