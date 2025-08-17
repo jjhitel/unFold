@@ -4,27 +4,130 @@
  */
 'use strict';
 
+function isSafeRegex(body) {
+    if (!body)
+        return false;
+    if (body.length > 512)
+        return false;
+    const danger = /(\(.{0,50}\)\+){3,}|(\.\*){2,}|\(\?[<!=]/;
+    return !danger.test(body);
+
+}
+
 function parseRegexLine(line) {
-    const s = String(line || '').trim();
-    if (!s || s.startsWith('#'))
+    const raw = (line ?? "").trim();
+    if (!raw)
+        return null;
+    if (/^(#|\/\/|;)/.test(raw))
         return null;
 
-    let match = s.match(/^\[?\s*\/(.+)\/([a-z]*)\s*,\s*["'](.+)["']\s*\]?$/i);
-    if (!match) {
-        match = s.match(/^\/(.+)\/([a-z]*)\s*->\s*(.+)$/i);
-    }
-    if (!match)
-        return null;
+    const unquote = (s) => {
+        if (!s)
+            return "";
+        const q = s[0];
+        if ((q === '"' || q === "'" || q === "`") && s[s.length - 1] === q) {
+            s = s.slice(1, -1);
+        }
+        return s
+        .replace(/\\n/g, "\n")
+        .replace(/\\r/g, "\r")
+        .replace(/\\t/g, "\t")
+        .replace(/\\"/g, '"')
+        .replace(/\\'/g, "'")
+        .replace(/\\\\/g, "\\");
+    };
 
-    try {
-        return {
-            re: new RegExp(match[1], match[2] || ''),
-            to: match[3]
-        };
-    } catch (e) {
-        console.error(`[FD] Failed to compile rule: ${line}`, e);
-        return null;
+    const safeCheck =
+        typeof isSafeRegex === "function"
+         ? isSafeRegex
+         : (body) => {
+        if (/^\^?https?:\\\/\\\//.test(body))
+            return true;
+        if (!body)
+            return false;
+        if (body.length > 1024)
+            return false;
+        const danger = /\([^)]+[+*]\)\s*[+*]{1,}/;
+        return !danger.test(body);
+    };
+
+    const escapeRegex = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+    let m = raw.match(
+            /^\/((?:\\.|[^/])*)\/([a-z]*)\s*,\s*("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')\s*$/i);
+    if (m) {
+        const body = m[1];
+        const flags = m[2] || "";
+        const to = unquote(m[3]);
+        if (!safeCheck(body))
+            return null;
+        try {
+            const re = new RegExp(body, flags);
+            return {
+                re,
+                to
+            };
+        } catch {
+            return null;
+        }
     }
+
+    m = raw.match(/^\/((?:\\.|[^/])*)\/([a-z]*)\s*(?:->|=>|→)\s*(.*)$/i);
+    if (m) {
+        const body = m[1];
+        const flags = m[2] || "";
+        const to = m[3] ?? "";
+        if (!safeCheck(body))
+            return null;
+        try {
+            const re = new RegExp(body, flags);
+            return {
+                re,
+                to
+            };
+        } catch {
+            return null;
+        }
+    }
+
+    m = raw.match(/^(.*?)\s*(?:->|=>|→)\s*(.*)$/);
+    if (m) {
+        const from = m[1].trim();
+        const to = m[2] ?? "";
+        if (!from)
+            return null;
+        const body = escapeRegex(from);
+        if (!safeCheck(body))
+            return null;
+        try {
+            const re = new RegExp(body);
+            return {
+                re,
+                to
+            };
+        } catch {
+            return null;
+        }
+    }
+
+    m = raw.match(/^\/((?:\\.|[^/])*)\/([a-z]*)$/i);
+    if (m) {
+        const body = m[1];
+        const flags = m[2] || "";
+        if (!safeCheck(body))
+            return null;
+        try {
+            const re = new RegExp(body, flags);
+            return {
+                re,
+                to: ""
+            };
+        } catch {
+            return null;
+        }
+    }
+
+    return null;
 }
 
 export function compileRules(text) {
