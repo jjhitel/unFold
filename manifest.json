@@ -16,7 +16,7 @@
     ],
     "background": {
         "page": "src/bg/background.html",
-        "persistent": true
+        "persistent": false
     },
     "icons": {
         "96": "res/icons/icon96.png"
