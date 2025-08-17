@@ -83,9 +83,6 @@
     "options_thresholdDesc": {
         "message": "기본값은 갤럭시 폴드 시리즈에 최적화되어 있습니다."
     },
-    "options_saveSettings": {
-        "message": "설정 저장"
-    },
     "options_tab_main": {
         "message": "메인"
     },

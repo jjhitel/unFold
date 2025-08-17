@@ -83,9 +83,6 @@
     "options_thresholdDesc": {
         "message": "The standard for determining the folded state. The default value is optimized for the Galaxy Fold series."
     },
-    "options_saveSettings": {
-        "message": "Save Settings"
-    },
     "options_tab_main": {
         "message": "Main"
     },

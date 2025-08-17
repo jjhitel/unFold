@@ -52,31 +52,14 @@ export async function loadSettings() {
 export async function saveSingleSetting(key, value) {
     if (typeof key !== 'string')
         return;
+
+    if (typeof DEFAULTS[key] === 'number') {
+        value = Number(value) || DEFAULTS[key];
+    }
+
     await uiStore.set({
         [key]: value
     });
-    browser.runtime.sendMessage({
-        type: C.MSG_SETTINGS_UPDATE
-    }).catch(() => {});
-    showSaved('status');
-};
-
-export async function saveSettings() {
-    const val = {};
-    for (const key in DEFAULTS) {
-        const elId = ID_MAP[key] || key;
-        const el = $id(elId);
-        if (!el)
-            continue;
-        if (el.type === 'checkbox') {
-            val[key] = el.checked;
-        } else if (el.type === 'number') {
-            val[key] = Number(el.value) || DEFAULTS[key];
-        } else {
-            val[key] = el.value;
-        }
-    }
-    await uiStore.set(val);
     browser.runtime.sendMessage({
         type: C.MSG_SETTINGS_UPDATE
     }).catch(() => {});

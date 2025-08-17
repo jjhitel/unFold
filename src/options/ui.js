@@ -61,29 +61,29 @@ function checkPlatformCompatibility() {
 }
 
 export function initUIBindings() {
-    $id('save')?.addEventListener('click', saveSettings);
+    $id('btn-url-save')?.addEventListener('click', saveUrlRules);
+    $id('save-denylist')?.addEventListener('click', saveDenylist);
+    $id('save-allowlist')?.addEventListener('click', saveAllowlist);
+
+    $id('mode')?.addEventListener('change', (e) => {
+        saveSingleSetting('mode', e.target.value);
+        updateModeDescription();
+        refreshTabVisibility(e.target.value);
+    });
     $id('autoRefresh')?.addEventListener('change', (e) => saveSingleSetting('autoRefresh', e.target.checked));
     $id('urlRedirect')?.addEventListener('change', (e) => saveSingleSetting('urlRedirect', e.target.checked));
     $id('debugMode')?.addEventListener('change', (e) => saveSingleSetting('debugMode', e.target.checked));
-    $id('autoUpdatePeriod')?.addEventListener('change', (e) => saveSingleSetting('autoUpdatePeriod', Number(e.target.value)));
+    $id('ua')?.addEventListener('change', (e) => saveSingleSetting('desktopUA', e.target.value));
+    $id('threshold')?.addEventListener('change', (e) => saveSingleSetting('threshold', Number(e.target.value)));
     $id('zoomLevel')?.addEventListener('change', (e) => saveSingleSetting('zoomLevel', Number(e.target.value)));
+    $id('autoUpdatePeriod')?.addEventListener('change', (e) => saveSingleSetting('autoUpdatePeriod', Number(e.target.value)));
+
     $id('resetUA')?.addEventListener('click', () => {
         $id('ua').value = DEFAULTS.desktopUA;
     });
     $id('resetThreshold')?.addEventListener('click', () => {
         $id('threshold').value = String(DEFAULTS.threshold);
     });
-    $id('btn-url-save')?.addEventListener('click', saveUrlRules);
-    $id('save-denylist')?.addEventListener('click', saveDenylist);
-    $id('save-allowlist')?.addEventListener('click', saveAllowlist);
-
-    const modeDropdown = $id('mode');
-    if (modeDropdown) {
-        modeDropdown.addEventListener('change', () => {
-            updateModeDescription();
-            refreshTabVisibility(modeDropdown.value);
-        });
-    }
 
     updateModeDescription();
     displayLastUpdated();
