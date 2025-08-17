@@ -3,17 +3,17 @@ import { util } from './utils.js';
 import { uiStore } from './store.js';
 import { C } from './constants.js';
 
-export function showSaved(id) {
+export function showSaved(id, message, ms = 1500) {
     const el = util.$id(id);
     if (!el)
         return;
     const originalText = el.textContent;
 
-    el.textContent = browser.i18n.getMessage("options_savedStatus") || 'Saved.';
+    el.textContent = message || browser.i18n.getMessage("options_savedStatus") || 'Saved.';
     setTimeout(() => {
         if (el)
             el.textContent = originalText;
-    }, 1500);
+    }, ms);
 };
 
 export function setSmallStatus(id, msg, ms = 2000) {

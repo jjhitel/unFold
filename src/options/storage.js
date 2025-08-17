@@ -2,10 +2,13 @@
 import { uiStore } from '../common/store.js';
 import { C } from '../common/constants.js';
 import { util } from '../common/utils.js';
-import { showSaved } from '../common/ui-utils.js';
+import { showSaved, setSmallStatus } from '../common/ui-utils.js';
 import { refreshTabVisibility } from './ui.js';
 
 const $id = (id) => document.getElementById(id);
+
+const MAX_RULES_PER_TYPE = 500;
+const MAX_TOTAL_LENGTH = 15000;
 
 const ID_MAP = {
     [C.KEY_MODE]: 'mode',
@@ -71,10 +74,28 @@ async function saveAndShow(data, statusId) {
     showSaved(statusId);
 }
 
-export const saveUrlRules = () => saveAndShow({
-    [C.KEY_DESKTOP_RULES]: util.normalizeList($id('desktopRegexText').value).join('\n'),
-    [C.KEY_MOBILE_RULES]: util.normalizeList($id('mobileRegexText').value).join('\n')
-}, 'status-url');
+export const saveUrlRules = () => {
+    const desktopText = $id('desktopRegexText').value;
+    const mobileText = $id('mobileRegexText').value;
+
+    const desktopLines = desktopText.split(/\r?\n/);
+    const mobileLines = mobileText.split(/\r?\n/);
+
+    if (desktopLines.length > MAX_RULES_PER_TYPE || mobileLines.length > MAX_RULES_PER_TYPE) {
+        setSmallStatus('status-url', `Error: Rule count cannot exceed ${MAX_RULES_PER_TYPE} per type.`, 5000);
+        return;
+    }
+
+    if ((desktopText.length + mobileText.length) > MAX_TOTAL_LENGTH) {
+        setSmallStatus('status-url', `Error: Total rule length cannot exceed ${MAX_TOTAL_LENGTH} characters.`, 5000);
+        return;
+    }
+
+    saveAndShow({
+        [C.KEY_DESKTOP_RULES]: util.normalizeList(desktopText).join('\n'),
+        [C.KEY_MOBILE_RULES]: util.normalizeList(mobileText).join('\n')
+    }, 'status-url');
+};
 
 export const saveDenylist = () => saveAndShow({
     [C.KEY_DENYLIST]: util.normalizeList($id('denylistText').value).join('\n')

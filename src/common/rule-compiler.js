@@ -7,9 +7,9 @@
 function isSafeRegex(body) {
     if (!body)
         return false;
-    if (body.length > 512)
+    if (body.length > 256)
         return false;
-    const danger = /(\(.{0,50}\)\+){3,}|(\.\*){2,}|\(\?[<!=]/;
+    const danger = /(\(.{0,50}\)\+){3,}|(\.\*){2,}|\(\?[<!=]|\([^)]+\*[^)]*\)/;
     return !danger.test(body);
 
 }
