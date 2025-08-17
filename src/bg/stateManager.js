@@ -283,6 +283,34 @@ export async function initialize() {
     await refreshAllSettings();
 }
 
+export function getTargetHostPatterns() {
+    const hosts = new Set();
+
+    const addHostsFromString = (text) => {
+        if (!text)
+            return;
+        for (const host of normalizeList(text)) {
+            hosts.add(host);
+        }
+    };
+
+    addHostsFromString(_prevDenyText);
+    addHostsFromString(_prevAllowText);
+
+    if (hosts.size === 0) {
+        return ["<all_urls>"];
+    }
+
+    const patterns = [];
+    for (const host of hosts) {
+        const domain = host.startsWith('*.') ? host.substring(2) : host;
+        patterns.push(`*://${domain}/*`);
+        patterns.push(`*://*.${domain}/*`);
+    }
+
+    return [...new Set(patterns)];
+}
+
 const handleStorageChange = debounce((changes, area) => {
     if (area !== 'local')
         return;

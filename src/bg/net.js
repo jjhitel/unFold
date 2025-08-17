@@ -33,23 +33,24 @@ export async function onViewportMessage(msg, sender) {
     await updateBadge(tabId);
 }
 
-export function registerListeners() {
-    if (isListenersRegistered)
+export function registerListeners(urlPatterns) {
+    if (isListenersRegistered || !urlPatterns || urlPatterns.length === 0)
         return;
+
     browser.webRequest.onBeforeSendHeaders.addListener(
         onBeforeSendHeaders, {
-        urls: ["http://*/*", "https://*/*"],
+        urls: urlPatterns,
         types: ["main_frame", "sub_frame", "xmlhttprequest"]
     },
         ["blocking", "requestHeaders"]);
     browser.webRequest.onBeforeRequest.addListener(
         onBeforeRequest, {
-        urls: ["http://*/*", "https://*/*"],
+        urls: urlPatterns,
         types: ["main_frame", "sub_frame"]
     },
         ["blocking"]);
     isListenersRegistered = true;
-    log('Web request listeners registered');
+    log('Web request listeners registered for patterns:', urlPatterns);
 }
 
 export function unregisterListeners() {
