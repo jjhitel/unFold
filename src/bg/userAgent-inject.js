@@ -80,16 +80,6 @@ export async function onBeforeSendHeaders(details) {
     }
     try {
         if (details.type === 'main_frame' && details.frameId === 0 && tabId !== browser.tabs.TAB_ID_NONE) {
-            browser.tabs.executeScript(tabId, {
-                allFrames: true,
-                runAt: 'document_start',
-                matchAboutBlank: true,
-                code: generateContentScript(state.desktopUA)
-            }).catch(() => {});
-        }
-    } catch (e) {}
-    try {
-        if (details.type === 'main_frame' && details.frameId === 0 && tabId !== browser.tabs.TAB_ID_NONE) {
             const scriptOptions = {
                 allFrames: !state.liteMode,
                 runAt: 'document_start',
