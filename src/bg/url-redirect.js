@@ -61,7 +61,10 @@ export async function onBeforeRequest(details) {
         try {
             if (!rule.re.test(url))
                 continue;
-            const to = url.replace(rule.re, rule.to);
+            const scheme = new URL(url).protocol.replace(':', '');
+            const to = url.replace(
+                    rule.re,
+                    String(rule.to || '').replace(/\{SCHEME\}/g, scheme));
             if (to && to !== url && shouldRedirect(tabId, url, to)) {
                 log('Redirecting', {
                     from: url,
