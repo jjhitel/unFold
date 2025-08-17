@@ -21,6 +21,30 @@ function normalize(u) {
 }
 
 function shouldRedirect(tabId, from, to) {
+    try {
+        const fromUrl = new URL(from);
+        const toUrl = new URL(to);
+
+        if (toUrl.protocol !== 'https:') {
+            log('Redirect blocked (non-HTTPS target)', {
+                from,
+                to
+            });
+            return false;
+        }
+
+        if (!toUrl.hostname.endsWith(fromUrl.hostname) && !fromUrl.hostname.endsWith(toUrl.hostname)) {
+            log('Redirect blocked (cross-origin target)', {
+                from,
+                to
+            });
+            return false;
+        }
+    } catch (e) {
+        log('Invalid URL for redirection safety check', e);
+        return false;
+    }
+
     from = normalize(from);
     to = normalize(to);
 
