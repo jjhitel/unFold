@@ -33,3 +33,7 @@ if (document.readyState === 'loading') {
 } else {
     boot();
 }
+
+window.addEventListener('focus', () => {
+    util.localizePage();
+});
