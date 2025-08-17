@@ -2,7 +2,7 @@
 import { util } from '../common/utils.js';
 import { uiStore } from '../common/store.js';
 import { C } from '../common/constants.js';
-import { getActiveHttpTab } from '../common/ui-utils.js';
+import { getActiveHttpTab, save as saveToStorage } from '../common/ui-utils.js';
 
 export async function setModeOn(on) {
     const cur = await uiStore.get(['mode', 'lastNonOffMode']);
@@ -11,14 +11,14 @@ export async function setModeOn(on) {
 
     if (on) {
         const newMode = (last === 'off') ? C.DEFAULT_MODE : last;
-        await popup.save({
+        await saveToStorage({
             mode: newMode,
             lastNonOffMode: newMode
         });
     } else {
         if (mode !== 'off')
             last = mode;
-        await popup.save({
+        await saveToStorage({
             mode: 'off',
             lastNonOffMode: last
         });
