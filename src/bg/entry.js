@@ -7,10 +7,20 @@ import { createUpdateAlarm, updateAllBadges } from './controller.js';
 
 const { log } = util;
 
+async function refreshListeners() {
+    unregisterListeners();
+    const state = StateManager.getState();
+    if (state.mode !== 'off') {
+        const patterns = getTargetHostPatterns();
+        registerListeners(patterns);
+    }
+}
+
 async function boot() {
     await initializeStateManager();
     await updateAllBadges();
     await createUpdateAlarm();
+    await refreshListeners();
 
     log('unFold background script booted.');
     const state = StateManager.getState();
@@ -20,16 +30,19 @@ async function boot() {
 }
 
 browser.storage.onChanged.addListener((changes, area) => {
-    if (area === 'local' && changes.mode) {
-        const mode = changes.mode.newValue;
-        const oldMode = changes.mode.oldValue;
-        if (mode === 'off' && oldMode !== 'off') {
-            unregisterListeners();
-        } else if (mode !== 'off' && oldMode === 'off') {
-            registerListeners();
-        }
+    if (area !== 'local')
+        return;
+
+    if (changes.mode) {
+        refreshListeners();
     }
-    if (area === 'local' && changes.autoUpdatePeriod) {
+
+    if (changes.denylistText || changes.allowlistText) {
+        log('Host list changed, refreshing listeners...');
+        refreshListeners();
+    }
+
+    if (changes.autoUpdatePeriod) {
         createUpdateAlarm();
     }
 });
