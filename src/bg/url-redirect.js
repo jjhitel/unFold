@@ -25,21 +25,30 @@ function shouldRedirect(tabId, from, to) {
         const fromUrl = new URL(from);
         const toUrl = new URL(to);
 
-        if (toUrl.protocol !== 'https:') {
-            log('Redirect blocked (non-HTTPS target)', {
+        if (fromUrl.protocol === 'https:' && toUrl.protocol === 'http:') {
+            log('Redirect blocked (HTTPS to HTTP downgrade)', {
                 from,
                 to
             });
             return false;
         }
 
-        if (!toUrl.hostname.endsWith(fromUrl.hostname) && !fromUrl.hostname.endsWith(toUrl.hostname)) {
+        const getMainDomain = (hostname) => {
+            const parts = hostname.split('.');
+            if (parts.length > 2 && parts[parts.length - 2].length <= 3) {
+                return parts.slice(-3).join('.');
+            }
+            return parts.slice(-2).join('.');
+        };
+
+        if (getMainDomain(fromUrl.hostname) !== getMainDomain(toUrl.hostname)) {
             log('Redirect blocked (cross-origin target)', {
                 from,
                 to
             });
             return false;
         }
+
     } catch (e) {
         log('Invalid URL for redirection safety check', e);
         return false;

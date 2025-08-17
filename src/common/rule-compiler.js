@@ -9,6 +9,11 @@ function isSafeRegex(body) {
         return false;
     if (body.length > 256)
         return false;
+
+    const captureGroups = body.match(/\((?!\?)/g) || [];
+    if (captureGroups.length > 8) {
+        return false;
+    }
     const danger = /(\(.{0,50}\)\+){3,}|(\.\*){2,}|\(\?[<!=]|\([^)]+\*[^)]*\)/;
     return !danger.test(body);
 
@@ -96,7 +101,10 @@ function parseRegexLine(line) {
         const to = m[2] ?? "";
         if (!from)
             return null;
-        const body = escapeRegex(from);
+
+        const escapedFrom = escapeRegex(from).replace(/^\\\*\\\./, '(?:www\\.)?');
+        const body = `^https?://${escapedFrom}`;
+
         if (!safeCheck(body))
             return null;
         try {
