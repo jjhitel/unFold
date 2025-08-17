@@ -181,67 +181,67 @@ function toBool(v, fallback = false) {
     return fallback;
 }
 
+function _determineEffectiveUA(s, dynamicUA) {
+    const rawUaDyn = s[C.KEY_UA_DYNAMIC];
+    let uaDynamic = toBool(rawUaDyn, C.DEFAULT_UA_DYNAMIC);
+    const storedUA = typeof s[C.KEY_DESKTOP_UA] === 'string' ? s[C.KEY_DESKTOP_UA].trim() : '';
+
+    const keyMissing = (rawUaDyn === undefined);
+    const hasCustomUA = !!storedUA && storedUA !== C.DEFAULT_DESKTOP_UA && storedUA !== dynamicUA.ua;
+
+    if (keyMissing && hasCustomUA) {
+        uaDynamic = false;
+    }
+
+    const desktopUA = (uaDynamic === false && hasCustomUA) ? storedUA : dynamicUA.ua;
+
+    return {
+        desktopUA,
+        uaDynamic,
+        storedUA,
+        hasCustomUA
+    };
+}
+
+async function _persistUAChanges(s, dynamicUA, determinedUA) {
+    const { uaDynamic, storedUA, hasCustomUA } = determinedUA;
+    const lastStoredVersion = s[C.KEY_LAST_BROWSER_VERSION];
+
+    if (uaDynamic) {
+        const needsPersist = (storedUA !== dynamicUA.ua) || (lastStoredVersion !== dynamicUA.version) || (s[C.KEY_UA_DYNAMIC] !== true);
+        if (needsPersist) {
+            await browser.storage.local.set({
+                [C.KEY_DESKTOP_UA]: dynamicUA.ua,
+                [C.KEY_UA_DYNAMIC]: true,
+                [C.KEY_LAST_BROWSER_VERSION]: dynamicUA.version
+            });
+        }
+    } else if (!hasCustomUA && storedUA) {
+        await browser.storage.local.set({
+            [C.KEY_UA_DYNAMIC]: false
+        });
+    }
+}
+
 async function refreshGeneralSettings(settings) {
     try {
         const s = settings || await browser.storage.local.get(null);
-        const { ua: dynamicUA, version: currentVersion } = await buildDynamicDesktopUA();
-        const defaults = {
-            [C.KEY_MODE]: C.DEFAULT_MODE,
-            [C.KEY_THRESHOLD]: C.DEFAULT_THRESHOLD,
-            [C.KEY_DESKTOP_UA]: dynamicUA,
-            [C.KEY_UA_DYNAMIC]: C.DEFAULT_UA_DYNAMIC,
-            [C.KEY_LAST_BROWSER_VERSION]: currentVersion,
-            [C.KEY_AUTO_REFRESH]: C.DEFAULT_AUTO_REFRESH,
-            [C.KEY_URL_REDIRECT]: C.DEFAULT_URL_REDIRECT,
-            [C.KEY_DEBUG_MODE]: C.DEFAULT_DEBUG_MODE,
-            [C.KEY_AUTO_UPDATE_PERIOD]: C.DEFAULT_AUTO_UPDATE_PERIOD,
-            [C.KEY_ZOOM_LEVEL]: C.DEFAULT_ZOOM_LEVEL,
-        };
-        const rawUaDyn = s[C.KEY_UA_DYNAMIC];
-        let uaDynamic = toBool(rawUaDyn, C.DEFAULT_UA_DYNAMIC);
-        const storedUA = typeof s[C.KEY_DESKTOP_UA] === 'string' ? s[C.KEY_DESKTOP_UA].trim() : '';
+        const dynamicUA = await buildDynamicDesktopUA();
 
-        const keyMissing = (rawUaDyn === undefined);
-        const hasCustomUA =
-            !!storedUA &&
-            storedUA !== C.DEFAULT_DESKTOP_UA &&
-            storedUA !== dynamicUA;
-        if (keyMissing && hasCustomUA) {
-            uaDynamic = false;
-        }
+        const determinedUA = _determineEffectiveUA(s, dynamicUA);
+        state.desktopUA = determinedUA.desktopUA;
+        state.uaDynamic = determinedUA.uaDynamic;
+        state.runtimeUA = dynamicUA.ua;
 
-        state.uaDynamic = uaDynamic;
-        state.runtimeUA = dynamicUA;
-        state.mode = s[C.KEY_MODE] ?? defaults[C.KEY_MODE];
-        state.threshold = s[C.KEY_THRESHOLD] ?? defaults[C.KEY_THRESHOLD];
-        if (uaDynamic === false && hasCustomUA) {
-            state.desktopUA = storedUA;
-        } else {
-            state.desktopUA = dynamicUA;
-        }
-        state.debugMode = s[C.KEY_DEBUG_MODE] ?? defaults[C.KEY_DEBUG_MODE];
-        state.autoRefresh = s[C.KEY_AUTO_REFRESH] ?? defaults[C.KEY_AUTO_REFRESH];
-        state.urlRedirect = s[C.KEY_URL_REDIRECT] ?? defaults[C.KEY_URL_REDIRECT];
-        state.autoUpdatePeriod = s[C.KEY_AUTO_UPDATE_PERIOD] ?? defaults[C.KEY_AUTO_UPDATE_PERIOD];
-        state.zoomLevel = s[C.KEY_ZOOM_LEVEL] ?? defaults[C.KEY_ZOOM_LEVEL];
+        state.mode = s[C.KEY_MODE] ?? C.DEFAULT_MODE;
+        state.threshold = s[C.KEY_THRESHOLD] ?? C.DEFAULT_THRESHOLD;
+        state.debugMode = s[C.KEY_DEBUG_MODE] ?? C.DEFAULT_DEBUG_MODE;
+        state.autoRefresh = s[C.KEY_AUTO_REFRESH] ?? C.DEFAULT_AUTO_REFRESH;
+        state.urlRedirect = s[C.KEY_URL_REDIRECT] ?? C.DEFAULT_URL_REDIRECT;
+        state.autoUpdatePeriod = s[C.KEY_AUTO_UPDATE_PERIOD] ?? C.DEFAULT_AUTO_UPDATE_PERIOD;
+        state.zoomLevel = s[C.KEY_ZOOM_LEVEL] ?? C.DEFAULT_ZOOM_LEVEL;
 
-        const last = s[C.KEY_LAST_BROWSER_VERSION];
-        if (uaDynamic) {
-            const needPersistDynamic = (storedUA !== dynamicUA) || (last !== currentVersion) || (rawUaDyn !== true);
-            if (needPersistDynamic) {
-                await browser.storage.local.set({
-                    [C.KEY_DESKTOP_UA]: dynamicUA,
-                    [C.KEY_UA_DYNAMIC]: true,
-                    [C.KEY_LAST_BROWSER_VERSION]: currentVersion
-                });
-            }
-        } else {
-            if (!hasCustomUA && storedUA) {
-                await browser.storage.local.set({
-                    [C.KEY_UA_DYNAMIC]: false
-                });
-            }
-        }
+        await _persistUAChanges(s, dynamicUA, determinedUA);
 
         if (state.threshold !== s[C.KEY_THRESHOLD]) {
             await browser.storage.local.set({
@@ -254,10 +254,12 @@ async function refreshGeneralSettings(settings) {
         log('General settings refreshed (UA mode:', state.uaDynamic ? 'dynamic' : 'static', ')', {
             desktopUA: state.desktopUA
         });
+
     } catch (e) {
         console.error('[FD] Failed to refresh general settings:', e);
     }
 }
+
 async function refreshAllSettings() {
     const [settings, lists, rules] = await Promise.all([
                 browser.storage.local.get(null),
