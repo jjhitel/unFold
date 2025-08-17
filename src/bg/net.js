@@ -99,7 +99,7 @@ export function registerListeners(urlPatterns) {
     browser.webRequest.onBeforeSendHeaders.addListener(
         onBeforeSendHeaders, {
         urls: urlPatterns,
-        types: ["main_frame", "sub_frame", "xmlhttprequest"]
+        types: headerListenerTypes
     },
         ["blocking", "requestHeaders"]);
     browser.webRequest.onBeforeRequest.addListener(
