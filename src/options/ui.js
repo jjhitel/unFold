@@ -119,6 +119,7 @@ export function initUIBindings() {
     bindCheckbox('autoRefresh', 'autoRefresh');
     bindCheckbox('urlRedirect', 'urlRedirect');
     bindCheckbox('debugMode', 'debugMode');
+    bindCheckbox('liteMode', 'liteMode');
 
     const uaInput = $id('ua');
     if (uaInput) {

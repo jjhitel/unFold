@@ -88,6 +88,18 @@ export async function onBeforeSendHeaders(details) {
             }).catch(() => {});
         }
     } catch (e) {}
+    try {
+        if (details.type === 'main_frame' && details.frameId === 0 && tabId !== browser.tabs.TAB_ID_NONE) {
+            const scriptOptions = {
+                allFrames: !state.liteMode,
+                runAt: 'document_start',
+                matchAboutBlank: !state.liteMode,
+                code: generateContentScript(state.desktopUA)
+            };
+
+            browser.tabs.executeScript(tabId, scriptOptions).catch(() => {});
+        }
+    } catch (e) {}
     return {
         requestHeaders: headers
     };

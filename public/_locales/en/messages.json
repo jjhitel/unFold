@@ -229,5 +229,8 @@
     },
     "options_zoomLevel": {
         "message": "Page Zoom Level (%)"
+    },
+    "options_liteMode": {
+        "message": "Lite Mode"
     }
 }

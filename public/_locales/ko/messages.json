@@ -229,5 +229,8 @@
     },
     "options_zoomLevel": {
         "message": "페이지 확대 배율 (%)"
+    },
+    "options_liteMode": {
+        "message": "라이트 모드"
     }
 }

@@ -24,6 +24,7 @@ const state = {
     debugMode: C.DEFAULT_DEBUG_MODE,
     autoUpdatePeriod: C.DEFAULT_AUTO_UPDATE_PERIOD,
     zoomLevel: C.DEFAULT_ZOOM_LEVEL,
+    liteMode: C.DEFAULT_LITE_MODE,
     desktopRedirectRules: [],
     mobileRedirectRules: [],
     isWideByTab: new Map(),
@@ -269,6 +270,7 @@ export async function refreshGeneralSettings(settings) {
         state.urlRedirect = s[C.KEY_URL_REDIRECT] ?? C.DEFAULT_URL_REDIRECT;
         state.autoUpdatePeriod = s[C.KEY_AUTO_UPDATE_PERIOD] ?? C.DEFAULT_AUTO_UPDATE_PERIOD;
         state.zoomLevel = s[C.KEY_ZOOM_LEVEL] ?? C.DEFAULT_ZOOM_LEVEL;
+        state.liteMode = s[C.KEY_LITE_MODE] ?? C.DEFAULT_LITE_MODE;
 
         await _persistUAChanges(s, dynamicUA, determinedUA);
 
