@@ -90,12 +90,26 @@ async function updateRules(data) {
         const g = data || await browser.storage.local.get(['desktopRegexText', 'mobileRegexText', 'desktopRedirectRule', 'mobileRedirectRule']);
         const desktopRulesText = (g.desktopRegexText || '') + '\n' + (g.desktopRedirectRule || '');
         const mobileRulesText = (g.mobileRegexText || '') + '\n' + (g.mobileRedirectRule || '');
-        state.desktopRedirectRules = compileRules(desktopRulesText);
-        state.mobileRedirectRules = compileRules(mobileRulesText);
+        const desktopRules = compileRules(desktopRulesText);
+        const mobileRules = compileRules(mobileRulesText);
+
+        const totalDesktopLines = desktopRulesText.split(/\r?\n/).filter(line => line.trim() && !line.startsWith('#')).length;
+        const totalMobileLines = mobileRulesText.split(/\r?\n/).filter(line => line.trim() && !line.startsWith('#')).length;
+
         log('Redirect rules compiled', {
-            desktop: state.desktopRedirectRules.length,
-            mobile: state.mobileRedirectRules.length
+            desktop: {
+                total: totalDesktopLines,
+                compiled: desktopRules.length
+            },
+            mobile: {
+                total: totalMobileLines,
+                compiled: mobileRules.length
+            }
         });
+
+        state.desktopRedirectRules = desktopRules;
+        state.mobileRedirectRules = mobileRules;
+
     } catch (e) {
         console.error('[FD] Failed to compile redirect rules:', e);
     }

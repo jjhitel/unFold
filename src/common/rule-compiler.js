@@ -22,6 +22,7 @@ function parseRegexLine(line) {
             to: match[3]
         };
     } catch (e) {
+        console.error(`[FD] Failed to compile rule: ${line}`, e);
         return null;
     }
 }
