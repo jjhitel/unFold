@@ -151,7 +151,9 @@ browser.tabs.onActivated.addListener(async({
     await StateManager.loadInitialTabState(tabId);
     await updateBadge(tabId);
     try {
-        const tab = await browser.tabs.get(tabId);
+        const tab = await browser.tabs.get(tabId).catch(() => null);
+        if (!tab)
+            return;
         if (tab && tab.url && tab.url.startsWith('http')) {
             await browser.tabs.sendMessage(tabId, {
                 type: C.MSG_VIEWPORT_CHECK
