@@ -13,7 +13,8 @@
         "webRequestBlocking",
         "webNavigation",
         "sessions",
-        "alarms"
+        "alarms",
+        "scripting"
     ],
     "background": {
         "page": "src/bg/background.html",
