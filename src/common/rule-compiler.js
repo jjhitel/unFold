@@ -14,7 +14,7 @@ function isSafeRegex(body) {
     if (captureGroups.length > 8) {
         return false;
     }
-    const danger = /(\(.{0,50}\)\+){3,}|(\.\*){2,}|\(\?[<!=]|\([^)]+\*[^)]*\)/;
+    const danger = /(\(.{0,50}\)\+){3,}|(\.\*){2,}|\(\?[<!=]/;
     return !danger.test(body);
 
 }
