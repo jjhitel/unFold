@@ -73,6 +73,11 @@ export async function onBeforeSendHeaders(details) {
         return {};
     const headers = details.requestHeaders || [];
     setOrAddUAHeader(headers, state.desktopUA);
+    if (state.debugMode) {
+        try {
+            console.debug('[FD] UA applied:', state.desktopUA);
+        } catch {}
+    }
     try {
         if (details.type === 'main_frame' && details.frameId === 0 && tabId !== browser.tabs.TAB_ID_NONE) {
             browser.tabs.executeScript(tabId, {
