@@ -4,7 +4,7 @@ import { compileRules } from '../common/rule-compiler.js';
 import { C } from '../common/constants.js';
 import { HNTrieContainer } from '../common/hntrie.js';
 
-const { log, normalizeList, debounce, deepEqual } = util;
+const { log, normalizeList, debounce } = util;
 let _prevDenyText = null, _prevAllowText = null;
 let _prevDesktopRulesText = null, _prevMobileRulesText = null;
 
@@ -30,6 +30,35 @@ const state = {
     stickyMobileByTab: new Map(),
     lastKnownWide: undefined,
 };
+
+export async function getTargetHostPatterns() {
+    const { denylistText = '', allowlistText = '' } = await browser.storage.local.get(['denylistText', 'allowlistText']);
+    const hosts = new Set();
+
+    const addHostsFromString = (text) => {
+        if (!text)
+            return;
+        for (const host of normalizeList(text)) {
+            hosts.add(host);
+        }
+    };
+
+    addHostsFromString(denylistText);
+    addHostsFromString(allowlistText);
+
+    if (hosts.size === 0) {
+        return ["<all_urls>"];
+    }
+
+    const patterns = [];
+    for (const host of hosts) {
+        const domain = host.startsWith('*.') ? host.substring(1) : host;
+        patterns.push(`*://${domain}/*`);
+        patterns.push(`*://*.${domain}/*`);
+    }
+
+    return [...new Set(patterns)];
+}
 
 export const StateManager = {
     getState: () => state,
@@ -90,7 +119,7 @@ export const StateManager = {
     },
 };
 
-async function updateRules(data) {
+export async function updateRules(data) {
     try {
         const g = data || await browser.storage.local.get(['desktopRegexText', 'mobileRegexText', 'desktopRedirectRule', 'mobileRedirectRule']);
         const desktopRulesText = ((g.desktopRegexText || '') + '\n' + (g.desktopRedirectRule || '')).trim();
@@ -123,24 +152,24 @@ async function updateRules(data) {
         console.error('[FD] Failed to compile redirect rules:', e);
     }
 }
-async function updateLists(data) {
+export async function updateLists(data) {
     try {
         const d = data || await browser.storage.local.get(['denylistText', 'allowlistText']);
         const denyText = d.denylistText || '';
         const allowText = d.allowlistText || '';
         if (denyText !== _prevDenyText) {
+            _prevDenyText = denyText;
             denylistTrie.reset();
             denylistTrieRoot = denylistTrie.createTrie();
             for (const host of normalizeList(denyText))
                 denylistTrie.setNeedle(host).add(denylistTrieRoot);
-            _prevDenyText = denyText;
         }
         if (allowText !== _prevAllowText) {
+            _prevAllowText = allowText;
             allowlistTrie.reset();
             allowlistTrieRoot = allowlistTrie.createTrie();
             for (const host of normalizeList(allowText))
                 allowlistTrie.setNeedle(host).add(allowlistTrieRoot);
-            _prevAllowText = allowText;
         }
         log('Deny/Allow Tries updated');
     } catch (e) {
@@ -223,7 +252,7 @@ async function _persistUAChanges(s, dynamicUA, determinedUA) {
     }
 }
 
-async function refreshGeneralSettings(settings) {
+export async function refreshGeneralSettings(settings) {
     try {
         const s = settings || await browser.storage.local.get(null);
         const dynamicUA = await buildDynamicDesktopUA();
@@ -259,16 +288,10 @@ async function refreshGeneralSettings(settings) {
         console.error('[FD] Failed to refresh general settings:', e);
     }
 }
-
 async function refreshAllSettings() {
-    const [settings, lists, rules] = await Promise.all([
-                browser.storage.local.get(null),
-                browser.storage.local.get(['denylistText', 'allowlistText']),
-                browser.storage.local.get(['desktopRegexText', 'mobileRegexText', 'desktopRedirectRule', 'mobileRedirectRule'])
-            ]);
-    await refreshGeneralSettings(settings);
-    await updateLists(lists);
-    await updateRules(rules);
+    await refreshGeneralSettings();
+    await updateLists();
+    await updateRules();
     log('All settings refreshed');
 }
 
@@ -282,69 +305,3 @@ async function normalizeThreshold(v) {
 export async function initialize() {
     await refreshAllSettings();
 }
-
-export function getTargetHostPatterns() {
-    const hosts = new Set();
-
-    const addHostsFromString = (text) => {
-        if (!text)
-            return;
-        for (const host of normalizeList(text)) {
-            hosts.add(host);
-        }
-    };
-
-    addHostsFromString(_prevDenyText);
-    addHostsFromString(_prevAllowText);
-
-    if (hosts.size === 0) {
-        return ["<all_urls>"];
-    }
-
-    const patterns = [];
-    for (const host of hosts) {
-        const domain = host.startsWith('*.') ? host.substring(2) : host;
-        patterns.push(`*://${domain}/*`);
-        patterns.push(`*://*.${domain}/*`);
-    }
-
-    return [...new Set(patterns)];
-}
-
-const handleStorageChange = debounce((changes, area) => {
-    if (area !== 'local')
-        return;
-
-    const listKeys = ['denylistText', 'allowlistText'];
-    const ruleKeys = ['desktopRegexText', 'mobileRegexText', 'desktopRedirectRule', 'mobileRedirectRule'];
-    const changedKeys = Object.keys(changes);
-
-    let settingsChanged = false;
-    let listsChanged = false;
-    let rulesChanged = false;
-
-    for (const key of changedKeys) {
-        if (listKeys.includes(key)) {
-            listsChanged = true;
-        } else if (ruleKeys.includes(key)) {
-            rulesChanged = true;
-        } else {
-            settingsChanged = true;
-        }
-    }
-
-    if (settingsChanged) {
-        if (globalThis.FD_ENV)
-            globalThis.FD_ENV.DEBUG = state.debugMode;
-        log('General settings updated selectively from storage change');
-        refreshGeneralSettings();
-    }
-    if (listsChanged) {
-        updateLists();
-    }
-    if (rulesChanged) {
-        updateRules();
-    }
-}, 250);
-
-browser.storage.onChanged.addListener(handleStorageChange);
