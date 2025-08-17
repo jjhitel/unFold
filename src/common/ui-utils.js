@@ -85,3 +85,42 @@ export async function save(obj) {
         util.log('[FD] Popup failed to save to storage:', e);
     }
 };
+
+async function saveSetting(key, value) {
+    try {
+        await uiStore.set({
+            [key]: value
+        });
+        await browser.runtime.sendMessage({
+            type: C.MSG_SETTINGS_UPDATE
+        });
+    } catch (e) {
+        util.log(`[FD] Failed to save setting ${key}:`, e);
+    }
+}
+
+export function bindCheckbox(elementId, settingKey) {
+    const el = util.$id(elementId);
+    if (el) {
+        el.addEventListener('change', (e) => saveSetting(settingKey, e.target.checked));
+    }
+}
+
+export function bindSelect(elementId, settingKey, callback) {
+    const el = util.$id(elementId);
+    if (el) {
+        el.addEventListener('change', (e) => {
+            saveSetting(settingKey, e.target.value);
+            if (callback)
+                callback(e.target.value);
+        });
+    }
+}
+
+export function bindTextInput(elementId, settingKey, debounceMs = 200) {
+    const el = util.$id(elementId);
+    if (el) {
+        const debouncedSave = util.debounce((value) => saveSetting(settingKey, value), debounceMs);
+        el.addEventListener('input', (e) => debouncedSave(e.target.value));
+    }
+}

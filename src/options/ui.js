@@ -1,6 +1,6 @@
 'use strict';
 import { saveSingleSetting, saveUrlRules, saveDenylist, saveAllowlist, loadRemoteCatalog, loadRemoteSelections, toggleRemoteRule } from './storage.js';
-import { setSmallStatus } from '../common/ui-utils.js';
+import { setSmallStatus, bindCheckbox, bindSelect, bindTextInput } from '../common/ui-utils.js';
 import { activateTab } from './tabs.js';
 import { util } from '../common/utils.js';
 import { uiStore } from '../common/store.js';
@@ -112,29 +112,31 @@ export function initUIBindings() {
     $id('save-denylist')?.addEventListener('click', saveDenylist);
     $id('save-allowlist')?.addEventListener('click', saveAllowlist);
 
-    $id('mode')?.addEventListener('change', (e) => {
-        saveSingleSetting('mode', e.target.value);
+    bindSelect('mode', 'mode', (value) => {
         updateModeDescription();
-        refreshTabVisibility(e.target.value);
+        refreshTabVisibility(value);
     });
-    $id('autoRefresh')?.addEventListener('change', (e) => saveSingleSetting('autoRefresh', e.target.checked));
-    $id('urlRedirect')?.addEventListener('change', (e) => saveSingleSetting('urlRedirect', e.target.checked));
-    $id('debugMode')?.addEventListener('change', (e) => saveSingleSetting('debugMode', e.target.checked));
-    $id('ua')?.addEventListener('change', async(e) => {
-        const val = String(e.target.value || '');
-        saveSingleSetting('desktopUA', val);
-        try {
-            await browser.storage.local.set({
+    bindCheckbox('autoRefresh', 'autoRefresh');
+    bindCheckbox('urlRedirect', 'urlRedirect');
+    bindCheckbox('debugMode', 'debugMode');
+
+    const uaInput = $id('ua');
+    if (uaInput) {
+        const debouncedSave = util.debounce(async(value) => {
+            await uiStore.set({
+                desktopUA: value,
                 uaDynamic: false
             });
-        } catch {}
-    });
-    $id('threshold')?.addEventListener('change', debounce(async(e) => {
-            const v = Number(e.target.value);
-            await saveSingleSetting('threshold', Number.isFinite(v) ? v : Number(C.DEFAULT_THRESHOLD));
-        }, 200));
-    $id('zoomLevel')?.addEventListener('change', (e) => saveSingleSetting('zoomLevel', Number(e.target.value)));
-    $id('autoUpdatePeriod')?.addEventListener('change', (e) => saveSingleSetting('autoUpdatePeriod', Number(e.target.value)));
+            browser.runtime.sendMessage({
+                type: C.MSG_SETTINGS_UPDATE
+            }).catch(() => {});
+        }, 300);
+        uaInput.addEventListener('input', (e) => debouncedSave(e.target.value));
+    }
+
+    bindTextInput('threshold', 'threshold', 300);
+    bindTextInput('zoomLevel', 'zoomLevel', 300);
+    bindSelect('autoUpdatePeriod', 'autoUpdatePeriod');
 
     $id('resetUA')?.addEventListener('click', async() => {
         try {
@@ -168,7 +170,12 @@ export function initUIBindings() {
         el.addEventListener('click', async() => {
             const def = Number(C.DEFAULT_THRESHOLD);
             $id('threshold').value = String(def);
-            await saveSingleSetting('threshold', def);
+            await uiStore.set({
+                threshold: def
+            });
+            browser.runtime.sendMessage({
+                type: C.MSG_SETTINGS_UPDATE
+            }).catch(() => {});
         });
     };
     bindResetThreshold('resetThreshold');
