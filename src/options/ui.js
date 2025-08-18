@@ -1,6 +1,6 @@
 'use strict';
-import { uiStore, saveSingleSetting, saveUrlRules, saveDenylist, saveAllowlist, loadRemoteCatalog, loadRemoteSelections, toggleRemoteRule } from '../common/storage.js';
-import { setSmallStatus, bindCheckbox, bindSelect, bindTextInput } from '../common/ui-utils.js';
+import { uiStore, saveUrlRules, saveDenylist, saveAllowlist, loadRemoteCatalog, loadRemoteSelections, toggleRemoteRule } from '../common/storage.js';
+import { setSmallStatus, bindCheckbox, bindSelect, bindTextInput, showSaved } from '../common/ui-utils.js';
 import { activateTab } from './tabs.js';
 import { util } from '../common/utils.js';
 import { C } from '../common/constants.js';

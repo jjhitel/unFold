@@ -104,6 +104,17 @@ async function saveSetting(key, value) {
     }
 }
 
+export function bindSwitch(elId, storageKey, onSave) {
+    const el = util.$id(elId);
+    if (!el)
+        return;
+
+    el.addEventListener('click', async() => {
+        const willOn = !el.classList.contains('on');
+        await(onSave ? onSave(willOn) : saveSetting(storageKey, willOn));
+    });
+}
+
 export function bindCheckbox(elementId, settingKey) {
     const el = util.$id(elementId);
     if (el) {

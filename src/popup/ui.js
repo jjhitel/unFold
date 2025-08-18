@@ -32,19 +32,6 @@ function updateListButtonsVisibility(mode) {
     actionRow.classList.toggle('settings-only', !isListButtonVisible);
 }
 
-function bindSwitch(elId, storageKey, onSave) {
-    const el = $id(elId);
-    if (!el)
-        return;
-
-    el.addEventListener('click', async() => {
-        const willOn = !el.classList.contains('on');
-        await(onSave ? onSave(willOn) : uiStore.set({
-                [storageKey]: willOn
-            }));
-    });
-}
-
 async function initListButtons() {
     const btnDeny = $id('btnDeny');
     const btnAllow = $id('btnAllow');
@@ -109,9 +96,9 @@ function bindStorageMirror() {
 export async function initPopupUI() {
     util.localizePage();
 
-    bindSwitch('switch', null, (willOn) => storage.setModeOn(willOn));
-    bindSwitch('toggle-autoRefresh', 'autoRefresh');
-    bindSwitch('toggle-urlRedirect', 'urlRedirect');
+    uiUtils.bindSwitch('switch', null, (willOn) => storage.setModeOn(willOn));
+    uiUtils.bindSwitch('toggle-autoRefresh', 'autoRefresh');
+    uiUtils.bindSwitch('toggle-urlRedirect', 'urlRedirect');
 
     const btnOptions = $id('btnOptions');
     if (btnOptions) {
