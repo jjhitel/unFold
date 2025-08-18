@@ -9,6 +9,8 @@ const REDIRECT_LIMIT = {
     windowMs: 2000,
     maxRedirects: 5
 };
+const RULE_CACHE = new Map();
+const CACHE_SIZE = 1000;
 
 function etld1(urlString, {
     icannOnly = true
@@ -107,31 +109,63 @@ export async function onBeforeRequest(details) {
     if (!state.urlRedirect || state.mode === 'off' || !/^https?:/i.test(url)) {
         return {};
     }
+
+    const cacheKey = `${tabId}:${url}`;
+    if (RULE_CACHE.has(cacheKey)) {
+        const cachedResult = RULE_CACHE.get(cacheKey);
+        RULE_CACHE.delete(cacheKey);
+        RULE_CACHE.set(cacheKey, cachedResult);
+        if (cachedResult !== null) {
+            log('Redirect from cache:', {
+                from: url,
+                to: cachedResult
+            });
+            return {
+                redirectUrl: cachedResult
+            };
+        }
+        return {};
+    }
+
     const isMobile = StateManager.isMobilePreferred(tabId);
     const bucket = isMobile ? state.mobileRedirectRules : state.desktopRedirectRules;
-    if (bucket.length === 0)
-        return {};
-    for (const rule of bucket) {
-        try {
-            if (!rule.re.test(url))
-                continue;
-            const scheme = new URL(url).protocol.replace(':', '');
-            const to = url.replace(
-                    rule.re,
-                    String(rule.to || '').replace(/\{SCHEME\}/g, scheme));
-            if (to && to !== url && shouldRedirect(tabId, url, to)) {
-                log('Redirecting', {
-                    from: url,
-                    to
-                });
-                return {
-                    redirectUrl: to
-                };
+
+    let redirectUrl = null;
+    if (bucket.length > 0) {
+        for (const rule of bucket) {
+            try {
+                if (!rule.re.test(url))
+                    continue;
+                const scheme = new URL(url).protocol.replace(':', '');
+                const to = url.replace(
+                        rule.re,
+                        String(rule.to || '').replace(/\{SCHEME\}/g, scheme));
+                if (to && to !== url && shouldRedirect(tabId, url, to)) {
+                    redirectUrl = to;
+                    log('Redirecting', {
+                        from: url,
+                        to
+                    });
+                    break;
+                }
+            } catch (e) {
+                log('Redirect rule error', String(e));
             }
-        } catch (e) {
-            log('Redirect rule error', String(e));
         }
     }
+
+    if (RULE_CACHE.size >= CACHE_SIZE) {
+        const oldestKey = RULE_CACHE.keys().next().value;
+        RULE_CACHE.delete(oldestKey);
+    }
+    RULE_CACHE.set(cacheKey, redirectUrl);
+
+    if (redirectUrl) {
+        return {
+            redirectUrl: redirectUrl
+        };
+    }
+
     return {};
 }
 
