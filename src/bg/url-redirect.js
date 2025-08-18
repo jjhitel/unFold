@@ -110,7 +110,8 @@ export async function onBeforeRequest(details) {
         return {};
     }
 
-    const cacheKey = `${tabId}:${url}`;
+    const isMobile = StateManager.isMobilePreferred(tabId);
+    const cacheKey = `${tabId}:${isMobile ? 'm' : 'd'}:${url}`;
     if (RULE_CACHE.has(cacheKey)) {
         const cachedResult = RULE_CACHE.get(cacheKey);
         RULE_CACHE.delete(cacheKey);
@@ -127,7 +128,6 @@ export async function onBeforeRequest(details) {
         return {};
     }
 
-    const isMobile = StateManager.isMobilePreferred(tabId);
     const bucket = isMobile ? state.mobileRedirectRules : state.desktopRedirectRules;
 
     let redirectUrl = null;
