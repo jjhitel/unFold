@@ -1,27 +1,29 @@
 {
-    "manifest_version": 2,
+    "manifest_version": 3,
     "name": "__MSG_extensionName__",
     "version": "1.0.3",
     "description": "__MSG_extensionDescription__",
     "default_locale": "en",
     "permissions": [
-        "https://*/*",
-        "http://*/*",
-        "storage",
-        "tabs",
         "webRequest",
         "webRequestBlocking",
         "webNavigation",
-        "alarms"
+        "tabs",
+        "storage",
+        "alarms",
+        "scripting"
+    ],
+    "host_permissions": [
+        "http://*/*",
+        "https://*/*"
     ],
     "background": {
-        "page": "src/bg/background.html",
-        "persistent": false
+        "page": "src/bg/background.html"
     },
     "icons": {
         "96": "res/icons/icon96.png"
     },
-    "browser_action": {
+    "action": {
         "default_icon": {
             "96": "res/icons/icon96.png"
         },

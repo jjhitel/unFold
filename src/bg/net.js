@@ -93,8 +93,12 @@ export async function onViewportMessage(msg, sender) {
                 log(`Auto-refresh blocked for tab ${tabId} due to a dirty form.`);
                 const message = browser.i18n.getMessage('notification_reloadBlocked_message');
                 try {
-                    await browser.tabs.executeScript(tabId, {
-                        code: `(${showAlertInPage.toString()})(${JSON.stringify(message)});`
+                    await browser.scripting.executeScript({
+                        target: { tabId },
+                        injectImmediately: true,
+                        world: "MAIN",
+                        func: (fnStr, message) => { try { (new Function(`return (${fnStr})`))()(message); } catch (_) {} },
+                        args: [String(showAlertInPage), message]
                     });
                 } catch (e) {
                     log('Failed to show in-page alert:', e);
