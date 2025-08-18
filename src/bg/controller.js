@@ -1,5 +1,5 @@
 'use strict';
-import { StateManager } from './stateManager.js';
+import { StateManager, cleanupTabState } from './stateManager.js';
 import { util } from '../common/utils.js';
 import { Cache } from '../common/cache.js';
 import { onViewportMessage, RELOAD_TIMES } from './net.js';
@@ -208,6 +208,7 @@ browser.tabs.onUpdated.addListener(async(tabId, changeInfo, tab) => {
 browser.tabs.onRemoved.addListener((tabId) => {
     clearRedirectGuard?.(tabId);
     RELOAD_TIMES.delete(tabId);
+    cleanupTabState(tabId).catch(() => {});
     StateManager.getState().isWideByTab.delete(tabId);
     StateManager.getState().stickyMobileByTab.delete(tabId);
     StateManager.getState().formDirtyByTab.delete(tabId);

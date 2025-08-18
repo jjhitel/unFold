@@ -13,6 +13,31 @@ const allowlistTrie = new HNTrieContainer();
 let denylistTrieRoot = 0;
 let allowlistTrieRoot = 0;
 
+const KV = (browser.storage && browser.storage.session) ? browser.storage.session : browser.storage.local;
+const TabKV = {
+    _k(tabId, key) {
+        return `tab:${tabId}:${key}`;
+    },
+    async set(tabId, key, val) {
+        const k = this._k(tabId, key);
+        await KV.set({
+            [k]: val
+        });
+    },
+    async get(tabId, key) {
+        const k = this._k(tabId, key);
+        const obj = await KV.get(k);
+        return obj?.[k];
+    },
+    async removeAllForTab(tabId) {
+        const prefix = `tab:${tabId}:`;
+        const all = await KV.get(null);
+        const toRemove = Object.keys(all).filter(k => k.startsWith(prefix));
+        if (toRemove.length)
+            await KV.remove(toRemove);
+    }
+};
+
 function trieCreate(tc) {
     if (typeof tc.createOne === 'function')
         return tc.createOne();
@@ -114,7 +139,7 @@ export const StateManager = {
         state.isWideByTab.set(tabId, isWide);
         state.lastKnownWide = isWide;
         try {
-            browser.sessions.setTabValue(tabId, 'fd_isWide', !!isWide);
+            TabKV.set(tabId, 'fd_isWide', !!isWide);
         } catch (e) {
             log('setTabValue(isWide) failed', e);
         }
@@ -127,7 +152,7 @@ export const StateManager = {
             state.stickyMobileByTab.delete(tabId);
         }
         try {
-            await browser.sessions.setTabValue(tabId, 'fd_stickyMobile', !!sticky);
+            await TabKV.set(tabId, 'fd_stickyMobile', !!sticky);
         } catch (e) {
             log('setTabValue(stickyMobile) failed', e);
         }
@@ -142,7 +167,7 @@ export const StateManager = {
         try {
             const tab = await browser.tabs.get(tabId).catch(() => null);
             if (tab) {
-                await browser.sessions.setTabValue(tabId, 'fd_formDirty', !!isDirty);
+                await TabKV.set(tabId, 'fd_formDirty', !!isDirty);
             }
         } catch (e) {
             log('setTabValue(formDirty) failed', e);
@@ -154,17 +179,17 @@ export const StateManager = {
 
     loadInitialTabState: async(tabId) => {
         try {
-            const w = await browser.sessions.getTabValue(tabId, 'fd_isWide');
+            const w = await TabKV.get(tabId, 'fd_isWide');
             if (typeof w === 'boolean')
                 state.isWideByTab.set(tabId, w);
 
-            const d = await browser.sessions.getTabValue(tabId, 'fd_formDirty');
+            const d = await TabKV.get(tabId, 'fd_formDirty');
             if (d === true)
                 state.formDirtyByTab.set(tabId, true);
             else
                 state.formDirtyByTab.delete(tabId);
 
-            const s = await browser.sessions.getTabValue(tabId, 'fd_stickyMobile');
+            const s = await TabKV.get(tabId, 'fd_stickyMobile');
             if (s === true)
                 state.stickyMobileByTab.set(tabId, true);
             else
@@ -182,6 +207,13 @@ export const StateManager = {
         return trieMatches(allowlistTrie, allowlistTrieRoot, host) !== -1;
     },
 };
+
+export async function cleanupTabState(tabId) {
+    try {
+        await TabKV.removeAllForTab(tabId);
+    } catch (e) {
+    }
+}
 
 export async function updateRules(data) {
     try {
@@ -334,7 +366,7 @@ export async function refreshGeneralSettings(settings) {
         state.autoUpdatePeriod = s[C.KEY_AUTO_UPDATE_PERIOD] ?? C.DEFAULT_AUTO_UPDATE_PERIOD;
         state.zoomLevel = s[C.KEY_ZOOM_LEVEL] ?? C.DEFAULT_ZOOM_LEVEL;
         state.liteMode = s[C.KEY_LITE_MODE] ?? C.DEFAULT_LITE_MODE;
-    state.veryAggressiveUA = s[C.KEY_VERY_AGGRESSIVE_UA] ?? C.DEFAULT_VERY_AGGRESSIVE_UA;
+        state.veryAggressiveUA = s[C.KEY_VERY_AGGRESSIVE_UA] ?? C.DEFAULT_VERY_AGGRESSIVE_UA;
 
         await _persistUAChanges(s, dynamicUA, determinedUA);
 

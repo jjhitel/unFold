@@ -12,7 +12,6 @@
         "webRequest",
         "webRequestBlocking",
         "webNavigation",
-        "sessions",
         "alarms"
     ],
     "background": {
