@@ -1,8 +1,8 @@
 'use strict';
 import { util } from '../common/utils.js';
 import * as uiUtils from '../common/ui-utils.js';
-import { uiStore } from '../common/store.js';
-import * as storage from './storage.js';
+import { uiStore } from '../common/storage.js';
+import * as storage from '../common/storage.js';
 import { C } from '../common/constants.js';
 
 const $id = util.$id;

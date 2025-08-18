@@ -1,9 +1,48 @@
 'use strict';
-import { uiStore } from '../common/store.js';
-import { C } from '../common/constants.js';
-import { util } from '../common/utils.js';
-import { showSaved, setSmallStatus } from '../common/ui-utils.js';
-import { refreshTabVisibility } from './ui.js';
+import { util } from './utils.js';
+import { C } from './constants.js';
+import { showSaved, setSmallStatus, getActiveHttpTab, save as saveToUiUtils } from './ui-utils.js';
+import { refreshTabVisibility } from '../options/ui.js';
+
+const S = {};
+
+S.get = async function (keys) {
+    try {
+        return await browser.storage.local.get(keys || null);
+    } catch (e) {
+        util.log("store.get error", e);
+        return {};
+    }
+};
+S.set = async function (obj) {
+    try {
+        await browser.storage.local.set(obj || {});
+        return true;
+    } catch (e) {
+        util.log("store.set error", e);
+        return false;
+    }
+};
+S.remove = async function (keys) {
+    try {
+        await browser.storage.local.remove(keys);
+        return true;
+    } catch (e) {
+        util.log("store.remove error", e);
+        return false;
+    }
+};
+S.clear = async function () {
+    try {
+        await browser.storage.local.clear();
+        return true;
+    } catch (e) {
+        util.log("store.clear error", e);
+        return false;
+    }
+};
+
+export const uiStore = S;
 
 const $id = (id) => document.getElementById(id);
 
@@ -35,7 +74,7 @@ export const DEFAULTS = {
 };
 
 export async function loadSettings() {
-    const cfg = await uiStore.get(null);
+    const cfg = await S.get(null);
     for (const key in DEFAULTS) {
         const elId = ID_MAP[key] || key;
         const el = $id(elId);
@@ -62,7 +101,7 @@ export async function saveSingleSetting(key, value) {
         value = Number(value) || DEFAULTS[key];
     }
 
-    await uiStore.set({
+    await S.set({
         [key]: value
     });
     browser.runtime.sendMessage({
@@ -72,7 +111,7 @@ export async function saveSingleSetting(key, value) {
 };
 
 async function saveAndShow(data, statusId) {
-    await uiStore.set(data);
+    await S.set(data);
     showSaved();
 }
 
@@ -117,8 +156,8 @@ export function bindStorageMirror() {
     });
 };
 
-export const loadRemoteSelections = async() => (await uiStore.get(C.KEY_REMOTE_SELECTED_RULES))?.[C.KEY_REMOTE_SELECTED_RULES] || [];
-export const saveRemoteSelections = (arr) => uiStore.set({
+export const loadRemoteSelections = async() => (await S.get(C.KEY_REMOTE_SELECTED_RULES))?.[C.KEY_REMOTE_SELECTED_RULES] || [];
+export const saveRemoteSelections = (arr) => S.set({
     [C.KEY_REMOTE_SELECTED_RULES]: arr
 });
 
@@ -142,4 +181,61 @@ export async function toggleRemoteRule(ruleMeta, checked) {
     browser.runtime.sendMessage({
         type: C.MSG_UPDATE_REMOTE_RULES
     }).catch(() => {});
+};
+
+export async function setModeOn(on) {
+    const cur = await S.get(['mode', 'lastNonOffMode']);
+    let mode = cur.mode || C.DEFAULT_MODE;
+    let last = cur.lastNonOffMode || (mode !== 'off' ? mode : C.DEFAULT_MODE);
+
+    if (on) {
+        const newMode = (last === 'off') ? C.DEFAULT_MODE : last;
+        await saveToUiUtils({
+            mode: newMode,
+            lastNonOffMode: newMode
+        });
+    } else {
+        if (mode !== 'off')
+            last = mode;
+        await saveToUiUtils({
+            mode: 'off',
+            lastNonOffMode: last
+        });
+    }
+};
+
+export async function addCurrentHostToList(listKey) {
+    const info = await getActiveHttpTab();
+    if (!info)
+        return false;
+
+    const cur = await S.get([listKey]);
+    const text = String(cur[listKey] || '').trim();
+    const lines = text ? text.split(/\r?\n/) : [];
+    lines.push(info.host);
+
+    const final = util.normalizeList(lines.join('\n')).join('\n');
+    await S.set({
+        [listKey]: final
+    });
+    return true;
+};
+
+export async function removeCurrentHostFromList(listKey) {
+    const info = await getActiveHttpTab();
+    if (!info)
+        return false;
+
+    const cur = await S.get([listKey]);
+    const text = String(cur[listKey] || '').trim();
+    const lines = text ? text.split(/\r?\n/) : [];
+
+    const hostLower = info.host.toLowerCase();
+    const finalLines = lines.filter(line => line.trim().toLowerCase() !== hostLower);
+
+    const final = finalLines.join('\n');
+    await S.set({
+        [listKey]: final
+    });
+    return true;
 };

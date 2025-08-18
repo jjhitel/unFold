@@ -1,6 +1,6 @@
 'use strict';
 import { util } from './utils.js';
-import { uiStore } from './store.js';
+import { uiStore } from './storage.js';
 import { C } from './constants.js';
 
 export function showSaved() {
