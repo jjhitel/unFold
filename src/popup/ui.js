@@ -35,7 +35,7 @@ function updateListButtonsVisibility(mode) {
 async function initListButtons() {
     const btnDeny = $id('btnDeny');
     const btnAllow = $id('btnAllow');
-    const info = await uiUtils.getActiveHttpTab();
+    const info = await getActiveHttpTab();
 
     if (!info) {
         if (btnDeny)
