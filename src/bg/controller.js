@@ -168,15 +168,6 @@ export async function updateAllBadges() {
     } catch {}
 }
 
-export function showNotification(id, titleKey, messageKey) {
-    browser.notifications.create(id, {
-        type: 'basic',
-        iconUrl: browser.runtime.getURL('res/icons/icon96.png'),
-        title: browser.i18n.getMessage(titleKey) || 'Notification',
-        message: browser.i18n.getMessage(messageKey) || '',
-    });
-}
-
 browser.tabs.onActivated.addListener(async({
         tabId
     }) => {
