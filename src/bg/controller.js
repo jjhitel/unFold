@@ -30,10 +30,16 @@ async function fetchAndCacheRule(url) {
             throw new Error(`HTTP ${res.status}`);
 
         const text = await res.text();
+
+        if (cached && cached.text === text) {
+            log(`Content for ${url} is the same, no date update needed.`);
+            return cached;
+        }
+
         const ruleData = {
             text,
-            lastModified: res.headers.get('Last-Modified') || cached?.lastModified || new Date().toISOString(),
-            etag: res.headers.get('ETag') || cached?.etag || ''
+            lastModified: res.headers.get('Last-Modified') || new Date().toISOString(),
+            etag: res.headers.get('ETag') || res.headers.get('last-modified') || ''
         };
         await Cache.set(url, ruleData);
         return ruleData;
@@ -58,30 +64,27 @@ async function updateCheckedRemoteRules() {
         return;
     }
     log('Starting remote rules update...');
-
-    const updatePromises = selectedRemoteRules.map(async(id) => {
+    let updated = false;
+    for (const id of selectedRemoteRules) {
         const ruleMeta = catalog.find(item => item.id === id);
         if (!ruleMeta)
-            return null;
+            continue;
         try {
             const ruleData = await fetchAndCacheRule(ruleMeta.url);
             if (!ruleData)
-                return null;
+                continue;
             const textKey = ruleMeta.kind === 'mobile' ? 'mobileRedirectRule' : 'desktopRedirectRule';
             const dateKey = util.getRuleLastModifiedKey(ruleMeta.id);
             await browser.storage.local.set({
                 [textKey]: ruleData.text,
                 [dateKey]: ruleData.lastModified
             });
-            return true;
+            updated = true;
         } catch (e) {
             log(`Failed to update rule: ${ruleMeta.name}`, e);
-            return false;
         }
-    });
-
-    const results = await Promise.all(updatePromises);
-    if (results.some(r => r === true)) {
+    }
+    if (updated) {
         await browser.storage.local.set({
             remoteRulesLastUpdated: Date.now()
         });
