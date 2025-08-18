@@ -38,6 +38,33 @@ It intelligently injects a desktop User-Agent when the screen is unfolded to mak
 4.  **Configure Advanced Settings**:
     * Open **Settings** to access advanced features like custom URL redirect rules, the unfolded screen width threshold, and a custom desktop User-Agent string.
 
+## Building from Source
+
+### Prerequisites
+
+* **Node.js**: Version 20.x or later is recommended. You can download it from [nodejs.org](https://nodejs.org/).
+* **npm**: This is included with Node.js.
+
+### Build Steps
+
+1.  **Clone the repository:**
+    ```bash
+    git clone https://github.com/jjhitel/unFold
+    cd unFold
+    ```
+
+2.  **Install dependencies:**
+    ```bash
+    npm install
+    ```
+
+3.  **Build the extension:**
+    ```bash
+    npm run build:firefox
+    ```
+
+After the build is complete, the packaged `.xpi` file will be available in the `dist_zip` directory.
+
 ## 🤝 Contributing
 
 Contributions are welcome! This project was largely developed with the assistance of AI (99% machine-generated code), so there is always room for human touch and improvement. If you have ideas for new features, find a bug, or see an opportunity to refactor the code, please feel free to open an issue or submit a pull request.
