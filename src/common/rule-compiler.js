@@ -5,20 +5,10 @@
 'use strict';
 
 import { util } from './utils.js';
+import safeRegex from 'safe-regex';
 
-function isSafeRegex(body) {
-    if (!body)
-        return false;
-    if (body.length > 256)
-        return false;
-
-    const captureGroups = body.match(/\((?!\?)/g) || [];
-    if (captureGroups.length > 9) {
-        return false;
-    }
-    const danger = /(\(.{0,50}\)\+){3,}|(\.\*){2,}|\(\?[<!]/;
-    return !danger.test(body);
-
+function isSafeRegex(pattern) {
+    return safeRegex(pattern);
 }
 
 function parseRegexLine(line, lineNum) {
@@ -83,8 +73,8 @@ function parseRegexLine(line, lineNum) {
             to = unquote(substitutionMatch[1].trim());
         }
 
-        if (!isSafeRegex(body)) {
-            util.log(`[RULE:L${lineNum}] Regex is too complex: ${body}`);
+        if (!isSafeRegex(regexMatch[0])) {
+            util.log(`[RULE:L${lineNum}] Unsafe or complex regex detected: ${body}`);
             return null;
         }
 
