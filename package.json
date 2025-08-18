@@ -21,6 +21,7 @@
     },
     "homepage": "https://github.com/jjhitel/unFold#readme",
     "devDependencies": {
+        "just-debounce-it": "^3.2.0",
         "lodash": "^4.17.21",
         "parse-domain": "^8.2.2",
         "vite": "^7.1.2",

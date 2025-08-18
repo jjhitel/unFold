@@ -1,6 +1,7 @@
 'use strict';
 
 import { C } from './constants.js';
+import debounce from 'just-debounce-it';
 const Utils = {};
 
 Utils.deepEqual = (a, b) => {
@@ -59,17 +60,7 @@ Utils.extractHostname = (url) => {
     }
 };
 
-Utils.debounce = (func, wait) => {
-    let timeout;
-    return function executedFunction(...args) {
-        const later = () => {
-            clearTimeout(timeout);
-            func(...args);
-        };
-        clearTimeout(timeout);
-        timeout = setTimeout(later, wait);
-    };
-};
+Utils.debounce = debounce;
 
 Utils.localizePage = () => {
     document.querySelectorAll('[data-i18n]').forEach(el => {
