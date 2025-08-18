@@ -1,6 +1,6 @@
 'use strict';
 import { uiStore, saveUrlRules, saveDenylist, saveAllowlist, loadRemoteCatalog, loadRemoteSelections, toggleRemoteRule } from '../common/storage.js';
-import { setSmallStatus, bindCheckbox, bindSelect, bindTextInput, showSaved } from '../common/ui-utils.js';
+import { setSmallStatus, bindCheckbox, bindSelect, bindTextInput } from '../common/ui-utils.js';
 import { activateTab } from './tabs.js';
 import { util } from '../common/utils.js';
 import { C } from '../common/constants.js';
@@ -90,7 +90,6 @@ function bindCaptureButtons() {
         if (foldedWidth > 0 && unfoldedWidth > 0) {
             const threshold = Math.round((foldedWidth + unfoldedWidth) / 2);
             $id('threshold').value = threshold;
-            saveSingleSetting('threshold', threshold);
             setSmallStatus('cal-status', `Threshold calculated: ${threshold}px`);
         } else {
             setSmallStatus('cal-status', 'Please capture both folded and unfolded widths.');
@@ -148,7 +147,7 @@ export function initUIBindings() {
             const v = `${major}.${minor}`;
             const dyn = `Mozilla/5.0 (X11; Linux x86_64; rv:${v}) Gecko/20100101 Firefox/${v}`;
             $id('ua').value = dyn;
-            await browser.storage.local.set({
+            await uiStore.set({
                 desktopUA: dyn,
                 uaDynamic: true,
                 lastBrowserVersion: v
@@ -156,7 +155,7 @@ export function initUIBindings() {
         } catch {
             const fallback = 'Mozilla/5.0 (X11; Linux x86_64; rv:141.0) Gecko/20100101 Firefox/141.0';
             $id('ua').value = fallback;
-            await browser.storage.local.set({
+            await uiStore.set({
                 desktopUA: fallback,
                 uaDynamic: true
             });

@@ -36,6 +36,8 @@ const handleStorageChange = debounce(async(changes, area) => {
     const ruleKeys = ['desktopRegexText', 'mobileRegexText', 'desktopRedirectRule', 'mobileRedirectRule'];
 
     let needsListenerRefresh = false;
+    const updatePromises = [];
+
     let settingsChanged = false;
     let listsChanged = false;
     let rulesChanged = false;
@@ -55,11 +57,13 @@ const handleStorageChange = debounce(async(changes, area) => {
     }
 
     if (settingsChanged)
-        await refreshGeneralSettings();
+        updatePromises.push(refreshGeneralSettings());
     if (listsChanged)
-        await updateLists();
+        updatePromises.push(updateLists());
     if (rulesChanged)
-        await updateRules();
+        updatePromises.push(updateRules());
+
+    await Promise.all(updatePromises);
 
     if (needsListenerRefresh) {
         log('Settings changed, refreshing listeners...');
