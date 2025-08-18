@@ -1,6 +1,6 @@
 'use strict';
 import { util } from '../common/utils.js';
-import * as uiUtils from '../common/ui-utils.js';
+import { getActiveHttpTab, openOptions, save, setOn, bindSetting } from '../common/ui-utils.js';
 import { uiStore } from '../common/storage.js';
 import * as storage from '../common/storage.js';
 import { C } from '../common/constants.js';
@@ -75,9 +75,9 @@ async function syncAllUI() {
     const settings = await uiStore.get(['mode', 'autoRefresh', 'urlRedirect']);
     const mode = settings.mode || C.DEFAULT_MODE;
 
-    uiUtils.setOn($id('switch'), mode !== 'off');
-    uiUtils.setOn($id('toggle-autoRefresh'), settings.autoRefresh ?? true);
-    uiUtils.setOn($id('toggle-urlRedirect'), settings.urlRedirect ?? false);
+    setOn($id('switch'), mode !== 'off');
+    setOn($id('toggle-autoRefresh'), settings.autoRefresh ?? true);
+    setOn($id('toggle-urlRedirect'), settings.urlRedirect ?? false);
 
     updateListButtonsVisibility(mode);
     await initListButtons();
@@ -96,13 +96,13 @@ function bindStorageMirror() {
 export async function initPopupUI() {
     util.localizePage();
 
-    uiUtils.bindSwitch('switch', null, (willOn) => storage.setModeOn(willOn));
-    uiUtils.bindSwitch('toggle-autoRefresh', 'autoRefresh');
-    uiUtils.bindSwitch('toggle-urlRedirect', 'urlRedirect');
+    bindSetting('switch', null, 200, (willOn) => storage.setModeOn(willOn));
+    bindSetting('toggle-autoRefresh', C.KEY_AUTO_REFRESH);
+    bindSetting('toggle-urlRedirect', C.KEY_URL_REDIRECT);
 
     const btnOptions = $id('btnOptions');
     if (btnOptions) {
-        btnOptions.addEventListener('click', () => uiUtils.openOptions());
+        btnOptions.addEventListener('click', () => openOptions());
     }
 
     bindStorageMirror();

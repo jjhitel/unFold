@@ -90,53 +90,43 @@ export async function save(obj) {
     }
 };
 
-async function saveSetting(key, value) {
-    try {
-        await uiStore.set({
-            [key]: value
-        });
-        await browser.runtime.sendMessage({
-            type: C.MSG_SETTINGS_UPDATE
-        });
-        showSaved();
-    } catch (e) {
-        util.log(`[FD] Failed to save setting ${key}:`, e);
-    }
-}
-
-export function bindSwitch(elId, storageKey, onSave) {
-    const el = util.$id(elId);
+export function bindSetting(elementId, settingKey, debounceMs = 200, callback) {
+    const el = util.$id(elementId);
     if (!el)
         return;
 
-    el.addEventListener('click', async() => {
-        const willOn = !el.classList.contains('on');
-        await(onSave ? onSave(willOn) : saveSetting(storageKey, willOn));
-    });
-}
-
-export function bindCheckbox(elementId, settingKey) {
-    const el = util.$id(elementId);
-    if (el) {
-        el.addEventListener('change', (e) => saveSetting(settingKey, e.target.checked));
-    }
-}
-
-export function bindSelect(elementId, settingKey, callback) {
-    const el = util.$id(elementId);
-    if (el) {
-        el.addEventListener('change', (e) => {
-            saveSetting(settingKey, e.target.value);
+    const saveAndNotify = async(value) => {
+        try {
+            await uiStore.set({
+                [settingKey]: value
+            });
+            await browser.runtime.sendMessage({
+                type: C.MSG_SETTINGS_UPDATE
+            });
+            showSaved();
             if (callback)
-                callback(e.target.value);
-        });
-    }
-}
+                callback(value);
+        } catch (e) {
+            util.log(`[FD] Failed to save setting ${settingKey}:`, e);
+        }
+    };
 
-export function bindTextInput(elementId, settingKey, debounceMs = 200) {
-    const el = util.$id(elementId);
-    if (el) {
-        const debouncedSave = util.debounce((value) => saveSetting(settingKey, value), debounceMs);
+    switch (el.type) {
+    case 'checkbox':
+        el.addEventListener('change', (e) => saveAndNotify(e.target.checked));
+        break;
+    case 'select-one':
+    case 'text':
+    case 'number':
+    case 'textarea':
+        const debouncedSave = util.debounce((value) => saveAndNotify(value), debounceMs);
         el.addEventListener('input', (e) => debouncedSave(e.target.value));
+        break;
+    default:
+        el.addEventListener('click', () => {
+            const willOn = !el.classList.contains('on');
+            saveAndNotify(willOn);
+        });
+        break;
     }
 }

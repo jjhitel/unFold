@@ -1,6 +1,6 @@
 'use strict';
 import { uiStore, saveUrlRules, saveDenylist, saveAllowlist, loadRemoteCatalog, loadRemoteSelections, toggleRemoteRule } from '../common/storage.js';
-import { setSmallStatus, bindCheckbox, bindSelect, bindTextInput } from '../common/ui-utils.js';
+import { setSmallStatus, bindSetting } from '../common/ui-utils.js';
 import { activateTab } from './tabs.js';
 import { util } from '../common/utils.js';
 import { C } from '../common/constants.js';
@@ -110,14 +110,14 @@ export function initUIBindings() {
     $id('save-denylist')?.addEventListener('click', saveDenylist);
     $id('save-allowlist')?.addEventListener('click', saveAllowlist);
 
-    bindSelect('mode', 'mode', (value) => {
+    bindSetting('mode', C.KEY_MODE, 200, (value) => {
         updateModeDescription();
         refreshTabVisibility(value);
     });
-    bindCheckbox('autoRefresh', 'autoRefresh');
-    bindCheckbox('urlRedirect', 'urlRedirect');
-    bindCheckbox('debugMode', 'debugMode');
-    bindCheckbox('liteMode', 'liteMode');
+    bindSetting('autoRefresh', C.KEY_AUTO_REFRESH);
+    bindSetting('urlRedirect', C.KEY_URL_REDIRECT);
+    bindSetting('debugMode', C.KEY_DEBUG_MODE);
+    bindSetting('liteMode', C.KEY_LITE_MODE);
 
     const uaInput = $id('ua');
     if (uaInput) {
@@ -133,9 +133,9 @@ export function initUIBindings() {
         uaInput.addEventListener('input', (e) => debouncedSave(e.target.value));
     }
 
-    bindTextInput('threshold', 'threshold', 300);
-    bindTextInput('zoomLevel', 'zoomLevel', 300);
-    bindSelect('autoUpdatePeriod', 'autoUpdatePeriod');
+    bindSetting('threshold', C.KEY_THRESHOLD, 300);
+    bindSetting('zoomLevel', C.KEY_ZOOM_LEVEL, 300);
+    bindSetting('autoUpdatePeriod', C.KEY_AUTO_UPDATE_PERIOD);
 
     $id('resetUA')?.addEventListener('click', async() => {
         try {
