@@ -119,14 +119,14 @@ export async function onBeforeSendHeaders(details) {
     }
     try {
         if (details.type === 'main_frame' && details.frameId === 0 && tabId !== browser.tabs.TAB_ID_NONE) {
-            const scriptOptions = {
-                allFrames: !state.liteMode,
-                runAt: 'document_start',
-                matchAboutBlank: !state.liteMode,
-                code: generateContentScript(state.desktopUA)
-            };
 
-            browser.tabs.executeScript(tabId, scriptOptions).catch(() => {});
+            browser.scripting.executeScript({
+                target: { tabId, allFrames: !state.liteMode },
+                injectImmediately: true,
+                world: "MAIN",
+                func: (code) => { try { (new Function(code))(); } catch (_) {} },
+                args: [generateContentScript(state.desktopUA)]
+            }).catch(() => {});
         }
     } catch (e) {}
     return {
