@@ -121,11 +121,11 @@ async function _updateBadge(tabId) {
         if (!/^https?:\/\//i.test(url)) {
             text = "X";
             color = "#9CA3AF";
-            await browser.browserAction.setBadgeText({
+            await browser.action.setBadgeText({
                 tabId,
                 text
             });
-            await browser.browserAction.setBadgeBackgroundColor({
+            await browser.action.setBadgeBackgroundColor({
                 tabId,
                 color
             });
@@ -146,11 +146,11 @@ async function _updateBadge(tabId) {
             text = isWide ? "D" : "M";
             color = "#10B981";
         }
-        await browser.browserAction.setBadgeText({
+        await browser.action.setBadgeText({
             tabId,
             text
         });
-        await browser.browserAction.setBadgeBackgroundColor({
+        await browser.action.setBadgeBackgroundColor({
             tabId,
             color
         });
