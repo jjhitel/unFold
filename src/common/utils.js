@@ -2,6 +2,7 @@
 
 import { C } from './constants.js';
 import debounce from 'just-debounce-it';
+import escapeStringRegexp from 'escape-string-regexp';
 const Utils = {};
 
 Utils.log = (tag, payload) => {
@@ -31,7 +32,10 @@ Utils.normalizeList = (multiline) => {
 };
 
 Utils.escapeRegExp = (s) => {
-    return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const str = String(s ?? '');
+    return typeof RegExp.escape === 'function'
+     ? RegExp.escape(str)
+     : escapeStringRegexp(str);
 };
 
 Utils.extractHostname = (url) => {
