@@ -4,24 +4,6 @@ import { C } from './constants.js';
 import debounce from 'just-debounce-it';
 const Utils = {};
 
-Utils.deepEqual = (a, b) => {
-    if (a === b)
-        return true;
-    if (typeof a !== 'object' || typeof b !== 'object' || !a || !b)
-        return false;
-    const ka = Object.keys(a),
-    kb = Object.keys(b);
-    if (ka.length !== kb.length)
-        return false;
-    for (const k of ka) {
-        if (!kb.includes(k))
-            return false;
-        if (!Utils.deepEqual(a[k], b[k]))
-            return false;
-    }
-    return true;
-};
-
 Utils.log = (tag, payload) => {
     try {
         if (!globalThis.FD_ENV?.DEBUG)
