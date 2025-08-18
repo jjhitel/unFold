@@ -51,11 +51,11 @@
     "browser_specific_settings": {
         "gecko": {
             "id": "@unfold.jsp",
-            "strict_min_version": "115.0"
+            "strict_min_version": "128.0"
         },
         "gecko_android": {
             "id": "@unfold.jsp",
-            "strict_min_version": "115.0"
+            "strict_min_version": "128.0"
         }
     },
     "incognito": "spanning"
