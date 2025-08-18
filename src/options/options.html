@@ -128,17 +128,21 @@
             <hr>
             <details class="row">
                 <summary data-i18n="options_redirect_customRules"></summary>
+                <p class="small" data-i18n="options_redirect_simpleRulesDesc"></p>
+                <p class="small" data-i18n="options_redirect_regexRulesDesc"></p>
                 <div class="row">
                     <label for="desktopRegexText" data-i18n="options_redirect_customDesktop"></label>
-                    <textarea id="desktopRegexText" rows="6" spellcheck="false" placeholder="/^https?:\/\/m\.example\.com\/(.*)$/ -> https://www.example.com/$1"></textarea>
+                    <textarea id="desktopRegexText" rows="6" spellcheck="false" placeholder="m.example.com/* -> www.example.com/$1"></textarea>
                 </div>
                 <div class="row">
                     <label for="mobileRegexText" data-i18n="options_redirect_customMobile"></label>
-                    <textarea id="mobileRegexText" rows="6" spellcheck="false" placeholder="/^https?:\/\/www\.example\.com\/(.*)$/ -> https://m.example.com/$1"></textarea>
+                    <textarea id="mobileRegexText" rows="6" spellcheck="false" placeholder="/^https?:\\/\\/www\\.example\\.com\\/(.*)$/ -> https://m.example.com/$1"></textarea>
                 </div>
                 <div class="row">
                     <button id="btn-url-save" type="button" data-i18n="options_redirect_saveCustom"></button>
                 </div>
+                <hr>
+                <p class="small" data-i18n="options_redirect_securityDesc"></p>
             </details>
 		</section>
 

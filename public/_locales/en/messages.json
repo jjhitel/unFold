@@ -141,7 +141,16 @@
         "message": "Custom Rules"
     },
     "options_redirect_customRulesDesc": {
-        "message": "Provide regex rules for sites that require more than a User-Agent change. For security, redirects are only allowed within the same domain and security downgrades (HTTPS to HTTP) are blocked."
+        "message": "Add rules for sites that need more than a User-Agent change."
+    },
+    "options_redirect_simpleRulesDesc": {
+        "message": "Simple rules are recommended. The wildcard `*` captures a path, which can be inserted with `$1`."
+    },
+    "options_redirect_regexRulesDesc": {
+        "message": "For complex cases, regex is supported."
+    },
+    "options_redirect_securityDesc": {
+        "message": "For security, redirects are only allowed within the same domain, and HTTPS to HTTP downgrades are blocked."
     },
     "options_redirect_customDesktop": {
         "message": "Custom Desktop Mode Rules"
