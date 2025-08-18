@@ -1,7 +1,7 @@
 'use strict';
 import { util } from '../common/utils.js';
 import { StateManager } from './stateManager.js';
-import { onBeforeSendHeaders } from './userAgent-inject.js';
+import { onBeforeSendHeaders } from './ua-inject.js';
 import { onBeforeRequest } from './url-redirect.js';
 import { updateBadge } from './controller.js';
 
