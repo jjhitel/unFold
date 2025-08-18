@@ -136,6 +136,9 @@ export const StateManager = {
     isMobilePreferred: (tabId) => !StateManager.isDesktopPreferred(tabId),
     updateTabWidth: (tabId, isWide) => {
         const prev = state.isWideByTab.get(tabId);
+        const prevEffective = (typeof prev === 'boolean')
+         ? prev
+         : (typeof state.lastKnownWide === 'boolean' ? state.lastKnownWide : undefined);
         state.isWideByTab.set(tabId, isWide);
         state.lastKnownWide = isWide;
         try {
@@ -143,7 +146,7 @@ export const StateManager = {
         } catch (e) {
             log('setTabValue(isWide) failed', e);
         }
-        return prev !== isWide;
+        return (typeof prevEffective === 'boolean') ? (prevEffective !== isWide) : false;
     },
     updateStickyMobile: async(tabId, sticky) => {
         if (sticky) {
@@ -211,8 +214,7 @@ export const StateManager = {
 export async function cleanupTabState(tabId) {
     try {
         await TabKV.removeAllForTab(tabId);
-    } catch (e) {
-    }
+    } catch (e) {}
 }
 
 export async function updateRules(data) {
