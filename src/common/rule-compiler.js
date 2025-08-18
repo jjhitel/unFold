@@ -5,6 +5,7 @@
 'use strict';
 
 import safeRegex from 'safe-regex';
+import { util } from './utils.js';
 
 function isSafeRegex(body) {
     if (!body)
@@ -12,7 +13,7 @@ function isSafeRegex(body) {
     return safeRegex(body);
 }
 
-function parseRegexLine(line) {
+function parseRegexLine(line, lineNum) {
     const raw = (line ?? "").trim();
     if (!raw)
         return null;
@@ -22,101 +23,97 @@ function parseRegexLine(line) {
     const unquote = (s) => {
         if (!s)
             return "";
-        const q = s[0];
-        if ((q === '"' || q === "'" || q === "`") && s[s.length - 1] === q) {
-            s = s.slice(1, -1);
+        if ((s.startsWith('"') && s.endsWith('"')) || (s.startsWith("'") && s.endsWith("'"))) {
+            return s.slice(1, -1);
         }
-        return s
-        .replace(/\\n/g, "\n")
-        .replace(/\\r/g, "\r")
-        .replace(/\\t/g, "\t")
-        .replace(/\\"/g, '"')
-        .replace(/\\'/g, "'")
-        .replace(/\\\\/g, "\\");
+        return s;
     };
-
-    const safeCheck = safeRegex;
 
     const escapeRegex = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
-    let m = raw.match(
-            /^\/((?:\\.|[^/])*)\/([a-z]*)\s*,\s*("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')\s*$/i);
-    if (m) {
-        const body = m[1];
-        const flags = m[2] || "";
-        const to = unquote(m[3]);
-        if (!safeCheck(body))
-            return null;
-        try {
-            const re = new RegExp(body, flags);
+    let m;
+    let body,
+    flags,
+    to,
+    re;
+
+    try {
+        m = raw.match(/^\/((?:\\.|[^/])*)\/([a-z]*)\s*,\s*("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')\s*$/i);
+        if (m) {
+            body = m[1];
+            flags = m[2] || '';
+            to = unquote(m[3]);
+            if (!isSafeRegex(body)) {
+                util.log(`[RULE:L${lineNum}] Regex is too complex: ${body}`);
+                return null;
+            }
+            re = new RegExp(body, flags);
             return {
                 re,
                 to
             };
-        } catch {
-            return null;
         }
-    }
 
-    m = raw.match(/^\/((?:\\.|[^/])*)\/([a-z]*)\s*(?:->|=>|→)\s*(.*)$/i);
-    if (m) {
-        const body = m[1];
-        const flags = m[2] || "";
-        const to = m[3] ?? "";
-        if (!safeCheck(body))
-            return null;
-        try {
-            const re = new RegExp(body, flags);
+        m = raw.match(/^\/((?:\\.|[^/])*)\/([a-z]*)\s*(?:->|=>|→)\s*(.*)$/i);
+        if (m) {
+            body = m[1];
+            flags = m[2] || '';
+            to = m[3] ?? '';
+            if (!isSafeRegex(body)) {
+                util.log(`[RULE:L${lineNum}] Regex is too complex: ${body}`);
+                return null;
+            }
+            re = new RegExp(body, flags);
             return {
                 re,
                 to
             };
-        } catch {
-            return null;
         }
-    }
 
-    m = raw.match(/^(.*?)\s*(?:->|=>|→)\s*(.*)$/);
-    if (m) {
-        const from = m[1].trim();
-        const to = m[2] ?? "";
-        if (!from)
-            return null;
+        m = raw.match(/^(.*?)\s*(?:->|=>|→)\s*(.*)$/);
+        if (m) {
+            const from = m[1].trim();
+            to = m[2] ?? '';
+            if (!from) {
+                util.log(`[RULE:L${lineNum}] Invalid redirect syntax: no source host`);
+                return null;
+            }
 
-        const escapedFrom = escapeRegex(from).replace(/^\\\*\\\./, '(?:www\\.)?');
-        const body = `^https?://${escapedFrom}`;
+            const escapedFrom = escapeRegex(from).replace(/^\\\*\\\./, '(?:www\\.)?');
+            body = `^https?://${escapedFrom}`;
 
-        if (!safeCheck(body))
-            return null;
-        try {
-            const re = new RegExp(body);
+            if (!isSafeRegex(body)) {
+                util.log(`[RULE:L${lineNum}] Generated regex is too complex: ${body}`);
+                return null;
+            }
+            re = new RegExp(body);
             return {
                 re,
                 to
             };
-        } catch {
-            return null;
         }
-    }
 
-    m = raw.match(/^\/((?:\\.|[^/])*)\/([a-z]*)$/i);
-    if (m) {
-        const body = m[1];
-        const flags = m[2] || "";
-        if (!safeCheck(body))
-            return null;
-        try {
-            const re = new RegExp(body, flags);
+        m = raw.match(/^\/((?:\\.|[^/])*)\/([a-z]*)$/i);
+        if (m) {
+            body = m[1];
+            flags = m[2] || '';
+            if (!isSafeRegex(body)) {
+                util.log(`[RULE:L${lineNum}] Regex is too complex: ${body}`);
+                return null;
+            }
+            re = new RegExp(body, flags);
             return {
                 re,
-                to: ""
+                to: ''
             };
-        } catch {
-            return null;
         }
-    }
 
-    return null;
+        util.log(`[RULE:L${lineNum}] Invalid rule syntax`);
+        return null;
+    } catch (e) {
+        util.log(`[RULE:L${lineNum}] Failed to compile rule: ${e.message}`);
+        return null;
+    }
 }
 
 export function compileRules(text) {
@@ -125,8 +122,8 @@ export function compileRules(text) {
         return rules;
 
     const lines = text.split(/\r?\n/);
-    for (const line of lines) {
-        const rule = parseRegexLine(line);
+    for (let i = 0; i < lines.length; i++) {
+        const rule = parseRegexLine(lines[i], i + 1);
         if (rule) {
             rules.push(rule);
         }
