@@ -13,6 +13,7 @@ export const C = {
     KEY_LAST_BROWSER_VERSION: 'lastBrowserVersion',
     KEY_DESKTOP_RULES: 'desktopRegexText',
     KEY_MOBILE_RULES: 'mobileRegexText',
+    KEY_VERY_AGGRESSIVE_UA: 'veryAggressiveUA',
     KEY_REMOTE_DESKTOP_RULE: 'desktopRedirectRule',
     KEY_REMOTE_MOBILE_RULE: 'mobileRedirectRule',
     KEY_DEBUG_MODE: 'debugMode',
@@ -34,6 +35,7 @@ export const C = {
     DEFAULT_AUTO_UPDATE_PERIOD: 1440,
     DEFAULT_ZOOM_LEVEL: 100,
     DEFAULT_LITE_MODE: false,
+    DEFAULT_VERY_AGGRESSIVE_UA: false,
 
     MSG_VIEWPORT_UPDATE: 'FOLD_DESKTOP_VIEWPORT',
     MSG_VIEWPORT_CHECK: 'FOLD_DESKTOP_VIEWPORT_CHECK',

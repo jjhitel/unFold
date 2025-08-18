@@ -97,6 +97,14 @@ export async function onBeforeSendHeaders(details) {
         return {};
     if (state.mode !== 'autoAllow' && StateManager.isHostInDenylist(host))
         return {};
+    if (!state.liteMode && (details.type === 'sub_frame' || details.type === 'xmlhttprequest')) {
+        const topUrl = details.documentUrl || details.originUrl || details.initiator || '';
+        const topHost = extractHostname(topUrl) || host;
+        const isThirdParty = (topHost && host) ? (topHost !== host) : false;
+        if (isThirdParty && !state.veryAggressiveUA) {
+            return {};
+        }
+    }
 
     const headers = details.requestHeaders || [];
     const bag = headersToBag(headers);

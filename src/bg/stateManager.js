@@ -59,6 +59,7 @@ const state = {
     autoUpdatePeriod: C.DEFAULT_AUTO_UPDATE_PERIOD,
     zoomLevel: C.DEFAULT_ZOOM_LEVEL,
     liteMode: C.DEFAULT_LITE_MODE,
+    veryAggressiveUA: C.DEFAULT_VERY_AGGRESSIVE_UA,
     desktopRedirectRules: [],
     mobileRedirectRules: [],
     isWideByTab: new Map(),
@@ -333,6 +334,7 @@ export async function refreshGeneralSettings(settings) {
         state.autoUpdatePeriod = s[C.KEY_AUTO_UPDATE_PERIOD] ?? C.DEFAULT_AUTO_UPDATE_PERIOD;
         state.zoomLevel = s[C.KEY_ZOOM_LEVEL] ?? C.DEFAULT_ZOOM_LEVEL;
         state.liteMode = s[C.KEY_LITE_MODE] ?? C.DEFAULT_LITE_MODE;
+    state.veryAggressiveUA = s[C.KEY_VERY_AGGRESSIVE_UA] ?? C.DEFAULT_VERY_AGGRESSIVE_UA;
 
         await _persistUAChanges(s, dynamicUA, determinedUA);
 
