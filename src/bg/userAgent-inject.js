@@ -1,9 +1,11 @@
 'use strict';
 import { StateManager } from './stateManager.js';
 import { util } from '../common/utils.js';
+import { C } from '../common/constants.js';
 
 const { extractHostname } = util;
 const UA_HEADER = 'user-agent';
+const CLIENT_HINTS_HEADERS = ['sec-ch-ua', 'sec-ch-ua-mobile', 'sec-ch-ua-platform', 'sec-ch-ua-platform-version', 'sec-ch-ua-model'];
 
 function headersToBag(headers) {
     const bag = new Map();
@@ -22,7 +24,15 @@ function headersToBag(headers) {
                 });
                 bag.set(lname, headers.length - 1);
             }
-        }
+        },
+        remove(name) {
+            const lname = name.toLowerCase();
+            const idx = bag.get(lname);
+            if (idx != null) {
+                headers.splice(idx, 1);
+                bag.delete(lname);
+            }
+        },
     };
 }
 
@@ -36,6 +46,9 @@ function generateContentScript(ua) {
     const isLinux = /Linux|X11/i.test(ua);
     const platform = isWin ? "Win32" : (isLinux ? "Linux x86_64" : "Linux x86_64");
     const oscpu = isWin ? "Windows NT 10.0; Win64; x64" : "X11; Linux x86_64";
+    const platformName = isWin ? "Windows" : "Linux";
+
+    // Updated content script to shim navigator.userAgentData
     return `
       (function(){
         try {
@@ -49,10 +62,23 @@ function generateContentScript(ua) {
           def(Navigator.prototype, "product", "Gecko");
           def(Navigator.prototype, "productSub", "20100101");
           def(Navigator.prototype, "maxTouchPoints", 0);
-          if (!("userAgentData" in Navigator.prototype)) {
-            const uad = { brands: [{ brand: "Firefox", version: "${rv}" }], mobile: false, platform: ${JSON.stringify(isWin ? "Windows" : "Linux")} };
-            def(Navigator.prototype, "userAgentData", uad);
-          }
+          
+          const uad = {
+            brands: [{ brand: "Firefox", version: "${rv}" }],
+            mobile: false,
+            platform: ${JSON.stringify(platformName)},
+            getHighEntropyValues: async (hints) => {
+                const values = {
+                    "architecture": "x86",
+                    "bitness": "64",
+                    "model": "",
+                    "platformVersion": "",
+                    "uaFullVersion": "${rv}",
+                };
+                return values;
+            }
+          };
+          def(Navigator.prototype, "userAgentData", uad);
         } catch(e) {}
       })();
     `;
@@ -71,7 +97,12 @@ export async function onBeforeSendHeaders(details) {
         return {};
     if (state.mode !== 'autoAllow' && StateManager.isHostInDenylist(host))
         return {};
+
     const headers = details.requestHeaders || [];
+    const bag = headersToBag(headers);
+
+    CLIENT_HINTS_HEADERS.forEach(header => bag.remove(header));
+
     setOrAddUAHeader(headers, state.desktopUA);
     if (state.debugMode) {
         try {
