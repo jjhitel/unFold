@@ -76,7 +76,7 @@ function shouldRedirect(tabId, from, to) {
     const now = Date.now();
     let history = REDIRECT_GUARD.get(tabId) || [];
 
-    history = history.filter(item => now - item.ts < REDIRECT_LIMIT.windowMs);
+    history = history.filter(item => (now - item.ts) < REDIRECT_LIMIT.windowMs);
 
     if (history.some(item => item.url === to)) {
         log('Redirect suppressed (loop detected in history)', {
