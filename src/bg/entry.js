@@ -17,8 +17,36 @@ async function refreshListeners() {
     }
 }
 
+async function cleanupStaleTabData() {
+    try {
+        const allStorage = await browser.storage.local.get(null);
+        const tabKeys = Object.keys(allStorage).filter(k => k.startsWith('tab:'));
+        if (tabKeys.length === 0)
+            return;
+
+        const openTabs = await browser.tabs.query({});
+        const openTabIds = new Set(openTabs.map(t => t.id));
+
+        const staleKeys = tabKeys.filter(key => {
+            const parts = key.split(':');
+            if (parts.length < 2)
+                return false;
+            const tabId = parseInt(parts[1], 10);
+            return !isNaN(tabId) && !openTabIds.has(tabId);
+        });
+
+        if (staleKeys.length > 0) {
+            await browser.storage.local.remove(staleKeys);
+            log(`Cleaned up stale data for ${staleKeys.length} keys from closed tabs.`);
+        }
+    } catch (e) {
+        log('Error during stale tab data cleanup:', e);
+    }
+}
+
 async function boot() {
     await Cache.cleanup();
+    await cleanupStaleTabData();
     await initializeStateManager();
     await updateAllBadges();
     await createUpdateAlarm();

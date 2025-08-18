@@ -13,10 +13,67 @@ const allowlistTrie = new HNTrieContainer();
 let denylistTrieRoot = 0;
 let allowlistTrieRoot = 0;
 
-const KV = (browser.storage && browser.storage.session) ? browser.storage.session : browser.storage.local;
+const USING_SESSION_STORAGE = !!(browser.storage && browser.storage.session);
+const KV = USING_SESSION_STORAGE ? browser.storage.session : browser.storage.local;
+let SESSION_NS = '';
+
+async function ensureSessionNamespace() {
+    if (USING_SESSION_STORAGE) {
+        SESSION_NS = '';
+        return;
+    }
+    const { kv_session_ns } = await browser.storage.local.get('kv_session_ns');
+    if (kv_session_ns) {
+        SESSION_NS = kv_session_ns;
+        return;
+    }
+    const ns = `${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
+    await browser.storage.local.set({
+        kv_session_ns: ns
+    });
+    SESSION_NS = ns;
+}
+
+async function cleanupOrphanTabKeysForCurrentSession() {
+    if (USING_SESSION_STORAGE)
+        return;
+    const all = await browser.storage.local.get(null);
+    const prefix = `s:${SESSION_NS}:tab:`;
+    const tabs = await browser.tabs.query({});
+    const alive = new Set(tabs.map(t => t.id));
+    const toRemove = Object.keys(all).filter(k => {
+        if (!k.startsWith(prefix))
+            return false;
+        const rest = k.slice(prefix.length);
+        const m = rest.match(/^(\d+):/);
+        if (!m)
+            return true;
+        return !alive.has(Number(m[1]));
+    });
+    if (toRemove.length)
+        await browser.storage.local.remove(toRemove);
+}
+
+export async function rotateSessionNamespace() {
+    if (USING_SESSION_STORAGE)
+        return;
+    const { kv_session_ns: oldNs } = await browser.storage.local.get('kv_session_ns');
+    const newNs = `${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
+    await browser.storage.local.set({
+        kv_session_ns: newNs
+    });
+    SESSION_NS = newNs;
+    const all = await browser.storage.local.get(null);
+    const oldPrefix = oldNs ? `s:${oldNs}:` : null;
+    const toRemove = oldPrefix ? Object.keys(all).filter(k => k.startsWith(oldPrefix)) : [];
+    if (toRemove.length)
+        await browser.storage.local.remove(toRemove);
+}
+
 const TabKV = {
     _k(tabId, key) {
-        return `tab:${tabId}:${key}`;
+        const p = USING_SESSION_STORAGE ? '' : `s:${SESSION_NS}:`;
+        return `${p}tab:${tabId}:${key}`;
     },
     async set(tabId, key, val) {
         const k = this._k(tabId, key);
@@ -403,5 +460,7 @@ async function normalizeThreshold(v) {
 }
 
 export async function initialize() {
+    await ensureSessionNamespace();
+    await cleanupOrphanTabKeysForCurrentSession();
     await refreshAllSettings();
 }
