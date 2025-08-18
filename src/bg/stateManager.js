@@ -2,7 +2,7 @@
 import { util } from '../common/utils.js';
 import { compileRules } from '../common/rule-compiler.js';
 import { C } from '../common/constants.js';
-import { HNTrieContainer } from '../common/hntrie.js';
+import HNTrieContainer from '@gorhill/ubo-core/js/hntrie.js';
 
 const { log, normalizeList, debounce } = util;
 let _prevDenyText = null, _prevAllowText = null;
@@ -12,6 +12,40 @@ const denylistTrie = new HNTrieContainer();
 const allowlistTrie = new HNTrieContainer();
 let denylistTrieRoot = 0;
 let allowlistTrieRoot = 0;
+
+function trieCreate(tc) {
+    if (typeof tc.createOne === 'function')
+        return tc.createOne();
+    if (typeof tc.createTrie === 'function')
+        return tc.createTrie();
+    throw new Error('HNTrieContainer: no createOne/createTrie');
+}
+function trieAdd(tc, root, host) {
+    if (typeof tc.add === 'function' && tc.add.length >= 2)
+        return tc.add(root, host);
+    if (typeof tc.addJS === 'function' && typeof tc.setNeedle === 'function') {
+        tc.setNeedle(host);
+        return tc.addJS(root);
+    }
+    if (typeof tc.add === 'function' && tc.add.length === 1 && typeof tc.setNeedle === 'function') {
+        tc.setNeedle(host);
+        return tc.add(root);
+    }
+    throw new Error('HNTrieContainer: no add/addJS(+setNeedle)');
+}
+function trieMatches(tc, root, host) {
+    if (typeof tc.matches === 'function' && tc.matches.length >= 2)
+        return tc.matches(root, host);
+    if (typeof tc.matchesJS === 'function' && typeof tc.setNeedle === 'function') {
+        tc.setNeedle(host);
+        return tc.matchesJS(root);
+    }
+    if (typeof tc.matches === 'function' && tc.matches.length === 1 && typeof tc.setNeedle === 'function') {
+        tc.setNeedle(host);
+        return tc.matches(root);
+    }
+    return -1;
+}
 
 const state = {
     mode: C.DEFAULT_MODE,
@@ -139,12 +173,12 @@ export const StateManager = {
     isHostInDenylist: (host) => {
         if (!host || denylistTrieRoot === 0)
             return false;
-        return denylistTrie.setNeedle(host).matches(denylistTrieRoot) !== -1;
+        return trieMatches(denylistTrie, denylistTrieRoot, host) !== -1;
     },
     isHostInAllowlist: (host) => {
         if (!host || allowlistTrieRoot === 0)
             return false;
-        return allowlistTrie.setNeedle(host).matches(allowlistTrieRoot) !== -1;
+        return trieMatches(allowlistTrie, allowlistTrieRoot, host) !== -1;
     },
 };
 
@@ -189,16 +223,16 @@ export async function updateLists(data) {
         if (denyText !== _prevDenyText) {
             _prevDenyText = denyText;
             denylistTrie.reset();
-            denylistTrieRoot = denylistTrie.createTrie();
+            denylistTrieRoot = trieCreate(denylistTrie);
             for (const host of normalizeList(denyText))
-                denylistTrie.setNeedle(host).add(denylistTrieRoot);
+                trieAdd(denylistTrie, denylistTrieRoot, host);
         }
         if (allowText !== _prevAllowText) {
             _prevAllowText = allowText;
             allowlistTrie.reset();
-            allowlistTrieRoot = allowlistTrie.createTrie();
+            allowlistTrieRoot = trieCreate(allowlistTrie);
             for (const host of normalizeList(allowText))
-                allowlistTrie.setNeedle(host).add(allowlistTrieRoot);
+                trieAdd(allowlistTrie, allowlistTrieRoot, host);
         }
         log('Deny/Allow Tries updated');
     } catch (e) {
