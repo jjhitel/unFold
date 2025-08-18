@@ -116,7 +116,24 @@ async function _updateBadge(tabId) {
         let text = "";
         let color = "#9CA3AF";
         const tab = await browser.tabs.get(tabId);
-        const host = tab?.url ? extractHostname(tab.url) : "";
+        const url = tab?.url || '';
+
+        if (!/^https?:\/\//i.test(url)) {
+            text = "X";
+            color = "#9CA3AF";
+            await browser.browserAction.setBadgeText({
+                tabId,
+                text
+            });
+            await browser.browserAction.setBadgeBackgroundColor({
+                tabId,
+                color
+            });
+            return;
+        }
+
+        const host = extractHostname(url);
+
         const isDenied = (state.mode !== 'autoAllow') && StateManager.isHostInDenylist(host);
         if (state.mode === "off" || isDenied) {
             text = "X";
