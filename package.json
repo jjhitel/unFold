@@ -25,6 +25,7 @@
         "just-debounce-it": "^3.2.0",
         "lodash": "^4.17.21",
         "parse-domain": "^8.2.2",
+        "safe-regex": "^2.1.1",
         "vite": "^7.1.2",
         "vite-plugin-web-extension": "^4.4.5",
         "web-ext": "^8.9.0"

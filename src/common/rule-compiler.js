@@ -4,19 +4,12 @@
  */
 'use strict';
 
+import safeRegex from 'safe-regex';
+
 function isSafeRegex(body) {
     if (!body)
         return false;
-    if (body.length > 256)
-        return false;
-
-    const captureGroups = body.match(/\((?!\?)/g) || [];
-    if (captureGroups.length > 8) {
-        return false;
-    }
-    const danger = /(\(.{0,50}\)\+){3,}|(\.\*){2,}|\(\?[<!=]/;
-    return !danger.test(body);
-
+    return safeRegex(body);
 }
 
 function parseRegexLine(line) {
@@ -42,19 +35,7 @@ function parseRegexLine(line) {
         .replace(/\\\\/g, "\\");
     };
 
-    const safeCheck =
-        typeof isSafeRegex === "function"
-         ? isSafeRegex
-         : (body) => {
-        if (/^\^?https?:\\\/\\\//.test(body))
-            return true;
-        if (!body)
-            return false;
-        if (body.length > 1024)
-            return false;
-        const danger = /\([^)]+[+*]\)\s*[+*]{1,}/;
-        return !danger.test(body);
-    };
+    const safeCheck = safeRegex;
 
     const escapeRegex = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
