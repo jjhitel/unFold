@@ -3,6 +3,7 @@
 import { C } from './constants.js';
 import debounce from 'just-debounce-it';
 import escapeStringRegexp from 'escape-string-regexp';
+import { fromUrl, NO_HOSTNAME } from 'parse-domain';
 const Utils = {};
 
 Utils.log = (tag, payload) => {
@@ -31,6 +32,8 @@ Utils.normalizeList = (multiline) => {
     return out;
 };
 
+Utils.debounce = debounce;
+
 Utils.escapeRegExp = (s) => {
     const str = String(s ?? '');
     return typeof RegExp.escape === 'function'
@@ -39,14 +42,9 @@ Utils.escapeRegExp = (s) => {
 };
 
 Utils.extractHostname = (url) => {
-    try {
-        return new URL(url).hostname.toLowerCase();
-    } catch {
-        return "";
-    }
+    const host = fromUrl(url);
+    return host === NO_HOSTNAME ? null : host;
 };
-
-Utils.debounce = debounce;
 
 Utils.localizePage = () => {
     document.querySelectorAll('[data-i18n]').forEach(el => {
