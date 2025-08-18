@@ -1,28 +1,29 @@
 {
-    "manifest_version": 2,
+    "manifest_version": 3,
     "name": "__MSG_extensionName__",
     "version": "1.0.0",
     "description": "__MSG_extensionDescription__",
     "default_locale": "en",
     "permissions": [
-        "https://*/*",
-        "http://*/*",
-        "storage",
-        "tabs",
         "webRequest",
         "webRequestBlocking",
         "webNavigation",
+        "tabs",
+        "storage",
         "sessions",
         "alarms"
     ],
+    "host_permissions": [
+        "http://*/*",
+        "https://*/*"
+    ],
     "background": {
-        "page": "src/bg/background.html",
-        "persistent": false
+        "page": "src/bg/background.html"
     },
     "icons": {
         "96": "res/icons/icon96.png"
     },
-    "browser_action": {
+    "action": {
         "default_icon": {
             "96": "res/icons/icon96.png"
         },
@@ -50,11 +51,11 @@
     "browser_specific_settings": {
         "gecko": {
             "id": "@unfold.jsp",
-            "strict_min_version": "58.0"
+            "strict_min_version": "109.0"
         },
         "gecko_android": {
             "id": "@unfold.jsp",
-            "strict_min_version": "113.0"
+            "strict_min_version": "121.0"
         }
     },
     "incognito": "spanning"
