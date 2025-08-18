@@ -1,6 +1,7 @@
 'use strict';
 import { StateManager } from './stateManager.js';
 import { util } from '../common/utils.js';
+import { parseDomain, fromUrl, NO_HOSTNAME, ParseResultType } from 'parse-domain';
 
 const { log } = util;
 const REDIRECT_GUARD = new Map();
@@ -8,6 +9,21 @@ const REDIRECT_LIMIT = {
     windowMs: 2000,
     maxRedirects: 5
 };
+
+function etld1(urlString, {
+    icannOnly = true
+} = {}) {
+    const hostname = fromUrl(urlString);
+    if (hostname === NO_HOSTNAME)
+        return null;
+    const res = parseDomain(hostname);
+    if (res.type !== ParseResultType.Listed)
+        return null;
+    const base = icannOnly ? res.icann : res;
+    if (!base.domain || base.topLevelDomains.length === 0)
+        return null;
+    return `${base.domain}.${base.topLevelDomains.join('.')}`;
+}
 
 function normalize(u) {
     try {
@@ -33,15 +49,13 @@ function shouldRedirect(tabId, from, to) {
             return false;
         }
 
-        const getMainDomain = (hostname) => {
-            const parts = hostname.split('.');
-            if (parts.length > 2 && parts[parts.length - 2].length <= 3) {
-                return parts.slice(-3).join('.');
-            }
-            return parts.slice(-2).join('.');
-        };
-
-        if (getMainDomain(fromUrl.hostname) !== getMainDomain(toUrl.hostname)) {
+        const fromSite = etld1(from, {
+            icannOnly: true
+        });
+        const toSite = etld1(to, {
+            icannOnly: true
+        });
+        if (!fromSite || !toSite || fromSite !== toSite) {
             log('Redirect blocked (cross-origin target)', {
                 from,
                 to
