@@ -1,13 +1,12 @@
 'use strict';
 import { util } from '../common/utils.js';
 import { StateManager } from './stateManager.js';
-import { onBeforeSendHeaders } from './ua-inject.js';
-import { onBeforeRequest } from './url-redirect.js';
+import { CLIENT_HINTS_HEADERS, shimUA } from './ua-inject.js';
 import { updateBadge } from './controller.js';
 
 const { log } = util;
 export const RELOAD_TIMES = new Map();
-let isListenersRegistered = false;
+const TAB_RULE_IDS = new Map();
 
 function showAlertInPage(message) {
     if (document.getElementById('unfold-alerter-host'))
@@ -122,38 +121,136 @@ export async function onViewportMessage(msg, sender) {
     const changed = StateManager.updateTabWidth(tabId, isNowWide);
     await handleAutoRefresh(tabId, changed);
     await updateBadge(tabId, isNowWide);
+    await refreshTabRules(tabId);
 }
 
-export function registerListeners(urlPatterns) {
-    if (isListenersRegistered || !urlPatterns || urlPatterns.length === 0)
-        return;
-
+async function applyUAShim(tabId) {
     const state = StateManager.getState();
-    const headerListenerTypes = state.compatMode
-         ? ["main_frame", "sub_frame", "xmlhttprequest"]
-         : ["main_frame", "xmlhttprequest"];
-
-    browser.webRequest.onBeforeSendHeaders.addListener(
-        onBeforeSendHeaders, {
-        urls: urlPatterns,
-        types: headerListenerTypes
-    },
-        ["blocking", "requestHeaders"]);
-    browser.webRequest.onBeforeRequest.addListener(
-        onBeforeRequest, {
-        urls: urlPatterns,
-        types: ["main_frame", "sub_frame"]
-    },
-        ["blocking"]);
-    isListenersRegistered = true;
-    log('Web request listeners registered for patterns:', urlPatterns, 'Compat Mode:', state.compatMode);
+    try {
+        await browser.scripting.executeScript({
+            target: {
+                tabId,
+                allFrames: state.compatMode,
+            },
+            injectImmediately: true,
+            world: 'MAIN',
+            func: shimUA,
+            args: [state.desktopUA],
+        });
+    } catch (e) {}
 }
 
-export function unregisterListeners() {
-    if (!isListenersRegistered)
+function buildHeaderRule(tabId, state) {
+    return {
+        id: tabId * 1000 + 1,
+        priority: 1,
+        action: {
+            type: 'modifyHeaders',
+            requestHeaders: [
+                { header: 'user-agent', operation: 'set', value: state.desktopUA },
+                ...CLIENT_HINTS_HEADERS.map((h) => ({ header: h, operation: 'remove' })),
+            ],
+        },
+        condition: {
+            tabIds: [tabId],
+            resourceTypes: state.compatMode
+                ? ['main_frame', 'sub_frame', 'xmlhttprequest']
+                : ['main_frame', 'xmlhttprequest'],
+        },
+    };
+}
+
+function buildRedirectRules(tabId, state, isDesktop) {
+    const bucket = isDesktop ? state.desktopRedirectRules : state.mobileRedirectRules;
+    const rules = [];
+    let offset = 2;
+    for (const r of bucket) {
+        if (!r || !r.to)
+            continue;
+        const baseId = tabId * 1000 + offset;
+        const caseSensitive = r.re.flags.includes('i') ? false : true;
+        if (r.to.includes('{SCHEME}')) {
+            for (const scheme of ['http', 'https']) {
+                rules.push({
+                    id: tabId * 1000 + offset,
+                    priority: 1,
+                    action: {
+                        type: 'redirect',
+                        regexSubstitution: r.to.replace(/\{SCHEME\}/g, scheme),
+                    },
+                    condition: {
+                        regexFilter: r.re.source.replace('https?', scheme),
+                        isUrlFilterCaseSensitive: caseSensitive,
+                        tabIds: [tabId],
+                        resourceTypes: ['main_frame', 'sub_frame'],
+                    },
+                });
+                offset++;
+            }
+        } else {
+            rules.push({
+                id: baseId,
+                priority: 1,
+                action: { type: 'redirect', regexSubstitution: r.to },
+                condition: {
+                    regexFilter: r.re.source,
+                    isUrlFilterCaseSensitive: caseSensitive,
+                    tabIds: [tabId],
+                    resourceTypes: ['main_frame', 'sub_frame'],
+                },
+            });
+            offset++;
+        }
+    }
+    return rules;
+}
+
+export async function refreshTabRules(tabId) {
+    const existing = TAB_RULE_IDS.get(tabId) || [];
+    if (existing.length) {
+        await browser.declarativeNetRequest.updateDynamicRules({
+            removeRuleIds: existing,
+        });
+    }
+    const state = StateManager.getState();
+    if (state.mode === 'off') {
+        TAB_RULE_IDS.set(tabId, []);
         return;
-    browser.webRequest.onBeforeSendHeaders.removeListener(onBeforeSendHeaders);
-    browser.webRequest.onBeforeRequest.removeListener(onBeforeRequest);
-    isListenersRegistered = false;
-    log('Web request listeners unregistered');
+    }
+    const isDesktop = state.mode === 'always' || StateManager.isDesktopPreferred(tabId);
+    const rules = [];
+    const ids = [];
+
+    if (isDesktop) {
+        const headerRule = buildHeaderRule(tabId, state);
+        rules.push(headerRule);
+        ids.push(headerRule.id);
+        await applyUAShim(tabId);
+    }
+
+    if (state.urlRedirect) {
+        const redirectRules = buildRedirectRules(tabId, state, isDesktop);
+        rules.push(...redirectRules);
+        ids.push(...redirectRules.map((r) => r.id));
+    }
+
+    if (rules.length) {
+        await browser.declarativeNetRequest.updateDynamicRules({ addRules: rules });
+    }
+    TAB_RULE_IDS.set(tabId, ids);
+}
+
+export async function refreshAllRules() {
+    const tabs = await browser.tabs.query({});
+    for (const t of tabs) {
+        await refreshTabRules(t.id);
+    }
+}
+
+export async function clearTabRules(tabId) {
+    const existing = TAB_RULE_IDS.get(tabId);
+    if (existing && existing.length) {
+        await browser.declarativeNetRequest.updateDynamicRules({ removeRuleIds: existing });
+        TAB_RULE_IDS.delete(tabId);
+    }
 }

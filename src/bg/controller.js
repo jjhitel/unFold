@@ -2,8 +2,7 @@
 import { StateManager, cleanupTabState } from './stateManager.js';
 import { util } from '../common/utils.js';
 import { Cache } from '../common/cache.js';
-import { onViewportMessage, RELOAD_TIMES } from './net.js';
-import { clearRedirectGuard } from './url-redirect.js';
+import { onViewportMessage, RELOAD_TIMES, clearTabRules } from './net.js';
 import { C } from '../common/constants.js';
 
 const { log, extractHostname } = util;
@@ -197,13 +196,13 @@ browser.tabs.onUpdated.addListener(async(tabId, changeInfo, tab) => {
         await updateBadge(tabId);
     }
     if (changeInfo.status === 'complete' && tab.url) {
-        clearRedirectGuard?.(tabId);
+        // no-op for DNR migration
     }
 });
 
 browser.tabs.onRemoved.addListener((tabId) => {
-    clearRedirectGuard?.(tabId);
     RELOAD_TIMES.delete(tabId);
+    clearTabRules(tabId).catch(() => {});
     cleanupTabState(tabId).catch(() => {});
     StateManager.getState().isWideByTab.delete(tabId);
     StateManager.getState().stickyMobileByTab.delete(tabId);

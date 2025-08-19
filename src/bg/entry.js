@@ -1,20 +1,15 @@
 'use strict';
 import '../common/env.js';
-import { initialize as initializeStateManager, StateManager, getTargetHostPatterns, refreshGeneralSettings, updateLists, updateRules } from './stateManager.js';
+import { initialize as initializeStateManager, StateManager, refreshGeneralSettings, updateLists, updateRules } from './stateManager.js';
 import { util } from '../common/utils.js';
-import { registerListeners, unregisterListeners } from './net.js';
+import { refreshAllRules } from './net.js';
 import { createUpdateAlarm, updateAllBadges } from './controller.js';
 import { Cache } from '../common/cache.js';
 
 const { log, debounce } = util;
 
-async function refreshListeners() {
-    unregisterListeners();
-    const state = StateManager.getState();
-    if (state.mode !== 'off') {
-        const patterns = await getTargetHostPatterns();
-        registerListeners(patterns);
-    }
+async function refreshRules() {
+    await refreshAllRules();
 }
 
 async function cleanupStaleTabData() {
@@ -50,7 +45,7 @@ async function boot() {
     await initializeStateManager();
     await updateAllBadges();
     await createUpdateAlarm();
-    await refreshListeners();
+    await refreshRules();
 
     log('unFold background script booted.');
 }
@@ -63,7 +58,7 @@ const handleStorageChange = debounce(async(changes, area) => {
     const listKeys = ['denylistText', 'allowlistText'];
     const ruleKeys = ['desktopRegexText', 'mobileRegexText', 'desktopRedirectRule', 'mobileRedirectRule'];
 
-    let needsListenerRefresh = false;
+    let needsRuleRefresh = false;
 
     let settingsChanged = false;
     let listsChanged = false;
@@ -72,13 +67,14 @@ const handleStorageChange = debounce(async(changes, area) => {
     for (const key of changedKeys) {
         if (listKeys.includes(key)) {
             listsChanged = true;
-            needsListenerRefresh = true;
+            needsRuleRefresh = true;
         } else if (ruleKeys.includes(key)) {
             rulesChanged = true;
+            needsRuleRefresh = true;
         } else {
             settingsChanged = true;
             if (key === 'mode') {
-                needsListenerRefresh = true;
+                needsRuleRefresh = true;
             }
         }
     }
@@ -94,9 +90,9 @@ const handleStorageChange = debounce(async(changes, area) => {
     await Promise.all(updatePromises);
     await updateAllBadges();
 
-    if (needsListenerRefresh) {
-        log('Settings changed, refreshing listeners...');
-        await refreshListeners();
+    if (needsRuleRefresh) {
+        log('Settings changed, refreshing rules...');
+        await refreshRules();
     }
 
     if (changes.autoUpdatePeriod) {

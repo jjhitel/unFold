@@ -5,7 +5,7 @@ import { C } from '../common/constants.js';
 
 const { extractHostname } = util;
 const UA_HEADER = 'user-agent';
-const CLIENT_HINTS_HEADERS = [
+export const CLIENT_HINTS_HEADERS = [
     'sec-ch-ua', 'sec-ch-ua-mobile',
     'sec-ch-ua-platform', 'sec-ch-ua-platform-version',
     'sec-ch-ua-model', 'sec-ch-ua-arch', 'sec-ch-ua-bitness',
@@ -45,7 +45,7 @@ function setOrAddUAHeader(headers, ua) {
     headersToBag(headers).set('User-Agent', ua);
 }
 
-function shimUA(ua) {
+export function shimUA(ua) {
     const rv = (ua.match(/rv:(\d+)/) || [])[1] || '0';
     const isWin = /Windows NT/i.test(ua);
     const isLinux = /Linux|X11/i.test(ua);
