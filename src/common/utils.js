@@ -6,16 +6,22 @@ import escapeStringRegexp from 'escape-string-regexp';
 import { parse as tldtsParse } from 'tldts';
 const Utils = {};
 
+function getTimestamp() {
+    try {
+        return new Date().toTimeString().slice(0, 8);
+    } catch {
+        return "00:00:00";
+    }
+}
+
 Utils.log = (tag, payload) => {
     try {
         if (!globalThis.FD_ENV?.DEBUG)
             return;
-        const ts = new Date().toTimeString().slice(0, 8);
-        if (payload !== undefined) {
-            console.log(`[FD][${ts}] ${tag}`, payload);
-        } else {
-            console.log(`[FD][${ts}] ${tag}`);
-        }
+        if (payload !== undefined)
+            console.log(`[FD][${getTimestamp()}] ${tag}`, payload);
+        else
+            console.log(`[FD][${getTimestamp()}] ${tag}`);
     } catch {}
 };
 
