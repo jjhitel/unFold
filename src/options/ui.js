@@ -117,7 +117,7 @@ export function initUIBindings() {
     bindSetting('autoRefresh', C.KEY_AUTO_REFRESH);
     bindSetting('urlRedirect', C.KEY_URL_REDIRECT);
     bindSetting('debugMode', C.KEY_DEBUG_MODE);
-    bindSetting('liteMode', C.KEY_LITE_MODE);
+    bindSetting('compatMode', C.KEY_COMPAT_MODE);
 
     const uaInput = $id('ua');
     if (uaInput) {

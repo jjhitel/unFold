@@ -140,7 +140,7 @@ const state = {
     debugMode: C.DEFAULT_DEBUG_MODE,
     autoUpdatePeriod: C.DEFAULT_AUTO_UPDATE_PERIOD,
     zoomLevel: C.DEFAULT_ZOOM_LEVEL,
-    liteMode: C.DEFAULT_LITE_MODE,
+    compatMode: C.DEFAULT_COMPAT_MODE,
     veryAggressiveUA: C.DEFAULT_VERY_AGGRESSIVE_UA,
     desktopRedirectRules: [],
     mobileRedirectRules: [],
@@ -434,7 +434,7 @@ export async function refreshGeneralSettings(settings) {
         state.urlRedirect = s[C.KEY_URL_REDIRECT] ?? C.DEFAULT_URL_REDIRECT;
         state.autoUpdatePeriod = s[C.KEY_AUTO_UPDATE_PERIOD] ?? C.DEFAULT_AUTO_UPDATE_PERIOD;
         state.zoomLevel = s[C.KEY_ZOOM_LEVEL] ?? C.DEFAULT_ZOOM_LEVEL;
-        state.liteMode = s[C.KEY_LITE_MODE] ?? C.DEFAULT_LITE_MODE;
+        state.compatMode = s[C.KEY_COMPAT_MODE] ?? C.DEFAULT_COMPAT_MODE;
         state.veryAggressiveUA = s[C.KEY_VERY_AGGRESSIVE_UA] ?? C.DEFAULT_VERY_AGGRESSIVE_UA;
 
         await _persistUAChanges(s, dynamicUA, determinedUA);

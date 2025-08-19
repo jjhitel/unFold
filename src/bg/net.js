@@ -116,9 +116,9 @@ export function registerListeners(urlPatterns) {
         return;
 
     const state = StateManager.getState();
-    const headerListenerTypes = state.liteMode
-         ? ["main_frame", "xmlhttprequest"]
-         : ["main_frame", "sub_frame", "xmlhttprequest"];
+    const headerListenerTypes = state.compatMode
+         ? ["main_frame", "sub_frame", "xmlhttprequest"]
+         : ["main_frame", "xmlhttprequest"];
 
     browser.webRequest.onBeforeSendHeaders.addListener(
         onBeforeSendHeaders, {
@@ -133,7 +133,7 @@ export function registerListeners(urlPatterns) {
     },
         ["blocking"]);
     isListenersRegistered = true;
-    log('Web request listeners registered for patterns:', urlPatterns, 'Lite Mode:', state.liteMode);
+    log('Web request listeners registered for patterns:', urlPatterns, 'Compat Mode:', state.compatMode);
 }
 
 export function unregisterListeners() {

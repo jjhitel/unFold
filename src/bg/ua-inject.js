@@ -104,7 +104,7 @@ export async function onBeforeSendHeaders(details) {
     const isDesktop = (state.mode === 'always') || StateManager.isDesktopPreferred(tabId);
     if (!isDesktop)
         return {};
-    if (!state.liteMode && (details.type === 'sub_frame' || details.type === 'xmlhttprequest')) {
+    if (state.compatMode && (details.type === 'sub_frame' || details.type === 'xmlhttprequest')) {
         const host = extractHostname(url);
         const topUrl = details.documentUrl || details.originUrl || details.initiator || '';
         const topHost = extractHostname(topUrl) || host;
@@ -130,7 +130,7 @@ export async function onBeforeSendHeaders(details) {
             browser.scripting.executeScript({
                 target: {
                     tabId,
-                    allFrames: !state.liteMode
+                    allFrames: state.compatMode
                 },
                 injectImmediately: true,
                 world: "MAIN",

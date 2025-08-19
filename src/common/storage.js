@@ -58,7 +58,7 @@ const ID_MAP = {
     [C.KEY_DEBUG_MODE]: 'debugMode',
     [C.KEY_AUTO_UPDATE_PERIOD]: 'autoUpdatePeriod',
     [C.KEY_ZOOM_LEVEL]: 'zoomLevel',
-    [C.KEY_LITE_MODE]: 'liteMode',
+    [C.KEY_COMPAT_MODE]: 'compatMode',
 };
 
 export const DEFAULTS = {
@@ -70,7 +70,7 @@ export const DEFAULTS = {
     [C.KEY_DEBUG_MODE]: C.DEFAULT_DEBUG_MODE,
     [C.KEY_AUTO_UPDATE_PERIOD]: C.DEFAULT_AUTO_UPDATE_PERIOD,
     [C.KEY_ZOOM_LEVEL]: C.DEFAULT_ZOOM_LEVEL,
-    [C.KEY_LITE_MODE]: C.DEFAULT_LITE_MODE,
+    [C.KEY_COMPAT_MODE]: C.DEFAULT_COMPAT_MODE,
 };
 
 export async function loadSettings() {

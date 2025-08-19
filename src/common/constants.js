@@ -21,7 +21,7 @@ export const C = {
     KEY_REMOTE_SELECTED_RULES: 'selectedRemoteRules',
     KEY_REMOTE_LAST_UPDATED: 'remoteRulesLastUpdated',
     KEY_ZOOM_LEVEL: 'zoomLevel',
-    KEY_LITE_MODE: 'liteMode',
+    KEY_COMPAT_MODE: 'compatMode',
 
     KEY_RULE_LAST_MODIFIED_PREFIX: '::lastModified',
 
@@ -34,7 +34,7 @@ export const C = {
     DEFAULT_DEBUG_MODE: false,
     DEFAULT_AUTO_UPDATE_PERIOD: 1440,
     DEFAULT_ZOOM_LEVEL: 100,
-    DEFAULT_LITE_MODE: false,
+    DEFAULT_COMPAT_MODE: true,
     DEFAULT_VERY_AGGRESSIVE_UA: false,
 
     MSG_VIEWPORT_UPDATE: 'FOLD_DESKTOP_VIEWPORT',

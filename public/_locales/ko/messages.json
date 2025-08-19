@@ -239,8 +239,8 @@
     "options_zoomLevel": {
         "message": "페이지 확대 배율 (%)"
     },
-    "options_liteMode": {
-        "message": "라이트 모드"
+    "options_compatMode": {
+        "message": "호환성 개선"
     },
     "notification_reloadBlocked_title": {
         "message": "자동 새로고침 차단됨"
