@@ -101,9 +101,6 @@ function shouldRedirect(tabId, from, to) {
 
 export async function onBeforeRequest(details) {
     const { tabId, url } = details;
-    if (tabId === browser.tabs.TAB_ID_NONE) {
-        return {};
-    }
     const state = StateManager.getState();
     if (!state.urlRedirect || state.mode === 'off' || !/^https?:/i.test(url)) {
         return {};
@@ -133,19 +130,8 @@ export async function onBeforeRequest(details) {
     if (bucket.length > 0) {
         for (const rule of bucket) {
             try {
-                const t0 = (typeof performance !== 'undefined' ? performance.now() : Date.now());
-                const matched = rule.re.test(url);
-                const dt = (typeof performance !== 'undefined' ? performance.now() : Date.now()) - t0;
-                if (dt > 12) {
-                    log('Redirect rule too slow; skipped', {
-                        re: String(rule.re),
-                        elapsedMs: dt
-                    });
+                if (!rule.re.test(url))
                     continue;
-                }
-                if (!matched)
-                    continue;
-                continue;
                 const scheme = new URL(url).protocol.replace(':', '');
                 const to = url.replace(
                         rule.re,
