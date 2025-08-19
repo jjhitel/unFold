@@ -36,6 +36,10 @@ function headersToBag(headers) {
     };
 }
 
+function setOrAddUAHeader(headers, ua) {
+    headersToBag(headers).set('User-Agent', ua);
+}
+
 function shimUA(ua) {
     const rv = (ua.match(/rv:(\d+)/) || [])[1] || '0';
     const isWin = /Windows NT/i.test(ua);
@@ -89,15 +93,11 @@ export async function onBeforeSendHeaders(details) {
     const state = StateManager.getState();
     if (state.mode === 'off')
         return {};
-    const host = extractHostname(url);
     const isDesktop = (state.mode === 'always') || StateManager.isDesktopPreferred(tabId);
     if (!isDesktop)
         return {};
-    if (state.mode === 'autoAllow' && !StateManager.isHostInAllowlist(host))
-        return {};
-    if (state.mode !== 'autoAllow' && StateManager.isHostInDenylist(host))
-        return {};
     if (!state.liteMode && (details.type === 'sub_frame' || details.type === 'xmlhttprequest')) {
+        const host = extractHostname(url);
         const topUrl = details.documentUrl || details.originUrl || details.initiator || '';
         const topHost = extractHostname(topUrl) || host;
         const isThirdParty = (topHost && host) ? (topHost !== host) : false;
