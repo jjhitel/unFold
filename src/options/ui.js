@@ -45,7 +45,7 @@ async function displayLastUpdated() {
     const ts = res?.remoteRulesLastUpdated;
     if (ts) {
         const date = new Date(ts);
-        const formatted = `${date.toLocaleDateString()} ${date.toLocaleTimeString()}`;
+        const formatted = `${date.toLocaleString()}`;
         el.textContent = browser.i18n.getMessage('options_redirect_lastUpdated', formatted);
     } else {
         el.textContent = browser.i18n.getMessage('options_redirect_lastUpdatedNever');
