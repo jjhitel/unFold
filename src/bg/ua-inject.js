@@ -5,7 +5,12 @@ import { C } from '../common/constants.js';
 
 const { extractHostname } = util;
 const UA_HEADER = 'user-agent';
-const CLIENT_HINTS_HEADERS = ['sec-ch-ua', 'sec-ch-ua-mobile', 'sec-ch-ua-platform', 'sec-ch-ua-platform-version', 'sec-ch-ua-model'];
+const CLIENT_HINTS_HEADERS = [
+    'sec-ch-ua', 'sec-ch-ua-mobile',
+    'sec-ch-ua-platform', 'sec-ch-ua-platform-version',
+    'sec-ch-ua-model', 'sec-ch-ua-arch', 'sec-ch-ua-bitness',
+    'sec-ch-ua-full-version', 'sec-ch-ua-full-version-list'
+];
 
 function headersToBag(headers) {
     const bag = new Map();
