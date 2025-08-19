@@ -150,7 +150,7 @@ const state = {
     lastKnownWide: undefined,
 };
 
-export async function getTargetHostPatterns() {
+export async function getTargetHostPatterns(mode) {
     const { denylistText = '', allowlistText = '' } = await browser.storage.local.get(['denylistText', 'allowlistText']);
     const hosts = new Set();
 
@@ -162,8 +162,11 @@ export async function getTargetHostPatterns() {
         }
     };
 
-    addHostsFromString(denylistText);
-    addHostsFromString(allowlistText);
+    if (mode === 'autoAllow') {
+        addHostsFromString(allowlistText);
+    } else if (mode === 'autoDeny' || mode === 'always') {
+        addHostsFromString(denylistText);
+    }
 
     if (hosts.size === 0) {
         return ["<all_urls>"];
