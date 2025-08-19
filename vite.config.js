@@ -10,5 +10,15 @@ export default defineConfig({
     ],
     build: {
         outDir: 'dist',
+        target: 'firefox128',
+        minify: 'esbuild',
+        sourcemap: false,
+        rollupOptions: {
+            treeshake: true,
+        },
+    },
+    define: {
+        __DEV__: 'false',
+        'process.env.NODE_ENV': '"production"',
     },
 });
