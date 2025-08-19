@@ -310,6 +310,7 @@ export async function updateRules(data) {
         console.error('[FD] Failed to compile redirect rules:', e);
     }
 }
+
 export async function updateLists(data) {
     try {
         const d = data || await browser.storage.local.get(['denylistText', 'allowlistText']);

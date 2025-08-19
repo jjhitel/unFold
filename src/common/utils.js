@@ -29,11 +29,17 @@ Utils.normalizeList = (multiline) => {
     const seen = new Set();
     const out = [];
     for (const raw of String(multiline || '').split(/\r?\n/)) {
-        const v = raw.trim().toLowerCase();
-        if (!v || seen.has(v))
+        const trimmed = raw.trim();
+        if (!trimmed)
             continue;
-        seen.add(v);
-        out.push(v);
+        const p = tldtsParse(trimmed, {
+            icannOnly: true
+        });
+        const host = p.hostname || trimmed;
+        if (host && !seen.has(host)) {
+            seen.add(host);
+            out.push(host);
+        }
     }
     return out;
 };
