@@ -92,7 +92,13 @@ import debounce from 'just-debounce-it';
         });
 
         document.addEventListener('input', (e) => {
-            if (e.target.matches('input, textarea, [contenteditable]')) {
+            const target = e.target;
+            if (target.matches('input') && (
+                    target.name?.includes('password') || target.name?.includes('pwd') ||
+                    target.name?.includes('account') || target.name?.includes('id'))) {
+                return;
+            }
+            if (target.matches('input, textarea, [contenteditable]')) {
                 setDirty();
             }
         }, {
@@ -115,6 +121,5 @@ import debounce from 'just-debounce-it';
             }
         });
 
-    } catch (e) {
-    }
+    } catch (e) {}
 })();
