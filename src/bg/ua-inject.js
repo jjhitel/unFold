@@ -36,11 +36,7 @@ function headersToBag(headers) {
     };
 }
 
-function setOrAddUAHeader(headers, ua) {
-    headersToBag(headers).set('User-Agent', ua);
-}
-
-function generateContentScript(ua) {
+function shimUA(ua) {
     const rv = (ua.match(/rv:(\d+)/) || [])[1] || '0';
     const isWin = /Windows NT/i.test(ua);
     const isLinux = /Linux|X11/i.test(ua);
@@ -48,40 +44,44 @@ function generateContentScript(ua) {
     const oscpu = isWin ? "Windows NT 10.0; Win64; x64" : "X11; Linux x86_64";
     const platformName = isWin ? "Windows" : "Linux";
 
-    // Updated content script to shim navigator.userAgentData
-    return `
-      (function(){
+    const def = (obj, key, val) => {
         try {
-          const UA = ${JSON.stringify(ua)};
-          const def = (obj, key, val) => { try { Object.defineProperty(obj, key, { get: () => val, configurable: true }); } catch(e){} };
-          def(Navigator.prototype, "userAgent", UA);
-          def(Navigator.prototype, "appVersion", "5.0 (" + UA + ")");
-          def(Navigator.prototype, "platform", ${JSON.stringify(platform)});
-          def(Navigator.prototype, "vendor", "");
-          def(Navigator.prototype, "oscpu", ${JSON.stringify(oscpu)});
-          def(Navigator.prototype, "product", "Gecko");
-          def(Navigator.prototype, "productSub", "20100101");
-          def(Navigator.prototype, "maxTouchPoints", 0);
-          
-          const uad = {
-            brands: [{ brand: "Firefox", version: "${rv}" }],
-            mobile: false,
-            platform: ${JSON.stringify(platformName)},
-            getHighEntropyValues: async (hints) => {
-                const values = {
-                    "architecture": "x86",
-                    "bitness": "64",
-                    "model": "",
-                    "platformVersion": "",
-                    "uaFullVersion": "${rv}",
-                };
-                return values;
+            Object.defineProperty(obj, key, {
+                get: () => val,
+                configurable: true
+            });
+        } catch (e) {}
+    };
+
+    def(Navigator.prototype, "userAgent", ua);
+    def(Navigator.prototype, "appVersion", "5.0 (" + ua + ")");
+    def(Navigator.prototype, "platform", platform);
+    def(Navigator.prototype, "vendor", "");
+    def(Navigator.prototype, "oscpu", oscpu);
+    def(Navigator.prototype, "product", "Gecko");
+    def(Navigator.prototype, "productSub", "20100101");
+    def(Navigator.prototype, "maxTouchPoints", 0);
+
+    const uad = {
+        brands: [{
+                brand: "Firefox",
+                version: rv
             }
-          };
-          def(Navigator.prototype, "userAgentData", uad);
-        } catch(e) {}
-      })();
-    `;
+        ],
+        mobile: false,
+        platform: platformName,
+        getHighEntropyValues: async(hints) => {
+            const values = {
+                "architecture": "x86",
+                "bitness": "64",
+                "model": "",
+                "platformVersion": "",
+                "uaFullVersion": rv,
+            };
+            return values;
+        }
+    };
+    def(Navigator.prototype, "userAgentData", uad);
 }
 
 export async function onBeforeSendHeaders(details) {
@@ -119,13 +119,15 @@ export async function onBeforeSendHeaders(details) {
     }
     try {
         if (details.type === 'main_frame' && details.frameId === 0 && tabId !== browser.tabs.TAB_ID_NONE) {
-
             browser.scripting.executeScript({
-                target: { tabId, allFrames: !state.liteMode },
+                target: {
+                    tabId,
+                    allFrames: !state.liteMode
+                },
                 injectImmediately: true,
                 world: "MAIN",
-                func: (code) => { try { (new Function(code))(); } catch (_) {} },
-                args: [generateContentScript(state.desktopUA)]
+                func: shimUA,
+                args: [state.desktopUA]
             }).catch(() => {});
         }
     } catch (e) {}

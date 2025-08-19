@@ -94,11 +94,13 @@ export async function onViewportMessage(msg, sender) {
                 const message = browser.i18n.getMessage('notification_reloadBlocked_message');
                 try {
                     await browser.scripting.executeScript({
-                        target: { tabId },
+                        target: {
+                            tabId
+                        },
                         injectImmediately: true,
                         world: "MAIN",
-                        func: (fnStr, message) => { try { (new Function(`return (${fnStr})`))()(message); } catch (_) {} },
-                        args: [String(showAlertInPage), message]
+                        func: showAlertInPage,
+                        args: [message]
                     });
                 } catch (e) {
                     log('Failed to show in-page alert:', e);
