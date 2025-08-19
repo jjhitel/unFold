@@ -169,7 +169,7 @@ export async function getTargetHostPatterns(mode) {
     }
 
     if (hosts.size === 0) {
-        return ["<all_urls>"];
+        return ["*://*/*"];
     }
 
     const patterns = [];
