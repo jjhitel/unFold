@@ -95,6 +95,9 @@ function shimUA(ua) {
 
 export async function onBeforeSendHeaders(details) {
     const { tabId, url } = details;
+    if (tabId === browser.tabs.TAB_ID_NONE || !/^https?:/i.test(url)) {
+        return {};
+    }
     const state = StateManager.getState();
     if (state.mode === 'off')
         return {};
