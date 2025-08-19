@@ -2,6 +2,7 @@
 import { StateManager } from './stateManager.js';
 import { util } from '../common/utils.js';
 import { parse as tldtsParse } from 'tldts';
+import { Cache } from '../common/cache.js';
 
 const { log } = util;
 const REDIRECT_GUARD = new Map();
@@ -9,8 +10,6 @@ const REDIRECT_LIMIT = {
     windowMs: 2000,
     maxRedirects: 5
 };
-const RULE_CACHE = new Map();
-const CACHE_SIZE = 1000;
 
 function etld1(urlString) {
     try {
@@ -108,20 +107,16 @@ export async function onBeforeRequest(details) {
 
     const isMobile = StateManager.isMobilePreferred(tabId);
     const cacheKey = `${tabId}:${isMobile ? 'm' : 'd'}:${url}`;
-    if (RULE_CACHE.has(cacheKey)) {
-        const cachedResult = RULE_CACHE.get(cacheKey);
-        RULE_CACHE.delete(cacheKey);
-        RULE_CACHE.set(cacheKey, cachedResult);
-        if (cachedResult !== null) {
-            log('Redirect from cache:', {
-                from: url,
-                to: cachedResult
-            });
-            return {
-                redirectUrl: cachedResult
-            };
-        }
-        return {};
+
+    const cachedResult = await Cache.get(cacheKey);
+    if (cachedResult !== null) {
+        log('Redirect from cache:', {
+            from: url,
+            to: cachedResult
+        });
+        return {
+            redirectUrl: cachedResult
+        };
     }
 
     const bucket = isMobile ? state.mobileRedirectRules : state.desktopRedirectRules;
@@ -149,12 +144,7 @@ export async function onBeforeRequest(details) {
             }
         }
     }
-
-    if (RULE_CACHE.size >= CACHE_SIZE) {
-        const oldestKey = RULE_CACHE.keys().next().value;
-        RULE_CACHE.delete(oldestKey);
-    }
-    RULE_CACHE.set(cacheKey, redirectUrl);
+    await Cache.set(cacheKey, redirectUrl);
 
     if (redirectUrl) {
         return {
