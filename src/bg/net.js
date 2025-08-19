@@ -63,52 +63,65 @@ function isSafeToReload(tabId) {
     return !StateManager.isFormDirty(tabId);
 }
 
-export async function onViewportMessage(msg, sender) {
-    const tabId = sender.tab.id;
-    const state = StateManager.getState();
+function getEffectiveWidth(msg) {
     const vw = msg.vvWidth || msg.innerWidth || 0;
     const sw = msg.screenWidth || 0;
-    const w = (vw && sw) ? Math.min(vw, sw) : (vw || sw);
+    return (vw && sw) ? Math.min(vw, sw) : (vw || sw);
+}
 
+function getFoldState(width, tabId) {
+    const state = StateManager.getState();
     const prevWide = StateManager.isDesktopPreferred(tabId);
     const HYSTERESIS_PX = 100;
     const thresholdUp = state.threshold;
     const thresholdDown = Math.max(100, thresholdUp - HYSTERESIS_PX);
+    return prevWide ? (width >= thresholdDown) : (width >= thresholdUp);
+}
 
-    const isNowWide = prevWide ? (w >= thresholdDown) : (w >= thresholdUp);
-    const changed = StateManager.updateTabWidth(tabId, isNowWide);
+async function handleAutoRefresh(tabId, changed) {
+    const state = StateManager.getState();
+    if (!changed || !state.autoRefresh || (state.mode !== 'autoDeny' && state.mode !== 'autoAllow')) {
+        return;
+    }
 
-    if (changed && state.autoRefresh && (state.mode === 'autoDeny' || state.mode === 'autoAllow')) {
-        const last = RELOAD_TIMES.get(tabId) || 0;
-        const now = Date.now();
-        if (now - last > 1200) {
-            RELOAD_TIMES.set(tabId, now);
-            if (isSafeToReload(tabId)) {
-                try {
-                    await browser.tabs.reload(tabId);
-                } catch (e) {
-                    log('Tab reload failed', e);
-                }
-            } else {
-                log(`Auto-refresh blocked for tab ${tabId} due to a dirty form.`);
-                const message = browser.i18n.getMessage('notification_reloadBlocked_message');
-                try {
-                    await browser.scripting.executeScript({
-                        target: {
-                            tabId
-                        },
-                        injectImmediately: true,
-                        world: "MAIN",
-                        func: showAlertInPage,
-                        args: [message]
-                    });
-                } catch (e) {
-                    log('Failed to show in-page alert:', e);
-                }
+    const last = RELOAD_TIMES.get(tabId) || 0;
+    const now = Date.now();
+    if (now - last > 1200) {
+        RELOAD_TIMES.set(tabId, now);
+        if (isSafeToReload(tabId)) {
+            try {
+                await browser.tabs.reload(tabId);
+            } catch (e) {
+                log('Tab reload failed', e);
+            }
+        } else {
+            log(`Auto-refresh blocked for tab ${tabId} due to a dirty form.`);
+            const message = browser.i18n.getMessage('notification_reloadBlocked_message');
+            try {
+                await browser.scripting.executeScript({
+                    target: {
+                        tabId
+                    },
+                    injectImmediately: true,
+                    world: "MAIN",
+                    func: showAlertInPage,
+                    args: [message]
+                });
+            } catch (e) {
+                log('Failed to show in-page alert:', e);
             }
         }
     }
-    await updateBadge(tabId);
+}
+
+export async function onViewportMessage(msg, sender) {
+    const tabId = sender.tab.id;
+    const effectiveWidth = getEffectiveWidth(msg);
+    const isNowWide = getFoldState(effectiveWidth, tabId);
+
+    const changed = StateManager.updateTabWidth(tabId, isNowWide);
+    await handleAutoRefresh(tabId, changed);
+    await updateBadge(tabId, isNowWide);
 }
 
 export function registerListeners(urlPatterns) {
