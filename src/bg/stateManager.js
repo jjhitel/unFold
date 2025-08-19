@@ -335,9 +335,16 @@ export async function updateLists(data) {
     }
 }
 
+async function withTimeout(promise, ms) {
+    return Promise.race([
+            promise,
+            new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), ms)),
+        ]);
+}
+
 async function buildDynamicDesktopUA() {
     try {
-        const info = await browser.runtime.getBrowserInfo();
+        const info = await withTimeout(browser.runtime.getBrowserInfo(), 150);
         const ver = String(info?.version || '');
         const m = ver.match(/^(\d+)(?:\.(\d+))?/);
         const major = m?.[1] ?? '141';
