@@ -57,9 +57,14 @@ async function updateCheckedRemoteRules() {
         log('No remote rules selected. Skipping update.');
         return;
     }
-    const catalogURL = browser.runtime.getURL('rules.json');
-    const catalog = await fetch(catalogURL).then(r => r.json()).catch(() => []);
-    if (catalog.length === 0) {
+    const catalogCacheKey = 'remoteCatalog';
+    let catalog = await Cache.get(catalogCacheKey);
+    if (!catalog) {
+        const catalogURL = browser.runtime.getURL('rules.json');
+        catalog = await fetch(catalogURL).then(r => r.json()).catch(() => []);
+        await Cache.set(catalogCacheKey, catalog, 3 * 60 * 60 * 1000); // cache for 3 hours
+    }
+    if (!catalog || catalog.length === 0) {
         log('Failed to load remote rules catalog.');
         return;
     }
