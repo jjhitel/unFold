@@ -11,58 +11,44 @@ function isSafeRegex(pattern) {
     return safeRegex(pattern);
 }
 
-function parseRegexLine(line, lineNum) {
-    const raw = (line ?? "").trim();
-    if (!raw || /^(#|\/\/|;)/.test(raw))
+function parseSimpleLine(raw, lineNum, unquote) {
+    const simpleMatch = raw.match(/^(.*?)\s*(?:->|=>|→)\s*(.*)$/);
+    if (!simpleMatch)
         return null;
 
-    const unquote = (s) => {
-        if (!s)
-            return "";
-        if ((s.startsWith('"') && s.endsWith('"')) || (s.startsWith("'") && s.endsWith("'"))) {
-            return s.slice(1, -1);
-        }
-        return s;
-    };
+    const from = simpleMatch[1].trim();
+    let to = simpleMatch[2].trim() || '';
 
-    const simpleMatch = raw.match(/^(.*?)\s*(?:->|=>|→)\s*(.*)$/);
-    if (simpleMatch) {
-        const from = simpleMatch[1].trim();
-        let to = simpleMatch[2].trim() || '';
-        if (!from) {
-            util.log(`[RULE:L${lineNum}] Invalid redirect syntax: no source pattern`);
-            return null;
-        }
-
-        if (!from.startsWith('/') || !from.endsWith('/')) {
-            if (to && !/^[a-z]+:\/\//i.test(to) && !to.startsWith('{SCHEME}')) {
-                to = `{SCHEME}://${to}`;
-            }
-
-            let body;
-            const escapedFrom = util.escapeRegExp(from);
-
-            if (from.includes('*')) {
-                body = '^https?://' + escapedFrom.replace(/\\\*/g, '(.*)');
-            } else {
-                body = '^https?://' + escapedFrom + '\\/?(?=[?#]|$)';
-            }
-
-            const re = new RegExp(body, 'i');
-            return {
-                re,
-                to
-            };
-        }
+    if (!from) {
+        util.log(`[RULE:L${lineNum}] Invalid redirect syntax: no source pattern`);
+        return null;
     }
 
+    if (to && !/^[a-z]+:\/\//i.test(to) && !to.startsWith('{SCHEME}')) {
+        to = `{SCHEME}://${to}`;
+    }
+
+    let body;
+    const escapedFrom = util.escapeRegExp(from);
+
+    if (from.includes('*')) {
+        body = '^https?://' + escapedFrom.replace(/\\\*/g, '(.*)');
+    } else {
+        body = '^https?://' + escapedFrom + '\\/?(?=[?#]|$)';
+    }
+
+    const re = new RegExp(body, 'i');
+    return {
+        re,
+        to
+    };
+}
+
+function parseFullRegexLine(raw, lineNum, unquote) {
     try {
         const regexMatch = raw.match(/^\/((?:\\.|[^\/])*)\/([a-z]*)/i);
-        if (!regexMatch) {
-            if (!simpleMatch)
-                util.log(`[RULE:L${lineNum}] Invalid rule syntax`);
+        if (!regexMatch)
             return null;
-        }
 
         const body = regexMatch[1];
         const flags = regexMatch[2] || '';
@@ -87,6 +73,27 @@ function parseRegexLine(line, lineNum) {
     } catch (e) {
         util.log(`[RULE:L${lineNum}] Failed to compile rule: ${e.message}`);
         return null;
+    }
+}
+
+function parseRegexLine(line, lineNum) {
+    const raw = (line ?? "").trim();
+    if (!raw || /^(#|\/\/|;)/.test(raw))
+        return null;
+
+    const unquote = (s) => {
+        if (!s)
+            return "";
+        if ((s.startsWith('"') && s.endsWith('"')) || (s.startsWith("'") && s.endsWith("'"))) {
+            return s.slice(1, -1);
+        }
+        return s;
+    };
+
+    if (raw.startsWith('/') && raw.endsWith('/') || raw.match(/^\/(?:\\.|[^\/])+\/[a-z]*/i)) {
+        return parseFullRegexLine(raw, lineNum, unquote);
+    } else {
+        return parseSimpleLine(raw, lineNum, unquote);
     }
 }
 
