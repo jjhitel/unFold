@@ -25,8 +25,8 @@
         "@gorhill/ubo-core": "^0.1.30",
         "escape-string-regexp": "^5.0.0",
         "just-debounce-it": "^3.2.0",
-        "parse-domain": "^8.2.2",
         "safe-regex": "^2.1.1",
+        "tldts": "^7.0.11",
         "vite": "^7.1.2",
         "vite-plugin-web-extension": "^4.4.5",
         "web-ext": "^8.9.0"

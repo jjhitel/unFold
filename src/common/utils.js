@@ -3,7 +3,7 @@
 import { C } from './constants.js';
 import debounce from 'just-debounce-it';
 import escapeStringRegexp from 'escape-string-regexp';
-import { fromUrl, NO_HOSTNAME } from 'parse-domain';
+import { parse as tldtsParse } from 'tldts';
 const Utils = {};
 
 Utils.log = (tag, payload) => {
@@ -42,8 +42,12 @@ Utils.escapeRegExp = (s) => {
 };
 
 Utils.extractHostname = (url) => {
-    const host = fromUrl(url);
-    return host === NO_HOSTNAME ? null : host;
+    try {
+        const p = tldtsParse(url);
+        return p && p.hostname ? p.hostname : null;
+    } catch {
+        return null;
+    }
 };
 
 Utils.localizePage = () => {

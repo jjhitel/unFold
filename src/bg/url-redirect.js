@@ -1,7 +1,7 @@
 'use strict';
 import { StateManager } from './stateManager.js';
 import { util } from '../common/utils.js';
-import { parseDomain, fromUrl, NO_HOSTNAME, ParseResultType } from 'parse-domain';
+import { parse as tldtsParse } from 'tldts';
 
 const { log } = util;
 const REDIRECT_GUARD = new Map();
@@ -12,19 +12,15 @@ const REDIRECT_LIMIT = {
 const RULE_CACHE = new Map();
 const CACHE_SIZE = 1000;
 
-function etld1(urlString, {
-    icannOnly = true
-} = {}) {
-    const hostname = fromUrl(urlString);
-    if (hostname === NO_HOSTNAME)
+function etld1(urlString) {
+    try {
+        const p = tldtsParse(urlString);
+        if (!p || !p.domain)
+            return null;
+        return p.publicSuffix ? `${p.domain}.${p.publicSuffix}` : p.domain;
+    } catch {
         return null;
-    const res = parseDomain(hostname);
-    if (res.type !== ParseResultType.Listed)
-        return null;
-    const base = icannOnly ? res.icann : res;
-    if (!base.domain || base.topLevelDomains.length === 0)
-        return null;
-    return `${base.domain}.${base.topLevelDomains.join('.')}`;
+    }
 }
 
 function normalize(u) {
