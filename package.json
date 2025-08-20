@@ -1,6 +1,6 @@
 {
     "name": "unfold",
-    "version": "1.0.4",
+    "version": "1.0.5",
     "description": "**unFold** is a Firefox extension for foldable Android devices, designed to automatically switch websites between their mobile and desktop layouts as you fold and unfold your screen.",
     "main": "index.js",
     "scripts": {
