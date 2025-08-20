@@ -79,7 +79,7 @@ export async function openOptions(hash) {
     }
 };
 
-export async function save(obj) {
+export async function saveAndNotify(obj) {
     try {
         await uiStore.set(obj);
         await browser.runtime.sendMessage({
@@ -95,7 +95,7 @@ export function bindSetting(elementId, settingKey, debounceMs = 200, callback) {
     if (!el)
         return;
 
-    const saveAndNotify = async(value) => {
+    const saveAndNotifyWrapper = async(value) => {
         try {
             await uiStore.set({
                 [settingKey]: value
@@ -113,19 +113,19 @@ export function bindSetting(elementId, settingKey, debounceMs = 200, callback) {
 
     switch (el.type) {
     case 'checkbox':
-        el.addEventListener('change', (e) => saveAndNotify(e.target.checked));
+        el.addEventListener('change', (e) => saveAndNotifyWrapper(e.target.checked));
         break;
     case 'select-one':
     case 'text':
     case 'number':
     case 'textarea':
-        const debouncedSave = util.debounce((value) => saveAndNotify(value), debounceMs);
+        const debouncedSave = util.debounce((value) => saveAndNotifyWrapper(value), debounceMs);
         el.addEventListener('input', (e) => debouncedSave(e.target.value));
         break;
     default:
         el.addEventListener('click', () => {
             const willOn = !el.classList.contains('on');
-            saveAndNotify(willOn);
+            saveAndNotifyWrapper(willOn);
         });
         break;
     }

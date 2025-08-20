@@ -1,8 +1,6 @@
 'use strict';
 import { util } from './utils.js';
 import { C } from './constants.js';
-import { showSaved, setSmallStatus, getActiveHttpTab, save as saveToUiUtils } from './ui-utils.js';
-import { refreshTabVisibility } from '../options/ui.js';
 
 const S = {};
 
@@ -44,11 +42,6 @@ S.clear = async function () {
 
 export const uiStore = S;
 
-const $id = (id) => document.getElementById(id);
-
-const MAX_RULES_PER_TYPE = 500;
-const MAX_TOTAL_LENGTH = 15000;
-
 const ID_MAP = {
     [C.KEY_MODE]: 'mode',
     [C.KEY_THRESHOLD]: 'threshold',
@@ -74,23 +67,7 @@ export const DEFAULTS = {
 };
 
 export async function loadSettings() {
-    const cfg = await S.get(null);
-    for (const key in DEFAULTS) {
-        const elId = ID_MAP[key] || key;
-        const el = $id(elId);
-        if (!el)
-            continue;
-        const value = cfg[key] ?? DEFAULTS[key];
-        if (el.type === 'checkbox') {
-            el.checked = !!value;
-        } else {
-            el.value = value;
-        }
-    }
-    $id('desktopRegexText').value = cfg[C.KEY_DESKTOP_RULES] || '';
-    $id('mobileRegexText').value = cfg[C.KEY_MOBILE_RULES] || '';
-    $id('denylistText').value = cfg[C.KEY_DENYLIST] || '';
-    $id('allowlistText').value = cfg[C.KEY_ALLOWLIST] || '';
+    return S.get(null);
 };
 
 export async function saveSingleSetting(key, value) {
@@ -104,83 +81,37 @@ export async function saveSingleSetting(key, value) {
     await S.set({
         [key]: value
     });
-    browser.runtime.sendMessage({
-        type: C.MSG_SETTINGS_UPDATE
-    }).catch(() => {});
-    showSaved();
 };
 
-async function saveAndShow(data, statusId) {
-    await S.set(data);
-    showSaved();
-}
-
-export const saveUrlRules = () => {
-    const desktopText = $id('desktopRegexText').value;
-    const mobileText = $id('mobileRegexText').value;
-
+export const saveUrlRules = async(desktopText, mobileText) => {
     const desktopLines = desktopText.split(/\r?\n/);
     const mobileLines = mobileText.split(/\r?\n/);
 
+    const MAX_RULES_PER_TYPE = 500;
+    const MAX_TOTAL_LENGTH = 15000;
     if (desktopLines.length > MAX_RULES_PER_TYPE || mobileLines.length > MAX_RULES_PER_TYPE) {
-        setSmallStatus('status-url', `Error: Rule count cannot exceed ${MAX_RULES_PER_TYPE} per type.`, 5000);
-        return;
+        throw new Error(`Error: Rule count cannot exceed ${MAX_RULES_PER_TYPE} per type.`);
     }
-
     if ((desktopText.length + mobileText.length) > MAX_TOTAL_LENGTH) {
-        setSmallStatus('status-url', `Error: Total rule length cannot exceed ${MAX_TOTAL_LENGTH} characters.`, 5000);
-        return;
+        throw new Error(`Error: Total rule length cannot exceed ${MAX_TOTAL_LENGTH} characters.`);
     }
 
-    saveAndShow({
+    await S.set({
         [C.KEY_DESKTOP_RULES]: util.normalizeList(desktopText).join('\n'),
         [C.KEY_MOBILE_RULES]: util.normalizeList(mobileText).join('\n')
     });
 };
 
-export const saveDenylist = () => saveAndShow({
-    [C.KEY_DENYLIST]: util.normalizeList($id('denylistText').value).join('\n')
-});
-
-export const saveAllowlist = () => saveAndShow({
-    [C.KEY_ALLOWLIST]: util.normalizeList($id('allowlistText').value).join('\n')
-});
-
-export function bindStorageMirror() {
-    browser.storage.onChanged.addListener((changes, area) => {
-        if (area !== 'local')
-            return;
-        loadSettings();
-        const mode = $id('mode')?.value || C.DEFAULT_MODE;
-        refreshTabVisibility(mode);
+export const saveDenylist = async(text) => {
+    await S.set({
+        [C.KEY_DENYLIST]: util.normalizeList(text).join('\n')
     });
 };
 
-export const loadRemoteSelections = async() => (await S.get(C.KEY_REMOTE_SELECTED_RULES))?.[C.KEY_REMOTE_SELECTED_RULES] || [];
-export const saveRemoteSelections = (arr) => S.set({
-    [C.KEY_REMOTE_SELECTED_RULES]: arr
-});
-
-export async function loadRemoteCatalog() {
-    try {
-        const response = await fetch(browser.runtime.getURL('rules.json'));
-        return await response.json();
-    } catch (e) {
-        console.error('[FD] Failed to load remote catalog:', e);
-        return [];
-    }
-};
-
-export async function toggleRemoteRule(ruleMeta, checked) {
-    const sel = await loadRemoteSelections();
-    const next = checked ? [...new Set([...sel, ruleMeta.id])] : sel.filter(id => id !== ruleMeta.id);
-    await saveRemoteSelections(next);
-
-    showSaved();
-
-    browser.runtime.sendMessage({
-        type: C.MSG_UPDATE_REMOTE_RULES
-    }).catch(() => {});
+export const saveAllowlist = async(text) => {
+    await S.set({
+        [C.KEY_ALLOWLIST]: util.normalizeList(text).join('\n')
+    });
 };
 
 export async function setModeOn(on) {
@@ -190,52 +121,63 @@ export async function setModeOn(on) {
 
     if (on) {
         const newMode = (last === 'off') ? C.DEFAULT_MODE : last;
-        await saveToUiUtils({
+        await S.set({
             mode: newMode,
             lastNonOffMode: newMode
         });
     } else {
         if (mode !== 'off')
             last = mode;
-        await saveToUiUtils({
+        await S.set({
             mode: 'off',
             lastNonOffMode: last
         });
     }
 };
 
-export async function addCurrentHostToList(listKey) {
-    const info = await getActiveHttpTab();
-    if (!info)
-        return false;
+export const loadRemoteSelections = async() => (await S.get(C.KEY_REMOTE_SELECTED_RULES))?.[C.KEY_REMOTE_SELECTED_RULES] || [];
+export const saveRemoteSelections = (arr) => S.set({
+    [C.KEY_REMOTE_SELECTED_RULES]: arr
+});
 
+export async function toggleRemoteRule(ruleId, checked) {
+    const sel = await loadRemoteSelections();
+    const next = checked ? [...new Set([...sel, ruleId])] : sel.filter(id => id !== ruleId);
+    await saveRemoteSelections(next);
+};
+
+export async function addCurrentHostToList(listKey, host) {
     const cur = await S.get([listKey]);
     const text = String(cur[listKey] || '').trim();
     const lines = text ? text.split(/\r?\n/) : [];
-    lines.push(info.host);
+    lines.push(host);
 
     const final = util.normalizeList(lines.join('\n')).join('\n');
     await S.set({
         [listKey]: final
     });
-    return true;
 };
 
-export async function removeCurrentHostFromList(listKey) {
-    const info = await getActiveHttpTab();
-    if (!info)
-        return false;
-
+export async function removeCurrentHostFromList(listKey, host) {
     const cur = await S.get([listKey]);
     const text = String(cur[listKey] || '').trim();
     const lines = text ? text.split(/\r?\n/) : [];
 
-    const hostLower = info.host.toLowerCase();
+    const hostLower = host.toLowerCase();
     const finalLines = lines.filter(line => line.trim().toLowerCase() !== hostLower);
 
     const final = finalLines.join('\n');
     await S.set({
         [listKey]: final
     });
-    return true;
+};
+
+export async function loadRemoteCatalog() {
+    try {
+        const response = await fetch(browser.runtime.getURL('rules.json'));
+        return await response.json();
+    } catch (e) {
+        console.error('[FD] Failed to load remote catalog:', e);
+        return [];
+    }
 };
