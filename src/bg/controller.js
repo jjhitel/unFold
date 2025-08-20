@@ -69,31 +69,36 @@ async function updateCheckedRemoteRules() {
         return;
     }
     log('Starting remote rules update...');
-    let updated = false;
-    for (const id of selectedRemoteRules) {
+
+    const ruleUpdates = selectedRemoteRules.map(async id => {
         const ruleMeta = catalog.find(item => item.id === id);
         if (!ruleMeta)
-            continue;
+            return null;
+
         try {
             const ruleData = await fetchAndCacheRule(ruleMeta.url);
             if (!ruleData)
-                continue;
+                return null;
+
             const textKey = ruleMeta.kind === 'mobile' ? 'mobileRedirectRule' : 'desktopRedirectRule';
             const dateKey = util.getRuleLastModifiedKey(ruleMeta.id);
             await browser.storage.local.set({
                 [textKey]: ruleData.text,
                 [dateKey]: ruleData.lastModified
             });
-            updated = true;
+            return true;
         } catch (e) {
             log(`Failed to update rule: ${ruleMeta.name}`, e);
+            return false;
         }
-    }
-    if (updated) {
+    });
+
+    const results = await Promise.all(ruleUpdates);
+    if (results.some(r => r === true)) {
         await browser.storage.local.set({
             remoteRulesLastUpdated: Date.now()
         });
-        log('Remote rules update finished.');
+        log('Remote rules update finished successfully.');
     }
 }
 
