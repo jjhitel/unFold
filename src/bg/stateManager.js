@@ -18,7 +18,7 @@ const USING_SESSION_STORAGE = !!(browser.storage && browser.storage.session);
 const KV = USING_SESSION_STORAGE ? browser.storage.session : browser.storage.local;
 let SESSION_NS = '';
 
-function normalizeAllowHost(host) {
+function normalizeHost(host) {
     let h = String(host || '').trim().toLowerCase();
     if (!h)
         return '';
@@ -176,7 +176,7 @@ export async function getTargetHostPatterns() {
         }
         const patterns = new Set();
         for (const h of rawHosts) {
-            const domain = normalizeAllowHost(h);
+            const domain = normalizeHost(h);
             if (!domain)
                 continue;
             patterns.add(`*://${domain}/*`);
@@ -325,7 +325,9 @@ export async function updateLists(data) {
             denylistTrie.reset();
             denylistTrieRoot = trieCreate(denylistTrie);
             for (const host of util.normalizeList(denyText)) {
-                trieAdd(denylistTrie, denylistTrieRoot, host);
+                const domain = normalizeHost(host);
+                if (domain)
+                    trieAdd(denylistTrie, denylistTrieRoot, domain);
             }
         }
         if (allowText !== _prevAllowText) {
@@ -333,7 +335,7 @@ export async function updateLists(data) {
             allowlistTrie.reset();
             allowlistTrieRoot = trieCreate(allowlistTrie);
             for (const host of util.normalizeList(allowText)) {
-                const domain = normalizeAllowHost(host);
+                const domain = normalizeHost(host);
                 if (domain)
                     trieAdd(allowlistTrie, allowlistTrieRoot, domain);
             }
