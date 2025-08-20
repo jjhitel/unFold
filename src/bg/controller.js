@@ -129,34 +129,24 @@ async function _updateBadge(tabId) {
         const tab = await browser.tabs.get(tabId);
         const url = tab?.url || '';
 
-        if (!/^https?:\/\//i.test(url)) {
-            text = "X";
-            color = "#9CA3AF";
-            await Promise.all([
-                    browser.action.setBadgeText({
-                        tabId,
-                        text
-                    }),
-                    browser.action.setBadgeBackgroundColor({
-                        tabId,
-                        color
-                    })
-                ]);
-            return;
-        }
+        const isHttp = /^https?:\/\//i.test(url);
+        const host = isHttp ? extractHostname(url) : null;
+        const isDenied = (state.mode !== 'autoAllow') && host && StateManager.isHostInDenylist(host);
+        const isAllowed = (state.mode !== 'autoAllow') || (host && StateManager.isHostInAllowlist(host));
+        const isDesktop = state.mode === 'always' || StateManager.isDesktopPreferred(tabId);
+        const uaInjected = isHttp && state.mode !== 'off' && !isDenied && isAllowed && isDesktop;
 
-        const host = extractHostname(url);
-
-        const isDenied = (state.mode !== 'autoAllow') && StateManager.isHostInDenylist(host);
-        if (state.mode === "off" || isDenied) {
-            text = "X";
-            color = "#9CA3AF";
+        if (!isHttp) {
+            text = uaInjected ? "!" : "X";
+            color = uaInjected ? "#EF4444" : "#9CA3AF";
+        } else if (state.mode === "off") {
+            text = uaInjected ? "!" : "X";
+            color = uaInjected ? "#EF4444" : "#9CA3AF";
         } else if (state.mode === "always") {
-            text = "D";
+            text = uaInjected ? "D" : "!";
             color = "#EF4444";
-        } else if (state.mode === "autoDeny" || state.mode === "autoAllow") {
-            const isWide = StateManager.isDesktopPreferred(tabId);
-            text = isWide ? "D" : "M";
+        } else {
+            text = uaInjected ? "D" : "M";
             color = "#10B981";
         }
         await browser.action.setBadgeText({
