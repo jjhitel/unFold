@@ -89,44 +89,36 @@ export async function save(obj) {
         util.log('[FD] Popup failed to save to storage:', e);
     }
 };
+const BINDING_MAP = {
+    'mode': C.KEY_MODE,
+    'autoRefresh': C.KEY_AUTO_REFRESH,
+    'urlRedirect': C.KEY_URL_REDIRECT,
+    'threshold': C.KEY_THRESHOLD,
+    'autoUpdatePeriod': C.KEY_AUTO_UPDATE_PERIOD,
+    'debugMode': C.KEY_DEBUG_MODE,
+    'compatMode': C.KEY_COMPAT_MODE,
+};
 
-export function bindSetting(elementId, settingKey, debounceMs = 200, callback) {
+export function bindSetting(elementId, settingKey = null, debounceMs = 200, callback) {
     const el = util.$id(elementId);
     if (!el)
         return;
 
-    const saveAndNotify = async(value) => {
-        try {
-            await uiStore.set({
-                [settingKey]: value
-            });
-            await browser.runtime.sendMessage({
-                type: C.MSG_SETTINGS_UPDATE
-            });
-            showSaved();
-            if (callback)
-                callback(value);
-        } catch (e) {
-            util.log(`[FD] Failed to save setting ${settingKey}:`, e);
-        }
+    const key = settingKey || BINDING_MAP[elementId];
+
+    const saveAndNotify = async value => {
+        await uiStore.set({
+            [key]: value
+        });
+        await browser.runtime.sendMessage({
+            type: C.MSG_SETTINGS_UPDATE
+        });
+        showSaved();
+        if (callback)
+            callback(value);
     };
 
-    switch (el.type) {
-    case 'checkbox':
-        el.addEventListener('change', (e) => saveAndNotify(e.target.checked));
-        break;
-    case 'select-one':
-    case 'text':
-    case 'number':
-    case 'textarea':
-        const debouncedSave = util.debounce((value) => saveAndNotify(value), debounceMs);
-        el.addEventListener('input', (e) => debouncedSave(e.target.value));
-        break;
-    default:
-        el.addEventListener('click', () => {
-            const willOn = !el.classList.contains('on');
-            saveAndNotify(willOn);
-        });
-        break;
-    }
-}
+    const debouncedSave = util.debounce(saveAndNotify, debounceMs);
+
+    el.addEventListener('input', e => debouncedSave(e.target.value));
+};

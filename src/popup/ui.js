@@ -97,9 +97,11 @@ function bindStorageMirror() {
 export async function initPopupUI() {
     util.localizePage();
 
-    bindSetting('switch', null, 200, (willOn) => storage.setModeOn(willOn));
-    bindSetting('toggle-autoRefresh', C.KEY_AUTO_REFRESH);
-    bindSetting('toggle-urlRedirect', C.KEY_URL_REDIRECT);
+    bindSetting('switch', null, 200, willOn => storage.setModeOn(willOn));
+
+    for (const id of['toggle-autoRefresh', 'toggle-urlRedirect']) {
+        bindSetting(id);
+    }
 
     const btnOptions = $id('btnOptions');
     if (btnOptions) {

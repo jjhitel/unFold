@@ -75,14 +75,14 @@ export function initUIBindings() {
         }).catch(() => {});
     });
 
-    bindSetting('mode', C.KEY_MODE, 200, (value) => {
-        updateModeDescription();
-        refreshTabVisibility(value);
-    });
-    bindSetting('autoRefresh', C.KEY_AUTO_REFRESH);
-    bindSetting('urlRedirect', C.KEY_URL_REDIRECT);
-    bindSetting('debugMode', C.KEY_DEBUG_MODE);
-    bindSetting('compatMode', C.KEY_COMPAT_MODE);
+    for (const id of['mode', 'autoRefresh', 'urlRedirect', 'debugMode', 'compatMode', 'threshold', 'autoUpdatePeriod']) {
+        const callback = id === 'mode' ? value => {
+            updateModeDescription();
+            refreshTabVisibility(value);
+        }
+         : null;
+        bindSetting(id, null, 200, callback);
+    }
 
     const uaInput = $id('ua');
     if (uaInput) {
@@ -97,10 +97,6 @@ export function initUIBindings() {
         }, 300);
         uaInput.addEventListener('input', (e) => debouncedSave(e.target.value));
     }
-
-    bindSetting('threshold', C.KEY_THRESHOLD, 300);
-    bindSetting('zoomLevel', C.KEY_ZOOM_LEVEL, 300);
-    bindSetting('autoUpdatePeriod', C.KEY_AUTO_UPDATE_PERIOD);
 
     $id('resetUA')?.addEventListener('click', async() => {
         try {
