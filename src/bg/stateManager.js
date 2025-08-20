@@ -3,6 +3,7 @@ import { util } from '../common/utils.js';
 import { compileRules } from '../common/rule-compiler.js';
 import { C } from '../common/constants.js';
 import HNTrieContainer from '@gorhill/ubo-core/js/hntrie.js';
+import { parse as tldtsParse } from 'tldts';
 
 const { log, normalizeList, debounce } = util;
 let _prevDenyText = null, _prevAllowText = null;
@@ -16,6 +17,19 @@ let allowlistTrieRoot = 0;
 const USING_SESSION_STORAGE = !!(browser.storage && browser.storage.session);
 const KV = USING_SESSION_STORAGE ? browser.storage.session : browser.storage.local;
 let SESSION_NS = '';
+
+function normalizeAllowHost(host) {
+    let h = String(host || '').trim().toLowerCase();
+    if (!h)
+        return '';
+    h = h.replace(/^\*\./, '');
+    try {
+        const p = tldtsParse(h);
+        return p.domain || h.replace(/^www\./, '');
+    } catch {
+        return h.replace(/^www\./, '');
+    }
+}
 
 async function ensureSessionNamespace() {
     if (USING_SESSION_STORAGE) {
@@ -156,13 +170,15 @@ export async function getTargetHostPatterns() {
     const { mode, denylistText = '', allowlistText = '' } = await browser.storage.local.get(['mode', 'denylistText', 'allowlistText']);
 
     if (mode === 'autoAllow') {
-        const allowHosts = normalizeList(allowlistText);
-        if (allowHosts.length === 0) {
+        const rawHosts = normalizeList(allowlistText);
+        if (rawHosts.length === 0) {
             return [];
         }
         const patterns = new Set();
-        for (const host of allowHosts) {
-            const domain = host.startsWith('*.') ? host.substring(1) : host;
+        for (const h of rawHosts) {
+            const domain = normalizeAllowHost(h);
+            if (!domain)
+                continue;
             patterns.add(`*://${domain}/*`);
             patterns.add(`*://*.${domain}/*`);
         }
@@ -317,7 +333,9 @@ export async function updateLists(data) {
             allowlistTrie.reset();
             allowlistTrieRoot = trieCreate(allowlistTrie);
             for (const host of util.normalizeList(allowText)) {
-                trieAdd(allowlistTrie, allowlistTrieRoot, host);
+                const domain = normalizeAllowHost(host);
+                if (domain)
+                    trieAdd(allowlistTrie, allowlistTrieRoot, domain);
             }
         }
         log('Deny/Allow Tries updated');
