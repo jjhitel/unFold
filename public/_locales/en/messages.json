@@ -81,7 +81,7 @@
         "message": "Unfolded Screen Threshold (px)"
     },
     "options_thresholdDesc": {
-        "message": "The standard for determining the folded state. The default value is optimized for the Galaxy Fold series."
+        "message": "The standard for determining the folded state. The default value is optimized for Galaxy Fold 7."
     },
     "options_tab_main": {
         "message": "Main"
@@ -173,17 +173,8 @@
     "options_savedStatus": {
         "message": "Saved."
     },
-    "options_captureFolded": {
-        "message": "Set as Folded Width"
-    },
     "options_captureUnfolded": {
-        "message": "Set as Unfolded Width"
-    },
-    "options_calcThreshold": {
-        "message": "Suggest Threshold"
-    },
-    "options_resetCaptures": {
-        "message": "Reset Captures"
+        "message": "Get recommended value from unfolded state"
     },
     "options_cal_folded": {
         "message": "Folded"

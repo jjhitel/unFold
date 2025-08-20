@@ -39,25 +39,18 @@
 					<label class="check"><input type="checkbox" id="compatMode"/><span data-i18n="options_compatMode"></span></label>
 				</div>
 			</div>
+			<div class="row">
+				<label for="threshold" data-i18n="options_threshold"></label>
+				<input id="threshold" type="number" min="0" step="1" inputmode="numeric"/>
+				<div class="small" data-i18n="options_thresholdDesc"></div>
+				<button type="button" id="captureUnfolded" data-i18n="options_captureUnfolded"></button>
+			</div>
 			<details id="advanced" class="row">
 				<summary data-i18n="options_advanced"></summary>
 				<div class="row">
 					<label for="ua" data-i18n="options_desktopUA"></label>
 					<input id="ua" type="text" spellcheck="false"/>
 					<button id="resetUA" type="button" data-i18n="options_resetDefault"></button>
-				</div>
-				<div class="row">
-					<label for="threshold" data-i18n="options_threshold"></label>
-					<input id="threshold" type="number" min="0" step="1" inputmode="numeric"/>
-                    <div class="small" data-i18n="options_thresholdDesc"></div>
-					<button id="resetThreshold" type="button" data-i18n="options_resetDefault"></button>
-				</div>
-                <div class="small" id="cal-status"></div>
-				<div class="adv-grid">
-					<button type="button" id="captureFolded" data-i18n="options_captureFolded"></button>
-					<button type="button" id="captureUnfolded" data-i18n="options_captureUnfolded"></button>
-					<button type="button" id="calcThreshold" data-i18n="options_calcThreshold"></button>
-					<button type="button" id="resetCaptures" data-i18n="options_resetCaptures"></button>
 				</div>
                 <div class="row" id="zoomLevelRow">
 					<label for="zoomLevel" data-i18n="options_zoomLevel"></label>

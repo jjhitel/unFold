@@ -81,7 +81,7 @@
         "message": "폴딩 상태 판단 기준 (px)"
     },
     "options_thresholdDesc": {
-        "message": "기본값은 갤럭시 폴드 시리즈에 최적화되어 있습니다."
+        "message": "기본값은 갤럭시 폴드7에 최적화되어 있습니다."
     },
     "options_tab_main": {
         "message": "메인"
@@ -173,17 +173,8 @@
     "options_savedStatus": {
         "message": "저장됨."
     },
-    "options_captureFolded": {
-        "message": "현재 폭을 접었을 때로 설정"
-    },
     "options_captureUnfolded": {
-        "message": "현재 폭을 펼쳤을 때로 설정"
-    },
-    "options_calcThreshold": {
-        "message": "기준 자동 계산"
-    },
-    "options_resetCaptures": {
-        "message": "측정값 초기화"
+        "message": "펼친 상태에서 추천값 얻기"
     },
     "options_cal_folded": {
         "message": "접힘"

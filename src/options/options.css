@@ -151,16 +151,6 @@ details > summary {
     opacity: 1;
 }
 
-
-.adv-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-    margin-top: 8px;
-}
-
-
-
 .fd-titlebar {
     display: flex;
     align-items: center;

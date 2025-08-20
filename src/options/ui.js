@@ -60,55 +60,20 @@ function checkPlatformCompatibility() {
     }
 }
 
-function bindCaptureButtons() {
-    let foldedWidth = 0;
-    let unfoldedWidth = 0;
-    const statusEl = $id('cal-status');
-
-    const renderStatus = () => {
-        let msg = '';
-        if (foldedWidth > 0) {
-            msg += `${browser.i18n.getMessage('options_cal_folded')}: ${foldedWidth}px `;
-        }
-        if (unfoldedWidth > 0) {
-            msg += `${browser.i18n.getMessage('options_cal_unfolded')}: ${unfoldedWidth}px`;
-        }
-        statusEl.textContent = msg;
-    };
-
-    $id('captureFolded')?.addEventListener('click', () => {
-        foldedWidth = window.innerWidth;
-        renderStatus();
-    });
-
-    $id('captureUnfolded')?.addEventListener('click', () => {
-        unfoldedWidth = window.innerWidth;
-        renderStatus();
-    });
-
-    $id('calcThreshold')?.addEventListener('click', () => {
-        if (foldedWidth > 0 && unfoldedWidth > 0) {
-            const threshold = Math.round((foldedWidth + unfoldedWidth) / 2);
-            $id('threshold').value = threshold;
-            setSmallStatus('cal-status', `Threshold calculated: ${threshold}px`);
-        } else {
-            setSmallStatus('cal-status', 'Please capture both folded and unfolded widths.');
-        }
-    });
-
-    $id('resetCaptures')?.addEventListener('click', () => {
-        foldedWidth = 0;
-        unfoldedWidth = 0;
-        renderStatus();
-    });
-
-    renderStatus();
-}
-
 export function initUIBindings() {
     $id('btn-url-save')?.addEventListener('click', saveUrlRules);
     $id('save-denylist')?.addEventListener('click', saveDenylist);
     $id('save-allowlist')?.addEventListener('click', saveAllowlist);
+    $id('captureUnfolded')?.addEventListener('click', async() => {
+        const recommendedThreshold = window.screen.width - 30;
+        $id('threshold').value = recommendedThreshold;
+        await uiStore.set({
+            threshold: recommendedThreshold
+        });
+        browser.runtime.sendMessage({
+            type: C.MSG_SETTINGS_UPDATE
+        }).catch(() => {});
+    });
 
     bindSetting('mode', C.KEY_MODE, 200, (value) => {
         updateModeDescription();
@@ -161,25 +126,6 @@ export function initUIBindings() {
             });
         }
     });
-
-    const bindResetThreshold = (id) => {
-        const el = $id(id);
-        if (!el)
-            return;
-        el.addEventListener('click', async() => {
-            const def = Number(C.DEFAULT_THRESHOLD);
-            $id('threshold').value = String(def);
-            await uiStore.set({
-                threshold: def
-            });
-            browser.runtime.sendMessage({
-                type: C.MSG_SETTINGS_UPDATE
-            }).catch(() => {});
-        });
-    };
-    bindResetThreshold('resetThreshold');
-    bindCaptureButtons();
-
     updateModeDescription();
     displayLastUpdated();
     checkPlatformCompatibility();
