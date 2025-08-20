@@ -37,6 +37,9 @@ export function setOn(elOrId, on) {
     const el = typeof elOrId === 'string' ? util.$id(elOrId) : elOrId;
     if (el) {
         el.classList.toggle('on', !!on);
+        if (el.getAttribute('role') === 'switch') {
+            el.setAttribute('aria-checked', !!on);
+        }
     }
 };
 
@@ -104,21 +107,34 @@ export function bindSetting(elementId, settingKey = null, debounceMs = 200, call
     if (!el)
         return;
 
-    const key = settingKey || BINDING_MAP[elementId];
+    const baseId = elementId.replace(/^toggle-/, '');
+    const key = settingKey || BINDING_MAP[elementId] || BINDING_MAP[baseId];
 
     const saveAndNotify = async value => {
-        await uiStore.set({
-            [key]: value
-        });
-        await browser.runtime.sendMessage({
-            type: C.MSG_SETTINGS_UPDATE
-        });
-        showSaved();
+        if (key) {
+            await uiStore.set({
+                [key]: value
+            });
+            await browser.runtime.sendMessage({
+                type: C.MSG_SETTINGS_UPDATE
+            });
+            showSaved();
+        }
         if (callback)
             callback(value);
     };
 
     const debouncedSave = util.debounce(saveAndNotify, debounceMs);
 
-    el.addEventListener('input', e => debouncedSave(e.target.value));
+    if (el.matches('input[type="checkbox"]')) {
+        el.addEventListener('input', e => debouncedSave(e.target.checked));
+    } else if (el.matches('input, select, textarea')) {
+        el.addEventListener('input', e => debouncedSave(e.target.value));
+    } else if (el.classList.contains('switch')) {
+        el.addEventListener('click', () => {
+            const value = !el.classList.contains('on');
+            setOn(el, value);
+            debouncedSave(value);
+        });
+    }
 };
