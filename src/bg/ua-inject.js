@@ -1,7 +1,7 @@
 'use strict';
 import { StateManager } from './stateManager.js';
 import { util } from '../common/utils.js';
-import { C } from '../common/constants.js';
+import { Headers } from 'headers-polyfill';
 
 const { extractHostname } = util;
 const UA_HEADER = 'user-agent';
@@ -12,37 +12,8 @@ const CLIENT_HINTS_HEADERS = [
     'sec-ch-ua-full-version', 'sec-ch-ua-full-version-list'
 ];
 
-function headersToBag(headers) {
-    const bag = new Map();
-    for (let i = 0; i < headers.length; i++)
-        bag.set(headers[i].name.toLowerCase(), i);
-    return {
-        set(name, value) {
-            const lname = name.toLowerCase();
-            const idx = bag.get(lname);
-            if (idx != null)
-                headers[idx].value = value;
-            else {
-                headers.push({
-                    name,
-                    value
-                });
-                bag.set(lname, headers.length - 1);
-            }
-        },
-        remove(name) {
-            const lname = name.toLowerCase();
-            const idx = bag.get(lname);
-            if (idx != null) {
-                headers.splice(idx, 1);
-                bag.delete(lname);
-            }
-        },
-    };
-}
-
 function setOrAddUAHeader(headers, ua) {
-    headersToBag(headers).set('User-Agent', ua);
+    headers.set('User-Agent', ua);
 }
 
 function shimUA(ua) {
@@ -124,10 +95,13 @@ export async function onBeforeSendHeaders(details) {
         }
     }
 
-    const headers = details.requestHeaders || [];
-    const bag = headersToBag(headers);
+    const headers = new Headers();
+    (details.requestHeaders || []).forEach(({
+            name,
+            value
+        }) => headers.set(name, value));
 
-    CLIENT_HINTS_HEADERS.forEach(header => bag.remove(header));
+    CLIENT_HINTS_HEADERS.forEach(header => headers.delete(header));
 
     setOrAddUAHeader(headers, state.desktopUA);
     if (state.debugMode) {
@@ -149,7 +123,14 @@ export async function onBeforeSendHeaders(details) {
             }).catch(() => {});
         }
     } catch (e) {}
+    const resultHeaders = [];
+    headers.forEach((value, name) => {
+        resultHeaders.push({
+            name,
+            value
+        });
+    });
     return {
-        requestHeaders: headers
+        requestHeaders: resultHeaders
     };
 }
