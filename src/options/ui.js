@@ -3,10 +3,10 @@ import { uiStore, saveUrlRules, saveDenylist, saveAllowlist, loadRemoteCatalog, 
 import { setSmallStatus, bindSetting } from '../common/ui-utils.js';
 import { activateTab } from './tabs.js';
 import { util } from '../common/utils.js';
+import debounce from 'just-debounce-it';
 import { C } from '../common/constants.js';
 
 const $id = (id) => document.getElementById(id);
-const { debounce } = util;
 
 const MODE_DESCRIPTIONS = {
     off: "options_modeDesc_off",

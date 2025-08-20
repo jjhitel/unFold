@@ -1,5 +1,6 @@
 'use strict';
 import { util } from '../common/utils.js';
+import debounce from 'just-debounce-it';
 import { getActiveHttpTab, openOptions, save, setOn, bindSetting } from '../common/ui-utils.js';
 import { uiStore } from '../common/storage.js';
 import * as storage from '../common/storage.js';
@@ -83,7 +84,7 @@ async function syncAllUI() {
     await initListButtons();
 }
 
-const syncAllUIdebounced = util.debounce(syncAllUI, 50);
+const syncAllUIdebounced = debounce(syncAllUI, 50);
 
 function bindStorageMirror() {
     browser.storage.onChanged.addListener((changes, area) => {
