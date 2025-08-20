@@ -163,7 +163,7 @@ const state = {
     isWideByTab: new Map(),
     stickyMobileByTab: new Map(),
     formDirtyByTab: new Map(),
-    lastKnownWide: undefined,
+    lastKnownWide: false,
 };
 
 export async function getTargetHostPatterns() {
@@ -249,8 +249,10 @@ export const StateManager = {
     loadInitialTabState: async(tabId) => {
         try {
             const w = await TabKV.get(tabId, 'fd_isWide');
-            if (typeof w === 'boolean')
+            if (typeof w === 'boolean') {
                 state.isWideByTab.set(tabId, w);
+                state.lastKnownWide = w;
+            }
 
             const d = await TabKV.get(tabId, 'fd_formDirty');
             if (d === true)

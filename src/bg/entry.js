@@ -51,6 +51,8 @@ async function boot() {
     await Cache.cleanup();
     await cleanupStaleTabData();
     await initializeStateManager();
+    const tabs = await browser.tabs.query({});
+    await Promise.all(tabs.map(t => StateManager.loadInitialTabState(t.id)));
     await updateAllBadges();
     await createUpdateAlarm();
     await refreshListeners();
