@@ -16,6 +16,14 @@ export async function handleMessage(msg, sender) {
     case C.MSG_VIEWPORT_UPDATE:
     case C.MSG_VIEWPORT_CHECK:
         if (sender.tab) {
+            const focusedWindow = await browser.windows.getLastFocused();
+            if (sender.tab.windowId !== focusedWindow.id) {
+                log('Viewport update message ignored from a non-focused window.', {
+                    tabId: sender.tab.id,
+                    windowId: sender.tab.windowId
+                });
+                return;
+            }
             onViewportMessage(msg, sender);
         }
         break;
