@@ -3,7 +3,7 @@
 export function activateTab(name) {
 
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-    document.querySelectorAll('.tabpanel').forEach(p => p.hidden = true);
+    document.querySelectorAll('.tabpanel').forEach(p => p.classList.remove('active'));
 
     const tabToActivate = document.querySelector(`.tab[data-tab="${name}"]`);
     const panelToShow = document.getElementById(`tab-${name}`);
@@ -14,15 +14,65 @@ export function activateTab(name) {
             return;
         }
         tabToActivate.classList.add('active');
-        panelToShow.hidden = false;
+        showTabPanel(panelToShow);
     } else {
         document.querySelector('.tab[data-tab="main"]')?.classList.add('active');
-        document.getElementById('tab-main')?.removeAttribute('hidden');
+        showTabPanel(document.getElementById('tab-main'));
     }
 
     try {
         history.replaceState(null, '', '#' + name);
     } catch (e) {}
+}
+
+function showTabPanel(panel) {
+    if (!panel)
+        return;
+    const container = document.getElementById('tab-container');
+    if (container) {
+        container.scrollLeft = panel.offsetLeft;
+    }
+}
+
+function initSwipe() {
+    const container = document.getElementById('tab-container');
+    const tabs = document.querySelectorAll('.tab');
+    let startX,
+    endX;
+
+    if (!container || tabs.length <= 1)
+        return;
+
+    container.addEventListener('touchstart', (e) => {
+        startX = e.touches[0].clientX;
+    });
+
+    container.addEventListener('touchend', (e) => {
+        endX = e.changedTouches[0].clientX;
+        const diff = endX - startX;
+        const swipeThreshold = 50;
+        if (Math.abs(diff) < swipeThreshold) {
+            return;
+        }
+
+        const activeTabButton = document.querySelector('.tab.active');
+        if (!activeTabButton)
+            return;
+
+        const activeTabIndex = Array.from(tabs).indexOf(activeTabButton);
+        let nextTabIndex = activeTabIndex;
+
+        if (diff > 0) {
+            nextTabIndex = Math.max(0, activeTabIndex - 1);
+        } else {
+            nextTabIndex = Math.min(tabs.length - 1, activeTabIndex + 1);
+        }
+
+        const nextTabName = tabs[nextTabIndex].getAttribute('data-tab');
+        if (nextTabName) {
+            activateTab(nextTabName);
+        }
+    });
 }
 
 document.querySelector('.tabs')?.addEventListener('click', (e) => {
@@ -39,4 +89,5 @@ document.querySelector('.tabs')?.addEventListener('click', (e) => {
     const validTabs = ['main', 'url', 'denylist', 'allowlist'];
     const initialTab = validTabs.includes(hash) ? hash : 'main';
     activateTab(initialTab);
+    initSwipe();
 })();

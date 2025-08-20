@@ -150,6 +150,31 @@ details > summary {
     background: var(--subtle-bg-color);
     opacity: 1;
 }
+#tab-container {
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: scroll;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+    scroll-behavior: smooth;
+	scrollbar-width: none; 
+}
+
+#tab-container::-webkit-scrollbar {
+    display: none;
+}
+
+.tabpanel {
+    flex: 0 0 100%;
+    width: 100%;
+    scroll-snap-align: start;
+    box-sizing: border-box;
+}
+
+.tabpanel[hidden] {
+    display: block !important;
+}
 
 .fd-titlebar {
     display: flex;
