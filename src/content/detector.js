@@ -56,14 +56,12 @@ import debounce from 'just-debounce-it';
                 vvHeight: readH(),
                 innerWidth: window.innerWidth,
                 innerHeight: window.innerHeight,
-                outerWidth: window.outerWidth,
-                outerHeight: window.outerHeight,
                 screenWidth: (window.screen && window.screen.width) || 0,
                 screenHeight: (window.screen && window.screen.height) || 0
             }).catch(() => {});
         };
 
-        const debouncedSend = debounce(send, 160);
+        const debouncedSend = debounce(send, 300);
 
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', send, {
@@ -72,7 +70,7 @@ import debounce from 'just-debounce-it';
         } else {
             send();
         }
-        setTimeout(send, 300);
+        setTimeout(send, 500);
 
         window.addEventListener("resize", debouncedSend, {
             passive: true

@@ -64,18 +64,14 @@ function isSafeToReload(tabId) {
 }
 
 function getEffectiveWidth(msg) {
-    const widths = [msg.vvWidth, msg.innerWidth, msg.outerWidth, msg.screenWidth]
-        .filter(w => typeof w === 'number' && w > 0);
-    return widths.length ? Math.min(...widths) : 0;
+    const vw = msg.vvWidth || msg.innerWidth || 0;
+    const sw = msg.screenWidth || 0;
+    return (vw && sw) ? Math.min(vw, sw) : (vw || sw);
 }
 
-function getFoldState(width, tabId) {
-    const state = StateManager.getState();
-    const prevWide = StateManager.isDesktopPreferred(tabId);
-    const HYSTERESIS_PX = 100;
-    const thresholdUp = state.threshold;
-    const thresholdDown = Math.max(100, thresholdUp - HYSTERESIS_PX);
-    return prevWide ? (width >= thresholdDown) : (width >= thresholdUp);
+function getFoldState(width) {
+    const { threshold } = StateManager.getState();
+    return width >= threshold;
 }
 
 async function handleAutoRefresh(tabId, changed) {
@@ -86,7 +82,7 @@ async function handleAutoRefresh(tabId, changed) {
 
     const last = RELOAD_TIMES.get(tabId) || 0;
     const now = Date.now();
-    if (now - last > 1200) {
+    if (now - last > 3000) {
         RELOAD_TIMES.set(tabId, now);
         if (isSafeToReload(tabId)) {
             try {
@@ -117,7 +113,7 @@ async function handleAutoRefresh(tabId, changed) {
 export async function onViewportMessage(msg, sender) {
     const tabId = sender.tab.id;
     const effectiveWidth = getEffectiveWidth(msg);
-    const isNowWide = getFoldState(effectiveWidth, tabId);
+    const isNowWide = getFoldState(effectiveWidth);
 
     const changed = StateManager.updateTabWidth(tabId, isNowWide);
     await handleAutoRefresh(tabId, changed);
