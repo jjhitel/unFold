@@ -1,105 +1,91 @@
 'use strict';
 import { util } from './utils.js';
+import QuickLRU from 'quick-lru';
 
 const DEFAULT_MAX_SIZE = 50;
 const CACHE_PREFIX = 'cache::';
 const DEFAULT_TTL = 24 * 60 * 60 * 1000;
 
-export const Cache = {
-    _cache: new Map(),
-    _maxSize: DEFAULT_MAX_SIZE,
+const lruCache = new QuickLRU({
+    maxSize: DEFAULT_MAX_SIZE,
+    maxAge: DEFAULT_TTL
+});
 
-    async get(key) {
-        try {
-            const item = this._cache.get(key);
-            if (!item)
-                return null;
-            if (Date.now() > item.expires) {
-                this.remove(key);
-                return null;
-            }
-
-            this._cache.delete(key);
-            this._cache.set(key, item);
-
+export const Cache = Object.freeze({
+    _lru: lruCache,
+    async get(key, ttl = DEFAULT_TTL) {
+        let item = this._lru.get(key);
+        if (item) {
             return item.data;
-        } catch (e) {
-            console.error(`[FD Cache] Failed to get item for key: ${key}`, e);
-            return null;
         }
+        const storageKey = CACHE_PREFIX + key;
+        const result = await browser.storage.local.get(storageKey).catch(() => null);
+        if (result && result[storageKey]) {
+            item = result[storageKey];
+            if (Date.now() < item.expires) {
+                this._lru.set(key, item, {
+                    maxAge: item.expires - Date.now()
+                });
+                return item.data;
+            } else {
+                this.remove(key);
+            }
+        }
+        return null;
     },
-
     async set(key, data, ttl = DEFAULT_TTL, forceNoPersist = false) {
+        const expires = Date.now() + ttl;
         const item = {
             data,
-            expires: Date.now() + ttl,
+            expires
         };
-        try {
-            if (this._cache.size >= this._maxSize) {
-                const oldestKey = this._cache.keys().next().value;
-                this._cache.delete(oldestKey);
-            }
-
-            this._cache.set(key, item);
-
-            if (!forceNoPersist) {
-                await browser.storage.local.set({
-                    [CACHE_PREFIX + key]: item
-                });
-            }
-        } catch (e) {
-            console.error(`[FD Cache] Failed to set item for key: ${key}`, e);
+        this._lru.set(key, item, {
+            maxAge: ttl
+        });
+        if (!forceNoPersist) {
+            await browser.storage.local.set({
+                [CACHE_PREFIX + key]: item
+            }).catch((e) => {
+                util.log(`[FD Cache] Failed to persist item for key: ${key}`, e);
+            });
         }
     },
-
     async remove(key) {
-        try {
-            this._cache.delete(key);
-            await browser.storage.local.remove(CACHE_PREFIX + key);
-        } catch (e) {
-            console.error(`[FD Cache] Failed to remove item for key: ${key}`, e);
-        }
+        this._lru.delete(key);
+        await browser.storage.local.remove(CACHE_PREFIX + key).catch((e) => {
+            util.log(`[FD Cache] Failed to remove item from storage for key: ${key}`, e);
+        });
     },
-
     async clear() {
-        try {
-            this._cache.clear();
-            const allItems = await browser.storage.local.get(null);
-            const keysToRemove = Object.keys(allItems).filter(key => key.startsWith(CACHE_PREFIX));
-            if (keysToRemove.length > 0) {
-                await browser.storage.local.remove(keysToRemove);
-                util.log(`Cache: Cleared ${keysToRemove.length} items from storage.`);
-            }
-        } catch (e) {
-            console.error('[FD Cache] Clear failed:', e);
+        this._lru.clear();
+        const allItems = await browser.storage.local.get(null).catch(() => ({}));
+        const keysToRemove = Object.keys(allItems).filter(key => key.startsWith(CACHE_PREFIX));
+        if (keysToRemove.length > 0) {
+            await browser.storage.local.remove(keysToRemove).catch(() => {});
+            util.log(`Cache: Cleared ${keysToRemove.length} items from storage.`);
         }
     },
-
     async cleanup() {
         try {
-            const allItems = await browser.storage.local.get(null);
-            const keysToRemove = [];
-
-            for (const key in allItems) {
+            const allStorageItems = await browser.storage.local.get(null).catch(() => ({}));
+            const expiredKeys = [];
+            for (const key in allStorageItems) {
                 if (key.startsWith(CACHE_PREFIX)) {
-                    const item = allItems[key];
-                    if (!item.expires || Date.now() > item.expires) {
-                        keysToRemove.push(key);
+                    const item = allStorageItems[key];
+                    if (item.expires && Date.now() > item.expires) {
+                        expiredKeys.push(key);
                     }
-
-                    this._cache.set(key.replace(CACHE_PREFIX, ''), item);
                 }
             }
-
-            if (keysToRemove.length > 0) {
-                await browser.storage.local.remove(keysToRemove);
-                util.log(`Cache cleanup: Removed ${keysToRemove.length} expired items.`);
+            if (expiredKeys.length > 0) {
+                await browser.storage.local.remove(expiredKeys).catch(() => {});
+                util.log(`Cache cleanup: Removed ${expiredKeys.length} expired items from storage.`);
             }
         } catch (e) {
             console.error('[FD Cache] Cleanup failed:', e);
         }
     },
     getSize() {
-        return this._cache.size;
+        return this._lru.size;
     }
-}
+});

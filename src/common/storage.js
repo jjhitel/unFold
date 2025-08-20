@@ -187,9 +187,9 @@ export async function toggleRemoteRule(ruleMeta, checked) {
 
     showSaved();
 
-    browser.runtime.sendMessage({
-        type: C.MSG_UPDATE_REMOTE_RULES
-    }).catch(() => {});
+    await saveAndShow({
+        [C.KEY_REMOTE_SELECTED_RULES]: next
+    }, C.MSG_UPDATE_REMOTE_RULES);
 };
 
 export async function setModeOn(on) {
