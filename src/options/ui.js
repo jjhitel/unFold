@@ -28,9 +28,17 @@ export function refreshTabVisibility(mode) {
     const showUrl = mode !== 'off';
     const showDeny = mode === 'autoDeny' || mode === 'always';
     const showAllow = mode === 'autoAllow';
-    document.querySelector('.tab[data-tab="url"]').style.display = showUrl ? '' : 'none';
-    document.querySelector('.tab[data-tab="denylist"]').style.display = showDeny ? '' : 'none';
-    document.querySelector('.tab[data-tab="allowlist"]').style.display = showAllow ? '' : 'none';
+    const toggle = (name, show) => {
+        const tab = document.querySelector(`.tab[data-tab="${name}"]`);
+        const panel = document.getElementById(`tab-${name}`);
+        if (tab)
+            tab.style.display = show ? '' : 'none';
+        if (panel)
+            panel.style.display = show ? '' : 'none';
+    };
+    toggle('url', showUrl);
+    toggle('denylist', showDeny);
+    toggle('allowlist', showAllow);
     const curTabButton = document.querySelector('.tab.active');
     if (curTabButton && curTabButton.style.display === 'none') {
         activateTab('main');

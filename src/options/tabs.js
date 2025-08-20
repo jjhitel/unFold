@@ -36,11 +36,10 @@ function showTabPanel(panel) {
 
 function initSwipe() {
     const container = document.getElementById('tab-container');
-    const tabs = document.querySelectorAll('.tab');
     let startX,
     endX;
 
-    if (!container || tabs.length <= 1)
+    if (!container)
         return;
 
     container.addEventListener('touchstart', (e) => {
@@ -55,20 +54,24 @@ function initSwipe() {
             return;
         }
 
-        const activeTabButton = document.querySelector('.tab.active');
-        if (!activeTabButton)
+        const tabs = Array.from(document.querySelectorAll('.tab'))
+            .filter(t => t.style.display !== 'none');
+        if (tabs.length <= 1)
             return;
 
-        const activeTabIndex = Array.from(tabs).indexOf(activeTabButton);
-        let nextTabIndex = activeTabIndex;
+        const activeTabButton = document.querySelector('.tab.active');
+        const activeTabIndex = tabs.indexOf(activeTabButton);
+        if (activeTabIndex === -1)
+            return;
 
+        let nextTabIndex = activeTabIndex;
         if (diff > 0) {
             nextTabIndex = Math.max(0, activeTabIndex - 1);
         } else {
             nextTabIndex = Math.min(tabs.length - 1, activeTabIndex + 1);
         }
 
-        const nextTabName = tabs[nextTabIndex].getAttribute('data-tab');
+        const nextTabName = tabs[nextTabIndex]?.getAttribute('data-tab');
         if (nextTabName) {
             activateTab(nextTabName);
         }
