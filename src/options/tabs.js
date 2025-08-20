@@ -30,7 +30,12 @@ function showTabPanel(panel) {
         return;
     const container = document.getElementById('tab-container');
     if (container) {
-        container.scrollLeft = panel.offsetLeft;
+        const panels = Array.from(container.children)
+            .filter(p => p.style.display !== 'none');
+        const index = panels.indexOf(panel);
+        if (index !== -1) {
+            container.scrollLeft = index * container.clientWidth;
+        }
     }
 }
 
