@@ -126,14 +126,16 @@ async function _updateBadge(tabId) {
         if (!/^https?:\/\//i.test(url)) {
             text = "X";
             color = "#9CA3AF";
-            await browser.action.setBadgeText({
-                tabId,
-                text
-            });
-            await browser.action.setBadgeBackgroundColor({
-                tabId,
-                color
-            });
+            await Promise.all([
+                    browser.action.setBadgeText({
+                        tabId,
+                        text
+                    }),
+                    browser.action.setBadgeBackgroundColor({
+                        tabId,
+                        color
+                    })
+                ]);
             return;
         }
 

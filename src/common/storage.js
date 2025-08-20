@@ -115,7 +115,7 @@ async function saveAndShow(data, statusId) {
     showSaved();
 }
 
-export const saveUrlRules = () => {
+export const saveUrlRules = async () => {
     const desktopText = $id('desktopRegexText').value;
     const mobileText = $id('mobileRegexText').value;
 
@@ -132,17 +132,17 @@ export const saveUrlRules = () => {
         return;
     }
 
-    saveAndShow({
+    await saveAndShow({
         [C.KEY_DESKTOP_RULES]: util.normalizeList(desktopText).join('\n'),
         [C.KEY_MOBILE_RULES]: util.normalizeList(mobileText).join('\n')
     });
 };
 
-export const saveDenylist = () => saveAndShow({
+export const saveDenylist = async () => await saveAndShow({
     [C.KEY_DENYLIST]: util.normalizeList($id('denylistText').value).join('\n')
 });
 
-export const saveAllowlist = () => saveAndShow({
+export const saveAllowlist = async () => await saveAndShow({
     [C.KEY_ALLOWLIST]: util.normalizeList($id('allowlistText').value).join('\n')
 });
 
