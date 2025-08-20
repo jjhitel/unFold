@@ -190,7 +190,9 @@ export async function renderRemoteRulesTable() {
     if (!tbody)
         return;
 
-    tbody.innerHTML = '';
+    while (tbody.firstChild) {
+        tbody.removeChild(tbody.firstChild);
+    }
     const [catalog, selected, storedData] = await Promise.all([
                 loadRemoteCatalog(),
                 loadRemoteSelections(),
