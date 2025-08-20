@@ -238,6 +238,22 @@ if (browser.webNavigation && browser.webNavigation.onCommitted) {
     });
 }
 
+browser.webNavigation.onCompleted.addListener(async(details) => {
+    if (details.frameId === 0) {
+        const { tabId, url } = details;
+        const state = await StateManager.getState();
+        if (state.mode === 'autoDeny' || state.mode === 'autoAllow') {
+            const isWide = StateManager.isWideByUrl(url);
+            const currentState = StateManager.isDesktopPreferred(tabId);
+            if (isWide !== currentState) {
+                log(`[webNavigation.onCompleted] Syncing state for tab ${tabId}. Expected: ${isWide}, Current: ${currentState}`);
+                await StateManager.updateDesktopPreferred(tabId, isWide);
+                await updateBadge(tabId);
+            }
+        }
+    }
+});
+
 browser.runtime.onMessage.addListener(async(msg, sender) => {
     if (!msg || !msg.type)
         return;
