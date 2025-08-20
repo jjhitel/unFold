@@ -56,6 +56,8 @@ import debounce from 'just-debounce-it';
                 vvHeight: readH(),
                 innerWidth: window.innerWidth,
                 innerHeight: window.innerHeight,
+                outerWidth: window.outerWidth,
+                outerHeight: window.outerHeight,
                 screenWidth: (window.screen && window.screen.width) || 0,
                 screenHeight: (window.screen && window.screen.height) || 0
             }).catch(() => {});

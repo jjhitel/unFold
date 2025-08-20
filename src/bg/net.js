@@ -64,9 +64,9 @@ function isSafeToReload(tabId) {
 }
 
 function getEffectiveWidth(msg) {
-    const vw = msg.vvWidth || msg.innerWidth || 0;
-    const sw = msg.screenWidth || 0;
-    return (vw && sw) ? Math.min(vw, sw) : (vw || sw);
+    const widths = [msg.vvWidth, msg.innerWidth, msg.outerWidth, msg.screenWidth]
+        .filter(w => typeof w === 'number' && w > 0);
+    return widths.length ? Math.min(...widths) : 0;
 }
 
 function getFoldState(width, tabId) {
