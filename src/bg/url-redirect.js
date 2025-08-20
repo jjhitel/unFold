@@ -98,6 +98,29 @@ function shouldRedirect(tabId, from, to) {
     return true;
 }
 
+function processRules(url, tabId, rules) {
+    for (const rule of rules) {
+        try {
+            if (!rule.re.test(url))
+                continue;
+            const scheme = new URL(url).protocol.replace(':', '');
+            const to = url.replace(
+                    rule.re,
+                    String(rule.to || '').replace(/\{SCHEME\}/g, scheme));
+            if (to && to !== url && shouldRedirect(tabId, url, to)) {
+                log('Redirecting', {
+                    from: url,
+                    to
+                });
+                return to;
+            }
+        } catch (e) {
+            log('Redirect rule error', String(e));
+        }
+    }
+    return null;
+}
+
 export async function onBeforeRequest(details) {
     const { tabId, url } = details;
     const state = StateManager.getState();
@@ -105,45 +128,27 @@ export async function onBeforeRequest(details) {
         return {};
     }
 
-    const isMobile = StateManager.isMobilePreferred(tabId);
-    const cacheKey = `${tabId}:${isMobile ? 'm' : 'd'}:${url}`;
+    const host = util.extractHostname(url);
 
-    const cachedResult = await Cache.get(cacheKey);
-    if (cachedResult !== null) {
-        log('Redirect from cache:', {
-            from: url,
-            to: cachedResult
-        });
-        return {
-            redirectUrl: cachedResult
-        };
-    }
+    const isDenied = (state.mode === 'autoDeny' || state.mode === 'always') && StateManager.isHostInDenylist(host);
 
-    const bucket = isMobile ? state.mobileRedirectRules : state.desktopRedirectRules;
+    const isEffectivelyMobile = StateManager.isMobilePreferred(tabId) || isDenied;
 
     let redirectUrl = null;
-    if (bucket.length > 0) {
-        for (const rule of bucket) {
-            try {
-                if (!rule.re.test(url))
-                    continue;
-                const scheme = new URL(url).protocol.replace(':', '');
-                const to = url.replace(
-                        rule.re,
-                        String(rule.to || '').replace(/\{SCHEME\}/g, scheme));
-                if (to && to !== url && shouldRedirect(tabId, url, to)) {
-                    redirectUrl = to;
-                    log('Redirecting', {
-                        from: url,
-                        to
-                    });
-                    break;
-                }
-            } catch (e) {
-                log('Redirect rule error', String(e));
-            }
+
+    const customBucket = isEffectivelyMobile ? state.customMobileRedirectRules : state.customDesktopRedirectRules;
+    if (customBucket.length > 0) {
+        redirectUrl = processRules(url, tabId, customBucket);
+    }
+
+    if (!redirectUrl && !isDenied) {
+        const remoteBucket = isEffectivelyMobile ? state.mobileRedirectRules : state.desktopRedirectRules;
+        if (remoteBucket.length > 0) {
+            redirectUrl = processRules(url, tabId, remoteBucket);
         }
     }
+
+    const cacheKey = `${tabId}:${isEffectivelyMobile ? 'm' : 'd'}:${url}`;
     await Cache.set(cacheKey, redirectUrl);
 
     if (redirectUrl) {
