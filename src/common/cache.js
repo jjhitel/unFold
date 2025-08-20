@@ -61,6 +61,20 @@ export const Cache = {
         }
     },
 
+    async clear() {
+        try {
+            this._cache.clear();
+            const allItems = await browser.storage.local.get(null);
+            const keysToRemove = Object.keys(allItems).filter(key => key.startsWith(CACHE_PREFIX));
+            if (keysToRemove.length > 0) {
+                await browser.storage.local.remove(keysToRemove);
+                util.log(`Cache: Cleared ${keysToRemove.length} items from storage.`);
+            }
+        } catch (e) {
+            console.error('[FD Cache] Clear failed:', e);
+        }
+    },
+
     async cleanup() {
         try {
             const allItems = await browser.storage.local.get(null);

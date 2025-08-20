@@ -110,12 +110,21 @@ export async function saveSingleSetting(key, value) {
     showSaved();
 };
 
-async function saveAndShow(data, statusId) {
+async function saveAndShow(data, messageType) {
     await S.set(data);
+    if (messageType) {
+        try {
+            await browser.runtime.sendMessage({
+                type: messageType
+            });
+        } catch (e) {
+            util.log("Failed to send immediate update message", e);
+        }
+    }
     showSaved();
 }
 
-export const saveUrlRules = async () => {
+export const saveUrlRules = async() => {
     const desktopText = $id('desktopRegexText').value;
     const mobileText = $id('mobileRegexText').value;
 
@@ -135,16 +144,16 @@ export const saveUrlRules = async () => {
     await saveAndShow({
         [C.KEY_DESKTOP_RULES]: util.normalizeList(desktopText).join('\n'),
         [C.KEY_MOBILE_RULES]: util.normalizeList(mobileText).join('\n')
-    });
+    }, C.MSG_RULES_UPDATED);
 };
 
-export const saveDenylist = async () => await saveAndShow({
-    [C.KEY_DENYLIST]: util.normalizeList($id('denylistText').value).join('\n')
-});
+export const saveDenylist = async() => await saveAndShow({
+    [C.KEY_DENYLIST]: $id('denylistText').value
+}, C.MSG_RULES_UPDATED);
 
-export const saveAllowlist = async () => await saveAndShow({
-    [C.KEY_ALLOWLIST]: util.normalizeList($id('allowlistText').value).join('\n')
-});
+export const saveAllowlist = async() => await saveAndShow({
+    [C.KEY_ALLOWLIST]: $id('allowlistText').value
+}, C.MSG_RULES_UPDATED);
 
 export function bindStorageMirror() {
     browser.storage.onChanged.addListener((changes, area) => {

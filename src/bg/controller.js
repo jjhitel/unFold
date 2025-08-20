@@ -1,5 +1,5 @@
 'use strict';
-import { StateManager, cleanupTabState } from './stateManager.js';
+import { StateManager, cleanupTabState, updateRules, updateLists } from './stateManager.js';
 import { util } from '../common/utils.js';
 import { Cache } from '../common/cache.js';
 import { onViewportMessage, RELOAD_TIMES } from './net.js';
@@ -232,7 +232,7 @@ if (browser.webNavigation && browser.webNavigation.onCommitted) {
     });
 }
 
-browser.runtime.onMessage.addListener((msg, sender) => {
+browser.runtime.onMessage.addListener(async(msg, sender) => {
     if (!msg || !msg.type)
         return;
     switch (msg.type) {
@@ -258,7 +258,33 @@ browser.runtime.onMessage.addListener((msg, sender) => {
         updateAllBadges();
         break;
     case C.MSG_UPDATE_REMOTE_RULES:
-        updateCheckedRemoteRules();
+        try {
+            const catalogURL = browser.runtime.getURL('rules.json');
+            const catalog = await fetch(catalogURL).then(r => r.json()).catch(() => []);
+            const { selectedRemoteRules } = await browser.storage.local.get({
+                selectedRemoteRules: []
+            });
+            const newSelection = new Set(selectedRemoteRules);
+            const keysToRemove = [];
+
+            for (const ruleMeta of catalog) {
+                if (!newSelection.has(ruleMeta.id)) {
+                    const key = ruleMeta.kind === 'mobile' ? C.KEY_REMOTE_MOBILE_RULE : C.KEY_REMOTE_DESKTOP_RULE;
+                    keysToRemove.push(key);
+                }
+            }
+
+            if (keysToRemove.length > 0) {
+                await browser.storage.local.remove(keysToRemove);
+            }
+
+            await updateCheckedRemoteRules();
+            await updateRules();
+            await Cache.clear();
+            log('Remote rules toggled, state updated, and cache cleared.');
+        } catch (e) {
+            log('Error handling remote rule update:', e);
+        }
         break;
     case C.MSG_CHECK_LIST_HOST:
         if (msg.host) {
@@ -268,6 +294,14 @@ browser.runtime.onMessage.addListener((msg, sender) => {
             });
         }
         break;
+    case C.MSG_RULES_UPDATED:
+        await Promise.all([
+                updateRules(),
+                updateLists(),
+                Cache.clear()
+            ]);
+        log('Rules, lists, and cache updated on demand.');
+        return true;
     default:
         break;
     }
