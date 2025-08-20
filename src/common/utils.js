@@ -32,13 +32,30 @@ Utils.normalizeList = (multiline) => {
         const trimmed = raw.trim();
         if (!trimmed)
             continue;
-        const p = tldtsParse(trimmed, {
-            icannOnly: true
-        });
-        const host = p.hostname || trimmed;
-        if (host && !seen.has(host)) {
-            seen.add(host);
-            out.push(host);
+        if (!seen.has(trimmed)) {
+            seen.add(trimmed);
+            out.push(trimmed);
+        }
+    }
+    return out;
+};
+
+Utils.normalizeHostnames = (multiline) => {
+    const lines = Utils.normalizeList(multiline);
+    const seen = new Set();
+    const out = [];
+
+    for (const line of lines) {
+        let hostCandidate = line.split(/(\s*->\s*|\s*=>\s*|\s+)/)[0];
+
+        const pathIndex = hostCandidate.indexOf('/');
+        if (pathIndex !== -1) {
+            hostCandidate = hostCandidate.substring(0, pathIndex);
+        }
+
+        if (hostCandidate && !seen.has(hostCandidate)) {
+            seen.add(hostCandidate);
+            out.push(hostCandidate);
         }
     }
     return out;

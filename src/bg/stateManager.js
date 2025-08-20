@@ -308,15 +308,17 @@ export async function updateLists(data) {
             _prevDenyText = denyText;
             denylistTrie.reset();
             denylistTrieRoot = trieCreate(denylistTrie);
-            for (const host of normalizeList(denyText))
+            for (const host of util.normalizeList(denyText)) {
                 trieAdd(denylistTrie, denylistTrieRoot, host);
+            }
         }
         if (allowText !== _prevAllowText) {
             _prevAllowText = allowText;
             allowlistTrie.reset();
             allowlistTrieRoot = trieCreate(allowlistTrie);
-            for (const host of normalizeList(allowText))
+            for (const host of util.normalizeList(allowText)) {
                 trieAdd(allowlistTrie, allowlistTrieRoot, host);
+            }
         }
         log('Deny/Allow Tries updated');
     } catch (e) {

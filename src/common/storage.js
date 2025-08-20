@@ -148,11 +148,11 @@ export const saveUrlRules = async() => {
 };
 
 export const saveDenylist = async() => await saveAndShow({
-    [C.KEY_DENYLIST]: $id('denylistText').value
+    [C.KEY_DENYLIST]: util.normalizeHostnames($id('denylistText').value).join('\n')
 }, C.MSG_RULES_UPDATED);
 
 export const saveAllowlist = async() => await saveAndShow({
-    [C.KEY_ALLOWLIST]: $id('allowlistText').value
+    [C.KEY_ALLOWLIST]: util.normalizeHostnames($id('allowlistText').value).join('\n')
 }, C.MSG_RULES_UPDATED);
 
 export function bindStorageMirror() {
