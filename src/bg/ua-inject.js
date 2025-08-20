@@ -101,6 +101,16 @@ export async function onBeforeSendHeaders(details) {
     const state = StateManager.getState();
     if (state.mode === 'off')
         return {};
+    const host = extractHostname(url);
+    if (state.mode === 'autoDeny' || state.mode === 'always') {
+        if (StateManager.isHostInDenylist(host)) {
+            return {};
+        }
+    } else if (state.mode === 'autoAllow') {
+        if (!StateManager.isHostInAllowlist(host)) {
+            return {};
+        }
+    }
     const isDesktop = (state.mode === 'always') || StateManager.isDesktopPreferred(tabId);
     if (!isDesktop)
         return {};

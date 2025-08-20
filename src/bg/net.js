@@ -146,7 +146,7 @@ export function registerListeners(urlPatterns) {
     },
         ["blocking"]);
     isListenersRegistered = true;
-    log('Web request listeners registered for patterns:', urlPatterns, 'Compat Mode:', state.compatMode);
+    log('Web request listeners registered. Compat Mode:', state.compatMode, 'Patterns:', urlPatterns);
 }
 
 export function unregisterListeners() {

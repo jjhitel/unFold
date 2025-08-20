@@ -152,36 +152,24 @@ const state = {
     lastKnownWide: undefined,
 };
 
-export async function getTargetHostPatterns(mode) {
-    const { denylistText = '', allowlistText = '' } = await browser.storage.local.get(['denylistText', 'allowlistText']);
-    const hosts = new Set();
-
-    const addHostsFromString = (text) => {
-        if (!text)
-            return;
-        for (const host of normalizeList(text)) {
-            hosts.add(host);
-        }
-    };
+export async function getTargetHostPatterns() {
+    const { mode, denylistText = '', allowlistText = '' } = await browser.storage.local.get(['mode', 'denylistText', 'allowlistText']);
 
     if (mode === 'autoAllow') {
-        addHostsFromString(allowlistText);
-    } else if (mode === 'autoDeny' || mode === 'always') {
-        addHostsFromString(denylistText);
+        const allowHosts = normalizeList(allowlistText);
+        if (allowHosts.length === 0) {
+            return [];
+        }
+        const patterns = new Set();
+        for (const host of allowHosts) {
+            const domain = host.startsWith('*.') ? host.substring(1) : host;
+            patterns.add(`*://${domain}/*`);
+            patterns.add(`*://*.${domain}/*`);
+        }
+        return Array.from(patterns);
     }
 
-    if (hosts.size === 0) {
-        return ["*://*/*"];
-    }
-
-    const patterns = [];
-    for (const host of hosts) {
-        const domain = host.startsWith('*.') ? host.substring(1) : host;
-        patterns.push(`*://${domain}/*`);
-        patterns.push(`*://*.${domain}/*`);
-    }
-
-    return [...new Set(patterns)];
+    return ["http://*/*", "https://*/*"];
 }
 
 export const StateManager = {

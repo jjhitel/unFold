@@ -14,7 +14,9 @@ async function refreshListeners() {
     const state = StateManager.getState();
     if (state.mode !== 'off') {
         const patterns = await getTargetHostPatterns();
-        registerListeners(patterns);
+        if (patterns.length > 0) {
+            registerListeners(patterns);
+        }
     }
 }
 
