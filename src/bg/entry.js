@@ -6,6 +6,7 @@ import debounce from 'just-debounce-it';
 import { registerListeners, unregisterListeners } from './net.js';
 import { createUpdateAlarm, updateAllBadges } from './controller.js';
 import { Cache } from '../common/cache.js';
+import { C } from '../common/constants.js';
 
 const { log } = util;
 
@@ -72,8 +73,8 @@ const handleStorageChange = debounce(async(changes, area) => {
         return;
 
     const changedKeys = Object.keys(changes);
-    const listKeys = ['denylistText', 'allowlistText'];
-    const ruleKeys = ['desktopRegexText', 'mobileRegexText', 'desktopRedirectRule', 'mobileRedirectRule'];
+    const listKeys = [C.KEY_DENYLIST, C.KEY_ALLOWLIST];
+    const ruleKeys = [C.KEY_DESKTOP_RULES, C.KEY_MOBILE_RULES, C.KEY_REMOTE_DESKTOP_RULE, C.KEY_REMOTE_MOBILE_RULE];
 
     let needsListenerRefresh = false;
 
@@ -89,7 +90,7 @@ const handleStorageChange = debounce(async(changes, area) => {
             rulesChanged = true;
         } else {
             settingsChanged = true;
-            if (key === 'mode') {
+            if (key === C.KEY_MODE) {
                 needsListenerRefresh = true;
             }
         }
@@ -114,7 +115,7 @@ const handleStorageChange = debounce(async(changes, area) => {
     if (changes.autoUpdatePeriod) {
         await createUpdateAlarm();
     }
-}, 250);
+}, C.DEBOUNCE_MS_MEDIUM);
 
 browser.storage.onChanged.addListener(handleStorageChange);
 

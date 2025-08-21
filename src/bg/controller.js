@@ -9,7 +9,7 @@ import { clearRedirectGuard } from './url-redirect.js';
 import { C } from '../common/constants.js';
 
 const { log, extractHostname } = util;
-const ALARM_NAME = 'remote-rules-update';
+const ALARM_NAME = C.ALARM_REMOTE_RULES_UPDATE;
 
 async function fetchAndCacheRule(url) {
     const cached = await Cache.get(url);
@@ -59,12 +59,12 @@ export async function updateCheckedRemoteRules() {
         log('No remote rules selected. Skipping update.');
         return;
     }
-    const catalogCacheKey = 'remoteCatalog';
+    const catalogCacheKey = C.KEY_REMOTE_CATALOG;
     let catalog = await Cache.get(catalogCacheKey);
     if (!catalog) {
-        const catalogURL = browser.runtime.getURL('rules.json');
+        const catalogURL = browser.runtime.getURL(C.FILE_REMOTE_RULES_JSON);
         catalog = await fetch(catalogURL).then(r => r.json()).catch(() => []);
-        await Cache.set(catalogCacheKey, catalog, 3 * 60 * 60 * 1000); // cache for 3 hours
+        await Cache.set(catalogCacheKey, catalog, C.CACHE_REMOTE_CATALOG_TTL);
     }
     if (!catalog || catalog.length === 0) {
         log('Failed to load remote rules catalog.');
@@ -111,7 +111,7 @@ export async function createUpdateAlarm() {
     await browser.alarms.clear(ALARM_NAME);
     if (autoUpdatePeriod > 0) {
         browser.alarms.create(ALARM_NAME, {
-            delayInMinutes: 5,
+            delayInMinutes: C.ALARM_DELAY_MINUTES,
             periodInMinutes: Number(autoUpdatePeriod)
         });
         log(`Update alarm created. Interval: ${autoUpdatePeriod} minutes.`);
@@ -132,10 +132,10 @@ async function _updateBadge(tabId) {
 
         const isHttp = /^https?:\/\//i.test(url);
         const host = isHttp ? extractHostname(url) : null;
-        const isDenied = (state.mode !== 'autoAllow') && host && StateManager.isHostInDenylist(host);
-        const isAllowed = (state.mode !== 'autoAllow') || (host && StateManager.isHostInAllowlist(host));
-        const isDesktop = state.mode === 'always' || StateManager.isDesktopPreferred(tabId);
-        const uaInjected = isHttp && state.mode !== 'off' && !isDenied && isAllowed && isDesktop;
+        const isDenied = (state.mode !== C.MODE_AUTO_ALLOW) && host && StateManager.isHostInDenylist(host);
+        const isAllowed = (state.mode !== C.MODE_AUTO_ALLOW) || (host && StateManager.isHostInAllowlist(host));
+        const isDesktop = state.mode === C.MODE_ALWAYS || StateManager.isDesktopPreferred(tabId);
+        const uaInjected = isHttp && state.mode !== C.MODE_OFF && !isDenied && isAllowed && isDesktop;
 
         if (!isHttp) {
             text = uaInjected ? "!" : "X";
@@ -216,7 +216,7 @@ if (browser.webNavigation && browser.webNavigation.onCommitted) {
         const { tabId } = details;
         await StateManager.loadInitialTabState(tabId);
         const state = StateManager.getState();
-        if (state.mode === 'autoDeny') {
+        if (state.mode === C.MODE_AUTO_DENY) {
             const isWide = state.isWideByTab.get(tabId);
             if (isWide === false) {
                 await StateManager.updateStickyMobile(tabId, true);
@@ -233,7 +233,7 @@ browser.webNavigation.onCompleted.addListener(async(details) => {
     if (details.frameId === 0) {
         const { tabId, url } = details;
         const state = await StateManager.getState();
-        if (state.mode === 'autoDeny' || state.mode === 'autoAllow') {
+        if (state.mode === C.MODE_AUTO_DENY || state.mode === C.MODE_AUTO_ALLOW) {
             const isWide = StateManager.isWideByUrl(url);
             const currentState = StateManager.isDesktopPreferred(tabId);
             if (isWide !== currentState) {

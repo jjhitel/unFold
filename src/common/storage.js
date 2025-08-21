@@ -172,7 +172,7 @@ export const saveRemoteSelections = (arr) => S.set({
 
 export async function loadRemoteCatalog() {
     try {
-        const response = await fetch(browser.runtime.getURL('rules.json'));
+        const response = await fetch(browser.runtime.getURL(C.FILE_REMOTE_RULES_JSON));
         return await response.json();
     } catch (e) {
         console.error('[FD] Failed to load remote catalog:', e);

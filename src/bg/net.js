@@ -4,6 +4,7 @@ import { StateManager } from './stateManager.js';
 import { onBeforeSendHeaders } from './ua-inject.js';
 import { onBeforeRequest } from './url-redirect.js';
 import { updateBadge } from './controller.js';
+import { C } from '../common/constants.js';
 
 const { log } = util;
 export const RELOAD_TIMES = new Map();
@@ -80,13 +81,13 @@ function getFoldState(width, tabId) {
 
 async function handleAutoRefresh(tabId, changed) {
     const state = StateManager.getState();
-    if (!changed || !state.autoRefresh || (state.mode !== 'autoDeny' && state.mode !== 'autoAllow')) {
+    if (!changed || !state.autoRefresh || (state.mode !== C.MODE_AUTO_DENY && state.mode !== C.MODE_AUTO_ALLOW)) {
         return;
     }
 
     const last = RELOAD_TIMES.get(tabId) || 0;
     const now = Date.now();
-    if (now - last > 1200) {
+    if (now - last > C.RELOAD_COOLDOWN) {
         RELOAD_TIMES.set(tabId, now);
         if (isSafeToReload(tabId)) {
             try {

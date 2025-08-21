@@ -25,6 +25,17 @@ export const C = {
 
     KEY_RULE_LAST_MODIFIED_PREFIX: '::lastModified',
 
+    FILE_REMOTE_RULES_JSON: 'rules.json',
+    OPTIONS_HTML_PATH: 'src/options/options.html',
+    ALARM_REMOTE_RULES_UPDATE: 'remote-rules-update',
+    ALARM_DELAY_MINUTES: 5,
+    CACHE_REMOTE_CATALOG_TTL: 3 * 60 * 60 * 1000,
+    RELOAD_COOLDOWN: 1200,
+    MODE_OFF: 'off',
+    MODE_AUTO_DENY: 'autoDeny',
+    MODE_AUTO_ALLOW: 'autoAllow',
+    MODE_ALWAYS: 'always',
+
     DEFAULT_MODE: 'autoDeny',
     DEFAULT_THRESHOLD: 724,
     DEFAULT_DESKTOP_UA: 'Mozilla/5.0 (X11; Linux x86_64; rv:141.0) Gecko/20100101 Firefox/141.0',
