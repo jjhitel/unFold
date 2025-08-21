@@ -6,8 +6,6 @@ import { util } from '../common/utils.js';
 import debounce from 'just-debounce-it';
 import { C } from '../common/constants.js';
 
-const $id = (id) => document.getElementById(id);
-
 const MODE_DESCRIPTIONS = {
     off: "options_modeDesc_off",
     autoDeny: "options_modeDesc_autoDeny",
@@ -16,8 +14,8 @@ const MODE_DESCRIPTIONS = {
 };
 
 function updateModeDescription() {
-    const mode = $id('mode')?.value || 'off';
-    const descEl = $id('mode-description');
+    const mode = util.$id('mode')?.value || 'off';
+    const descEl = util.$id('mode-description');
     if (descEl) {
         const msgKey = MODE_DESCRIPTIONS[mode];
         descEl.textContent = browser.i18n.getMessage(msgKey) || '';
@@ -30,7 +28,7 @@ export function refreshTabVisibility(mode) {
     const showAllow = mode === 'autoAllow';
     const toggle = (name, show) => {
         const tab = document.querySelector(`.tab[data-tab="${name}"]`);
-        const panel = document.getElementById(`tab-${name}`);
+        const panel = util.$id(`tab-${name}`);
         if (tab)
             tab.style.display = show ? '' : 'none';
         if (panel)
@@ -46,7 +44,7 @@ export function refreshTabVisibility(mode) {
 };
 
 async function displayLastUpdated() {
-    const el = $id('last-updated');
+    const el = util.$id('last-updated');
     if (!el)
         return;
     const res = await uiStore.get('remoteRulesLastUpdated');
@@ -62,19 +60,19 @@ async function displayLastUpdated() {
 
 function checkPlatformCompatibility() {
     const isAndroid = navigator.userAgent.includes("Android");
-    const zoomRow = $id('zoomLevelRow');
+    const zoomRow = util.$id('zoomLevelRow');
     if (isAndroid && zoomRow) {
         zoomRow.style.display = 'none';
     }
 }
 
 export function initUIBindings() {
-    $id('btn-url-save')?.addEventListener('click', saveUrlRules);
-    $id('save-denylist')?.addEventListener('click', saveDenylist);
-    $id('save-allowlist')?.addEventListener('click', saveAllowlist);
-    $id('captureUnfolded')?.addEventListener('click', async() => {
+    util.$id('btn-url-save')?.addEventListener('click', saveUrlRules);
+    util.$id('save-denylist')?.addEventListener('click', saveDenylist);
+    util.$id('save-allowlist')?.addEventListener('click', saveAllowlist);
+    util.$id('captureUnfolded')?.addEventListener('click', async() => {
         const recommendedThreshold = window.screen.width - 30;
-        $id('threshold').value = recommendedThreshold;
+        util.$id('threshold').value = recommendedThreshold;
         await uiStore.set({
             threshold: recommendedThreshold
         });
@@ -92,7 +90,7 @@ export function initUIBindings() {
         bindSetting(id, null, 200, callback);
     }
 
-    const uaInput = $id('ua');
+    const uaInput = util.$id('ua');
     if (uaInput) {
         const debouncedSave = util.debounce(async(value) => {
             await uiStore.set({
@@ -106,7 +104,7 @@ export function initUIBindings() {
         uaInput.addEventListener('input', (e) => debouncedSave(e.target.value));
     }
 
-    $id('resetUA')?.addEventListener('click', async() => {
+    util.$id('resetUA')?.addEventListener('click', async() => {
         try {
             const info = await browser.runtime.getBrowserInfo();
             const ver = String(info?.version || '');
@@ -115,7 +113,7 @@ export function initUIBindings() {
             const minor = m?.[2] ?? '0';
             const v = `${major}.${minor}`;
             const dyn = `Mozilla/5.0 (X11; Linux x86_64; rv:${v}) Gecko/20100101 Firefox/${v}`;
-            $id('ua').value = dyn;
+            util.$id('ua').value = dyn;
             await uiStore.set({
                 desktopUA: dyn,
                 uaDynamic: true,
@@ -123,7 +121,7 @@ export function initUIBindings() {
             });
         } catch {
             const fallback = 'Mozilla/5.0 (X11; Linux x86_64; rv:141.0) Gecko/20100101 Firefox/141.0';
-            $id('ua').value = fallback;
+            util.$id('ua').value = fallback;
             await uiStore.set({
                 desktopUA: fallback,
                 uaDynamic: true
@@ -136,7 +134,7 @@ export function initUIBindings() {
 };
 
 export async function renderRemoteRulesTable() {
-    const tbody = document.getElementById('remote-rules');
+    const tbody = util.$id('remote-rules');
     if (!tbody)
         return;
 
@@ -179,7 +177,7 @@ export async function renderRemoteRulesTable() {
         tdUpd.title = iso;
     }
 
-    const btn = document.getElementById('btn-remote-update');
+    const btn = util.$id('btn-remote-update');
     if (btn && !btn.fdBound) {
         btn.fdBound = true;
         btn.addEventListener('click', async() => {

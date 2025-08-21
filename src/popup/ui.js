@@ -6,13 +6,11 @@ import { uiStore } from '../common/storage.js';
 import * as storage from '../common/storage.js';
 import { C } from '../common/constants.js';
 
-const $id = util.$id;
-
 function updateListButtonsVisibility(mode) {
     const modeStr = String(mode || '').toLowerCase();
-    const actionRow = $id('main-action-row');
-    const btnDeny = $id('btnDeny');
-    const btnAllow = $id('btnAllow');
+    const actionRow = util.$id('main-action-row');
+    const btnDeny = util.$id('btnDeny');
+    const btnAllow = util.$id('btnAllow');
 
     if (!actionRow || !btnDeny || !btnAllow)
         return;
@@ -34,8 +32,8 @@ function updateListButtonsVisibility(mode) {
 }
 
 async function initListButtons() {
-    const btnDeny = $id('btnDeny');
-    const btnAllow = $id('btnAllow');
+    const btnDeny = util.$id('btnDeny');
+    const btnAllow = util.$id('btnAllow');
     const info = await getActiveHttpTab();
 
     if (!info) {
@@ -76,9 +74,9 @@ async function syncAllUI() {
     const settings = await uiStore.get(['mode', 'autoRefresh', 'urlRedirect']);
     const mode = settings.mode || C.DEFAULT_MODE;
 
-    setOn($id('switch'), mode !== 'off');
-    setOn($id('toggle-autoRefresh'), settings.autoRefresh ?? true);
-    setOn($id('toggle-urlRedirect'), settings.urlRedirect ?? false);
+    setOn(util.$id('switch'), mode !== 'off');
+    setOn(util.$id('toggle-autoRefresh'), settings.autoRefresh ?? true);
+    setOn(util.$id('toggle-urlRedirect'), settings.urlRedirect ?? false);
 
     updateListButtonsVisibility(mode);
     await initListButtons();
@@ -103,7 +101,7 @@ export async function initPopupUI() {
         bindSetting(id);
     }
 
-    const btnOptions = $id('btnOptions');
+    const btnOptions = util.$id('btnOptions');
     if (btnOptions) {
         btnOptions.addEventListener('click', () => openOptions());
     }
