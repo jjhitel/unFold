@@ -7,8 +7,10 @@ import { updateBadge } from './controller.js';
 import { C } from '../common/constants.js';
 
 const { log } = util;
+const state = StateManager.getState();
 export const RELOAD_TIMES = new Map();
-let isListenersRegistered = false;
+let isUAListenerRegistered = false;
+let isRedirectListenerRegistered = false;
 
 function showAlertInPage(message) {
     if (document.getElementById('unfold-alerter-host'))
@@ -71,7 +73,6 @@ function getEffectiveWidth(msg) {
 }
 
 function getFoldState(width, tabId) {
-    const state = StateManager.getState();
     const prevWide = StateManager.isDesktopPreferred(tabId);
     const HYSTERESIS_PX = 100;
     const thresholdUp = state.threshold;
@@ -80,7 +81,6 @@ function getFoldState(width, tabId) {
 }
 
 async function handleAutoRefresh(tabId, changed) {
-    const state = StateManager.getState();
     if (!changed || !state.autoRefresh || (state.mode !== C.MODE_AUTO_DENY && state.mode !== C.MODE_AUTO_ALLOW)) {
         return;
     }
@@ -125,38 +125,48 @@ export async function onViewportMessage(msg, sender) {
     await updateBadge(tabId, isNowWide);
 }
 
-export function registerListeners(urlPatterns) {
-    if (isListenersRegistered || !urlPatterns || urlPatterns.length === 0)
+export function registerListeners({
+    patterns,
+    shouldRegisterUA,
+    shouldRegisterRedirect
+}) {
+    if (!patterns || patterns.length === 0)
         return;
 
-    const state = StateManager.getState();
-    const headerListenerTypes = state.compatMode
-         ? ["main_frame", "sub_frame", "xmlhttprequest"]
-         : ["main_frame", "xmlhttprequest"];
+    if (shouldRegisterUA && !isUAListenerRegistered) {
+        const headerListenerTypes = state.compatMode ?
+            ["main_frame", "sub_frame", "xmlhttprequest"] :
+            ["main_frame", "xmlhttprequest"];
+        browser.webRequest.onBeforeSendHeaders.addListener(
+            onBeforeSendHeaders, {
+            urls: patterns,
+            types: headerListenerTypes
+        }, ["blocking", "requestHeaders"]);
+        isUAListenerRegistered = true;
+        log('UA injection listener registered.');
+    }
 
-    const requestListenerTypes = state.compatMode ? ["main_frame", "sub_frame"] : ["main_frame"];
-
-    browser.webRequest.onBeforeSendHeaders.addListener(
-        onBeforeSendHeaders, {
-        urls: urlPatterns,
-        types: headerListenerTypes
-    },
-        ["blocking", "requestHeaders"]);
-    browser.webRequest.onBeforeRequest.addListener(
-        onBeforeRequest, {
-        urls: urlPatterns,
-        types: requestListenerTypes
-    },
-        ["blocking"]);
-    isListenersRegistered = true;
-    log('Web request listeners registered. Compat Mode:', state.compatMode, 'Patterns:', urlPatterns);
+    if (shouldRegisterRedirect && !isRedirectListenerRegistered) {
+        const requestListenerTypes = state.compatMode ? ["main_frame", "sub_frame"] : ["main_frame"];
+        browser.webRequest.onBeforeRequest.addListener(
+            onBeforeRequest, {
+            urls: patterns,
+            types: requestListenerTypes
+        }, ["blocking"]);
+        isRedirectListenerRegistered = true;
+        log('URL redirect listener registered.');
+    }
+    log('Web request listeners registered. Compat Mode:', state.compatMode, 'Patterns:', patterns);
 }
 
 export function unregisterListeners() {
-    if (!isListenersRegistered)
-        return;
-    browser.webRequest.onBeforeSendHeaders.removeListener(onBeforeSendHeaders);
-    browser.webRequest.onBeforeRequest.removeListener(onBeforeRequest);
-    isListenersRegistered = false;
+    if (isUAListenerRegistered) {
+        browser.webRequest.onBeforeSendHeaders.removeListener(onBeforeSendHeaders);
+        isUAListenerRegistered = false;
+    }
+    if (isRedirectListenerRegistered) {
+        browser.webRequest.onBeforeRequest.removeListener(onBeforeRequest);
+        isRedirectListenerRegistered = false;
+    }
     log('Web request listeners unregistered');
 }

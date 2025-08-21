@@ -20,10 +20,21 @@ export async function initBackground() {
 async function refreshListeners() {
     unregisterListeners();
     const state = StateManager.getState();
-    if (state.mode !== 'off') {
+    const shouldRegisterUA = state.mode !== 'off';
+    const hasRedirectRules = state.desktopRedirectRules.length > 0 ||
+        state.mobileRedirectRules.length > 0 ||
+        state.customDesktopRedirectRules.length > 0 ||
+        state.customMobileRedirectRules.length > 0;
+    const shouldRegisterRedirect = state.urlRedirect && hasRedirectRules;
+
+    if (shouldRegisterUA || shouldRegisterRedirect) {
         const patterns = await getTargetHostPatterns();
         if (patterns.length > 0) {
-            registerListeners(patterns);
+            registerListeners({
+                patterns,
+                shouldRegisterUA,
+                shouldRegisterRedirect
+            });
         }
     }
 }
@@ -119,8 +130,10 @@ const handleStorageChange = debounce(async(changes, area) => {
 
 browser.storage.onChanged.addListener(handleStorageChange);
 
-browser.runtime.onInstalled.addListener(async (info) => {
-    try { await rotateSessionNamespace(); } catch {}
+browser.runtime.onInstalled.addListener(async(info) => {
+    try {
+        await rotateSessionNamespace();
+    } catch {}
 });
 
 boot();
