@@ -1,6 +1,6 @@
 'use strict';
 import './msg-handler.js';
-import { StateManager, cleanupTabState } from './stateManager.js';
+import { StateManager, cleanupTabState, shouldApplyTransformation } from './stateManager.js';
 import { util } from '../common/utils.js';
 import { Cache } from '../common/cache.js';
 import { onViewportMessage, RELOAD_TIMES } from './net.js';
@@ -130,23 +130,19 @@ async function _updateBadge(tabId) {
         const url = tab?.url || '';
 
         const isHttp = /^https?:\/\//i.test(url);
-        const host = isHttp ? extractHostname(url) : null;
-        const isDenied = (state.mode !== C.MODE_AUTO_ALLOW) && host && StateManager.isHostInDenylist(host);
-        const isAllowed = (state.mode !== C.MODE_AUTO_ALLOW) || (host && StateManager.isHostInAllowlist(host));
-        const isDesktop = state.mode === C.MODE_ALWAYS || StateManager.isDesktopPreferred(tabId);
-        const uaInjected = isHttp && state.mode !== C.MODE_OFF && !isDenied && isAllowed && isDesktop;
+        const isDesktop = shouldApplyTransformation(tabId, url);
 
         if (!isHttp) {
-            text = uaInjected ? "!" : "X";
-            color = uaInjected ? "#EF4444" : "#9CA3AF";
+            text = isDesktop ? "!" : "X";
+            color = isDesktop ? "#EF4444" : "#9CA3AF";
         } else if (state.mode === "off") {
-            text = uaInjected ? "!" : "X";
-            color = uaInjected ? "#EF4444" : "#9CA3AF";
+            text = isDesktop ? "!" : "X";
+            color = isDesktop ? "#EF4444" : "#9CA3AF";
         } else if (state.mode === "always") {
-            text = uaInjected ? "D" : "!";
+            text = isDesktop ? "D" : "!";
             color = "#EF4444";
         } else {
-            text = uaInjected ? "D" : "M";
+            text = isDesktop ? "D" : "M";
             color = "#10B981";
         }
         await browser.action.setBadgeText({

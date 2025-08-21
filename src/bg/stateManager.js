@@ -188,6 +188,32 @@ export async function getTargetHostPatterns() {
     return ["http://*/*", "https://*/*"];
 }
 
+export function shouldApplyTransformation(tabId, url) {
+    const state = StateManager.getState();
+    if (state.mode === 'off' || !/^https?:/i.test(url)) {
+        return false;
+    }
+
+    const host = util.extractHostname(url);
+    if (!host) {
+        return false;
+    }
+
+    const isDesktopPreferred = StateManager.isDesktopPreferred(tabId);
+    const isDenied = (state.mode === 'autoDeny' || state.mode === 'always') && StateManager.isHostInDenylist(host);
+    const isAllowed = (state.mode === 'autoAllow') && StateManager.isHostInAllowlist(host);
+
+    if (state.mode === 'autoDeny' || state.mode === 'always') {
+        return isDesktopPreferred && !isDenied;
+    }
+
+    if (state.mode === 'autoAllow') {
+        return isDesktopPreferred && isAllowed;
+    }
+
+    return false;
+}
+
 export const StateManager = {
     getState: () => state,
     get: (key) => state[key],
@@ -258,13 +284,13 @@ export const StateManager = {
             if (d === true)
                 state.formDirtyByTab.set(tabId, true);
             else
-                state.formDirtyByTab.delete(tabId);
+                state.formDirtyByTab.delete(d);
 
             const s = await TabKV.get(tabId, 'fd_stickyMobile');
             if (s === true)
                 state.stickyMobileByTab.set(tabId, true);
             else
-                state.stickyMobileByTab.delete(tabId);
+                state.stickyMobileByTab.delete(s);
         } catch (e) {}
     },
     isHostInDenylist: (host) => {

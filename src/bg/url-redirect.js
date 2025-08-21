@@ -1,5 +1,5 @@
 'use strict';
-import { StateManager } from './stateManager.js';
+import { StateManager, shouldApplyTransformation } from './stateManager.js';
 import { util } from '../common/utils.js';
 import { parse as tldtsParse } from 'tldts';
 import { Cache } from '../common/cache.js';
@@ -101,7 +101,8 @@ function shouldRedirect(tabId, from, to) {
 function processRules(url, tabId, rules) {
     for (const rule of rules) {
         try {
-            if (rule.prefix && !url.startsWith(rule.prefix)) continue;
+            if (rule.prefix && !url.startsWith(rule.prefix))
+                continue;
             if (!rule.re.test(url))
                 continue;
             const scheme = new URL(url).protocol.replace(':', '');
@@ -125,15 +126,12 @@ function processRules(url, tabId, rules) {
 export async function onBeforeRequest(details) {
     const { tabId, url } = details;
     const state = StateManager.getState();
-    if (!state.urlRedirect || state.mode === 'off' || !/^https?:/i.test(url)) {
+
+    if (!state.urlRedirect || !shouldApplyTransformation(tabId, url)) {
         return {};
     }
 
-    const host = util.extractHostname(url);
-
-    const isDenied = (state.mode === 'autoDeny' || state.mode === 'always') && StateManager.isHostInDenylist(host);
-
-    const isEffectivelyMobile = StateManager.isMobilePreferred(tabId) || isDenied;
+    const isEffectivelyMobile = StateManager.isMobilePreferred(tabId);
 
     let redirectUrl = null;
 
@@ -142,7 +140,7 @@ export async function onBeforeRequest(details) {
         redirectUrl = processRules(url, tabId, customBucket);
     }
 
-    if (!redirectUrl && !isDenied) {
+    if (!redirectUrl) {
         const remoteBucket = isEffectivelyMobile ? state.mobileRedirectRules : state.desktopRedirectRules;
         if (remoteBucket.length > 0) {
             redirectUrl = processRules(url, tabId, remoteBucket);
