@@ -214,6 +214,7 @@ if (browser.webNavigation && browser.webNavigation.onCommitted) {
         if (details.frameId !== 0)
             return;
         const { tabId } = details;
+        await StateManager.updateFormDirty(tabId, false);
         await StateManager.loadInitialTabState(tabId);
         const state = StateManager.getState();
         if (state.mode === C.MODE_AUTO_DENY) {
