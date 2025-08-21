@@ -6,41 +6,48 @@ import { uiStore } from '../common/storage.js';
 import * as storage from '../common/storage.js';
 import { C } from '../common/constants.js';
 
+const elements = {};
+
+function initElements() {
+    elements.modeSwitch = util.$id('switch');
+    elements.autoRefreshToggle = util.$id('toggle-autoRefresh');
+    elements.urlRedirectToggle = util.$id('toggle-urlRedirect');
+    elements.btnDeny = util.$id('btnDeny');
+    elements.btnAllow = util.$id('btnAllow');
+    elements.btnOptions = util.$id('btnOptions');
+    elements.mainActionRow = util.$id('main-action-row');
+}
+
 function updateListButtonsVisibility(mode) {
     const modeStr = String(mode || '').toLowerCase();
-    const actionRow = util.$id('main-action-row');
-    const btnDeny = util.$id('btnDeny');
-    const btnAllow = util.$id('btnAllow');
 
-    if (!actionRow || !btnDeny || !btnAllow)
+    if (!elements.mainActionRow || !elements.btnDeny || !elements.btnAllow)
         return;
 
-    btnDeny.style.display = 'none';
-    btnAllow.style.display = 'none';
+    elements.btnDeny.style.display = 'none';
+    elements.btnAllow.style.display = 'none';
 
     let isListButtonVisible = false;
 
     if (modeStr === 'autodeny' || modeStr === 'always') {
-        btnDeny.style.display = 'block';
+        elements.btnDeny.style.display = 'block';
         isListButtonVisible = true;
     } else if (modeStr === 'autoallow') {
-        btnAllow.style.display = 'block';
+        elements.btnAllow.style.display = 'block';
         isListButtonVisible = true;
     }
 
-    actionRow.classList.toggle('settings-only', !isListButtonVisible);
+    elements.mainActionRow.classList.toggle('settings-only', !isListButtonVisible);
 }
 
 async function initListButtons() {
-    const btnDeny = util.$id('btnDeny');
-    const btnAllow = util.$id('btnAllow');
     const info = await getActiveHttpTab();
 
     if (!info) {
-        if (btnDeny)
-            btnDeny.disabled = true;
-        if (btnAllow)
-            btnAllow.disabled = true;
+        if (elements.btnDeny)
+            elements.btnDeny.disabled = true;
+        if (elements.btnAllow)
+            elements.btnAllow.disabled = true;
         return;
     }
 
@@ -54,17 +61,17 @@ async function initListButtons() {
 
     const { inDeny, inAllow } = listStatus;
 
-    if (btnDeny) {
-        btnDeny.disabled = false;
-        btnDeny.textContent = inDeny ? browser.i18n.getMessage('popup_removeFromDenylist') : browser.i18n.getMessage('popup_addToDenylist');
-        btnDeny.onclick = async() => {
+    if (elements.btnDeny) {
+        elements.btnDeny.disabled = false;
+        elements.btnDeny.textContent = inDeny ? browser.i18n.getMessage('popup_removeFromDenylist') : browser.i18n.getMessage('popup_addToDenylist');
+        elements.btnDeny.onclick = async() => {
             await(inDeny ? storage.removeCurrentHostFromList(C.KEY_DENYLIST) : storage.addCurrentHostToList(C.KEY_DENYLIST));
         };
     }
-    if (btnAllow) {
-        btnAllow.disabled = false;
-        btnAllow.textContent = inAllow ? browser.i18n.getMessage('popup_removeFromAllowlist') : browser.i18n.getMessage('popup_addToAllowlist');
-        btnAllow.onclick = async() => {
+    if (elements.btnAllow) {
+        elements.btnAllow.disabled = false;
+        elements.btnAllow.textContent = inAllow ? browser.i18n.getMessage('popup_removeFromAllowlist') : browser.i18n.getMessage('popup_addToAllowlist');
+        elements.btnAllow.onclick = async() => {
             await(inAllow ? storage.removeCurrentHostFromList(C.KEY_ALLOWLIST) : storage.addCurrentHostToList(C.KEY_ALLOWLIST));
         };
     }
@@ -74,9 +81,9 @@ async function syncAllUI() {
     const settings = await uiStore.get(['mode', 'autoRefresh', 'urlRedirect']);
     const mode = settings.mode || C.DEFAULT_MODE;
 
-    setOn(util.$id('switch'), mode !== 'off');
-    setOn(util.$id('toggle-autoRefresh'), settings.autoRefresh ?? true);
-    setOn(util.$id('toggle-urlRedirect'), settings.urlRedirect ?? false);
+    setOn(elements.modeSwitch, mode !== 'off');
+    setOn(elements.autoRefreshToggle, settings.autoRefresh ?? true);
+    setOn(elements.urlRedirectToggle, settings.urlRedirect ?? false);
 
     updateListButtonsVisibility(mode);
     await initListButtons();
@@ -94,6 +101,7 @@ function bindStorageMirror() {
 
 export async function initPopupUI() {
     util.localizePage();
+    initElements();
 
     bindSetting('switch', null, 200, willOn => storage.setModeOn(willOn));
 
@@ -101,9 +109,8 @@ export async function initPopupUI() {
         bindSetting(id);
     }
 
-    const btnOptions = util.$id('btnOptions');
-    if (btnOptions) {
-        btnOptions.addEventListener('click', () => openOptions());
+    if (elements.btnOptions) {
+        elements.btnOptions.addEventListener('click', () => openOptions());
     }
 
     bindStorageMirror();

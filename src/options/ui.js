@@ -13,12 +13,30 @@ const MODE_DESCRIPTIONS = {
     always: "options_modeDesc_always"
 };
 
+const elements = {};
+
+function initElements() {
+    elements.modeSelect = util.$id('mode');
+    elements.modeDescription = util.$id('mode-description');
+    elements.btnUrlSave = util.$id('btn-url-save');
+    elements.saveDenylist = util.$id('save-denylist');
+    elements.saveAllowlist = util.$id('save-allowlist');
+    elements.captureUnfolded = util.$id('captureUnfolded');
+    elements.thresholdInput = util.$id('threshold');
+    elements.uaInput = util.$id('ua');
+    elements.resetUa = util.$id('resetUA');
+    elements.zoomLevelRow = util.$id('zoomLevelRow');
+    elements.lastUpdatedEl = util.$id('last-updated');
+    elements.remoteRulesTableBody = util.$id('remote-rules');
+    elements.btnRemoteUpdate = util.$id('btn-remote-update');
+    elements.statusRemote = util.$id('status-remote');
+}
+
 function updateModeDescription() {
-    const mode = util.$id('mode')?.value || 'off';
-    const descEl = util.$id('mode-description');
-    if (descEl) {
+    const mode = elements.modeSelect?.value || 'off';
+    if (elements.modeDescription) {
         const msgKey = MODE_DESCRIPTIONS[mode];
-        descEl.textContent = browser.i18n.getMessage(msgKey) || '';
+        elements.modeDescription.textContent = browser.i18n.getMessage(msgKey) || '';
     }
 }
 
@@ -44,35 +62,37 @@ export function refreshTabVisibility(mode) {
 };
 
 async function displayLastUpdated() {
-    const el = util.$id('last-updated');
-    if (!el)
+    if (!elements.lastUpdatedEl)
         return;
     const res = await uiStore.get('remoteRulesLastUpdated');
     const ts = res?.remoteRulesLastUpdated;
     if (ts) {
         const date = new Date(ts);
         const formatted = `${date.toLocaleString()}`;
-        el.textContent = browser.i18n.getMessage('options_redirect_lastUpdated', formatted);
+        elements.lastUpdatedEl.textContent = browser.i18n.getMessage('options_redirect_lastUpdated', formatted);
     } else {
-        el.textContent = browser.i18n.getMessage('options_redirect_lastUpdatedNever');
+        elements.lastUpdatedEl.textContent = browser.i18n.getMessage('options_redirect_lastUpdatedNever');
     }
 }
 
 function checkPlatformCompatibility() {
     const isAndroid = navigator.userAgent.includes("Android");
-    const zoomRow = util.$id('zoomLevelRow');
-    if (isAndroid && zoomRow) {
-        zoomRow.style.display = 'none';
+    if (isAndroid && elements.zoomLevelRow) {
+        elements.zoomLevelRow.style.display = 'none';
     }
 }
 
 export function initUIBindings() {
-    util.$id('btn-url-save')?.addEventListener('click', saveUrlRules);
-    util.$id('save-denylist')?.addEventListener('click', saveDenylist);
-    util.$id('save-allowlist')?.addEventListener('click', saveAllowlist);
-    util.$id('captureUnfolded')?.addEventListener('click', async() => {
+    initElements();
+
+    elements.btnUrlSave?.addEventListener('click', saveUrlRules);
+    elements.saveDenylist?.addEventListener('click', saveDenylist);
+    elements.saveAllowlist?.addEventListener('click', saveAllowlist);
+    elements.captureUnfolded?.addEventListener('click', async() => {
         const recommendedThreshold = window.screen.width - 30;
-        util.$id('threshold').value = recommendedThreshold;
+        if (elements.thresholdInput) {
+            elements.thresholdInput.value = recommendedThreshold;
+        }
         await uiStore.set({
             threshold: recommendedThreshold
         });
@@ -90,8 +110,7 @@ export function initUIBindings() {
         bindSetting(id, null, 200, callback);
     }
 
-    const uaInput = util.$id('ua');
-    if (uaInput) {
+    if (elements.uaInput) {
         const debouncedSave = util.debounce(async(value) => {
             await uiStore.set({
                 desktopUA: value,
@@ -101,10 +120,10 @@ export function initUIBindings() {
                 type: C.MSG_SETTINGS_UPDATE
             }).catch(() => {});
         }, 300);
-        uaInput.addEventListener('input', (e) => debouncedSave(e.target.value));
+        elements.uaInput.addEventListener('input', (e) => debouncedSave(e.target.value));
     }
 
-    util.$id('resetUA')?.addEventListener('click', async() => {
+    elements.resetUa?.addEventListener('click', async() => {
         try {
             const info = await browser.runtime.getBrowserInfo();
             const ver = String(info?.version || '');
@@ -113,7 +132,9 @@ export function initUIBindings() {
             const minor = m?.[2] ?? '0';
             const v = `${major}.${minor}`;
             const dyn = `Mozilla/5.0 (X11; Linux x86_64; rv:${v}) Gecko/20100101 Firefox/${v}`;
-            util.$id('ua').value = dyn;
+            if (elements.uaInput) {
+                elements.uaInput.value = dyn;
+            }
             await uiStore.set({
                 desktopUA: dyn,
                 uaDynamic: true,
@@ -121,7 +142,9 @@ export function initUIBindings() {
             });
         } catch {
             const fallback = 'Mozilla/5.0 (X11; Linux x86_64; rv:141.0) Gecko/20100101 Firefox/141.0';
-            util.$id('ua').value = fallback;
+            if (elements.uaInput) {
+                elements.uaInput.value = fallback;
+            }
             await uiStore.set({
                 desktopUA: fallback,
                 uaDynamic: true
@@ -134,12 +157,11 @@ export function initUIBindings() {
 };
 
 export async function renderRemoteRulesTable() {
-    const tbody = util.$id('remote-rules');
-    if (!tbody)
+    if (!elements.remoteRulesTableBody)
         return;
 
-    while (tbody.firstChild) {
-        tbody.removeChild(tbody.firstChild);
+    while (elements.remoteRulesTableBody.firstChild) {
+        elements.remoteRulesTableBody.removeChild(elements.remoteRulesTableBody.firstChild);
     }
     const [catalog, selected, storedData] = await Promise.all([
                 loadRemoteCatalog(),
@@ -147,7 +169,7 @@ export async function renderRemoteRulesTable() {
                 uiStore.get(null)
             ]);
     for (const item of catalog) {
-        const tr = tbody.insertRow();
+        const tr = elements.remoteRulesTableBody.insertRow();
         const tdUse = tr.insertCell();
         const cb = document.createElement('input');
         cb.type = 'checkbox';
@@ -177,10 +199,9 @@ export async function renderRemoteRulesTable() {
         tdUpd.title = iso;
     }
 
-    const btn = util.$id('btn-remote-update');
-    if (btn && !btn.fdBound) {
-        btn.fdBound = true;
-        btn.addEventListener('click', async() => {
+    if (elements.btnRemoteUpdate && !elements.btnRemoteUpdate.fdBound) {
+        elements.btnRemoteUpdate.fdBound = true;
+        elements.btnRemoteUpdate.addEventListener('click', async() => {
             setSmallStatus('status-remote', browser.i18n.getMessage('options_rules_status_updating'), 0);
             try {
                 await browser.runtime.sendMessage({
