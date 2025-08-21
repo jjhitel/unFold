@@ -4,7 +4,13 @@ import { uiStore } from './storage.js';
 import { C } from './constants.js';
 
 export function showSaved() {
-    const activePanel = document.querySelector('.tabpanel:not([hidden])');
+    const activeTabButton = document.querySelector('.tab.active');
+    if (!activeTabButton)
+        return;
+
+    const activeTabName = activeTabButton.getAttribute('data-tab');
+    const activePanel = util.$id(`tab-${activeTabName}`);
+
     if (!activePanel)
         return;
 
