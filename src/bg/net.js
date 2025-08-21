@@ -65,7 +65,7 @@ function isSafeToReload(tabId) {
 
 function getEffectiveWidth(msg) {
     const widths = [msg.vvWidth, msg.innerWidth, msg.outerWidth, msg.screenWidth]
-        .filter(w => typeof w === 'number' && w > 0);
+    .filter(w => typeof w === 'number' && w > 0);
     return widths.length ? Math.min(...widths) : 0;
 }
 
@@ -133,6 +133,8 @@ export function registerListeners(urlPatterns) {
          ? ["main_frame", "sub_frame", "xmlhttprequest"]
          : ["main_frame", "xmlhttprequest"];
 
+    const requestListenerTypes = state.compatMode ? ["main_frame", "sub_frame"] : ["main_frame"];
+
     browser.webRequest.onBeforeSendHeaders.addListener(
         onBeforeSendHeaders, {
         urls: urlPatterns,
@@ -142,7 +144,7 @@ export function registerListeners(urlPatterns) {
     browser.webRequest.onBeforeRequest.addListener(
         onBeforeRequest, {
         urls: urlPatterns,
-        types: ["main_frame", "sub_frame"]
+        types: requestListenerTypes
     },
         ["blocking"]);
     isListenersRegistered = true;
