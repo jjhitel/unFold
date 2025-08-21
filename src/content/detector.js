@@ -95,13 +95,20 @@ import debounce from 'just-debounce-it';
 
         document.addEventListener('input', (e) => {
             const target = e.target;
-            if (target.matches('input') && (
-                    target.name?.includes('password') || target.name?.includes('pwd') ||
-                    target.name?.includes('account') || target.name?.includes('id'))) {
+            let length = 0;
+
+            if (target.matches('input, textarea')) {
+                length = target.value.length;
+            } else if (target.matches('[contenteditable]')) {
+                length = target.textContent.length;
+            } else {
                 return;
             }
-            if (target.matches('input, textarea, [contenteditable]')) {
+
+            if (length >= 100) {
                 setDirty();
+            } else {
+                setClean();
             }
         }, {
             capture: true,
