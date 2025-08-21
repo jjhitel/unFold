@@ -9,6 +9,13 @@ import { Cache } from '../common/cache.js';
 
 const { log } = util;
 
+export async function initBackground() {
+    try {
+        await rotateSessionNamespace();
+    } catch {}
+    await boot();
+}
+
 async function refreshListeners() {
     unregisterListeners();
     const state = StateManager.getState();
@@ -110,5 +117,9 @@ const handleStorageChange = debounce(async(changes, area) => {
 }, 250);
 
 browser.storage.onChanged.addListener(handleStorageChange);
+
+browser.runtime.onInstalled.addListener(async (info) => {
+    try { await rotateSessionNamespace(); } catch {}
+});
 
 boot();
