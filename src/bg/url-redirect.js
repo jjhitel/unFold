@@ -101,6 +101,7 @@ function shouldRedirect(tabId, from, to) {
 function processRules(url, tabId, rules) {
     for (const rule of rules) {
         try {
+            if (rule.prefix && !url.startsWith(rule.prefix)) continue;
             if (!rule.re.test(url))
                 continue;
             const scheme = new URL(url).protocol.replace(':', '');

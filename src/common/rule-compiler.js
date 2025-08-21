@@ -7,6 +7,35 @@
 import { util } from './utils.js';
 import safeRegex from 'safe-regex';
 
+function deriveLiteralPrefix(re) {
+    try {
+        const src = re && re.source || "";
+        const m = src.match(/^https?:\/\/(.*)$/);
+        if (!m) return null;
+        let s = m[1];
+        let out = "http";
+        out += "s?://";
+        out = "";
+        let lit = "";
+        let i = 0;
+        while (i < s.length) {
+            const ch = s[i];
+            if ("[](){}.+*?^$|".includes(ch)) break;
+            if (ch === "\\") {
+                i++;
+                if (i < s.length) lit += s[i];
+            } else {
+                lit += ch;
+            }
+            i++;
+        }
+        if (!lit) return null;
+        return "https://" + lit;
+    } catch {
+        return null;
+    }
+}
+
 function isSafeRegex(pattern) {
     return safeRegex(pattern);
 }
@@ -107,6 +136,9 @@ export function compileRules(text) {
         const rule = parseRegexLine(lines[i], i + 1);
         if (rule) {
             rules.push(rule);
+            if (rule && rule.re && !('prefix' in rule)) {
+                try { rule.prefix = deriveLiteralPrefix(rule.re); } catch {}
+            }
         }
     }
     return rules;
