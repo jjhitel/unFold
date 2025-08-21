@@ -2,8 +2,7 @@
 import { StateManager, cleanupTabState, updateRules, updateLists } from './stateManager.js';
 import { util } from '../common/utils.js';
 import { Cache } from '../common/cache.js';
-import { onViewportMessage, RELOAD_TIMES, registerListeners, unregisterListeners } from './net.js';
-import { handleMessage } from './msg-handler.js';
+import { onViewportMessage, RELOAD_TIMES } from './net.js';
 import { clearRedirectGuard } from './url-redirect.js';
 import { C } from '../common/constants.js';
 
@@ -50,7 +49,7 @@ async function fetchAndCacheRule(url) {
     }
 }
 
-export async function updateCheckedRemoteRules() {
+async function updateCheckedRemoteRules() {
     const { selectedRemoteRules } = await browser.storage.local.get({
         selectedRemoteRules: []
     });
