@@ -72,10 +72,15 @@ Utils.escapeRegExp = (s) => {
 
 Utils.extractHostname = (url) => {
     try {
-        const p = tldtsParse(url);
-        return p && p.hostname ? p.hostname : null;
-    } catch {
-        return null;
+        const parsedUrl = new URL(url);
+        return parsedUrl.hostname;
+    } catch (e) {
+        try {
+            const p = tldtsParse(url);
+            return p && p.hostname ? p.hostname : null;
+        } catch {
+            return null;
+        }
     }
 };
 
