@@ -1,10 +1,9 @@
 'use strict';
 import './msg-handler.js';
-import { StateManager, cleanupTabState, updateRules, updateLists } from './stateManager.js';
+import { StateManager, cleanupTabState } from './stateManager.js';
 import { util } from '../common/utils.js';
 import { Cache } from '../common/cache.js';
-import { onViewportMessage, RELOAD_TIMES, registerListeners, unregisterListeners } from './net.js';
-import { handleMessage } from './msg-handler.js';
+import { onViewportMessage, RELOAD_TIMES } from './net.js';
 import { clearRedirectGuard } from './url-redirect.js';
 import { C } from '../common/constants.js';
 
@@ -216,35 +215,18 @@ if (browser.webNavigation && browser.webNavigation.onCommitted) {
         const { tabId } = details;
         await StateManager.updateFormDirty(tabId, false);
         await StateManager.loadInitialTabState(tabId);
-        const state = StateManager.getState();
-        if (state.mode === C.MODE_AUTO_DENY) {
-            const isWide = state.isWideByTab.get(tabId);
-            if (isWide === false) {
-                await StateManager.updateStickyMobile(tabId, true);
-            } else if (isWide === true) {
-                await StateManager.updateStickyMobile(tabId, false);
+        try {
+            const tab = await browser.tabs.get(tabId).catch(() => null);
+            if (tab && tab.url && tab.url.startsWith('http')) {
+                await browser.tabs.sendMessage(tabId, {
+                    type: C.MSG_VIEWPORT_CHECK
+                });
             }
-        } else {
-            await StateManager.updateStickyMobile(tabId, false);
+        } catch (e) {
+            log('Failed to send viewport check message on committed', e);
         }
     });
 }
-
-browser.webNavigation.onCompleted.addListener(async(details) => {
-    if (details.frameId === 0) {
-        const { tabId, url } = details;
-        const state = await StateManager.getState();
-        if (state.mode === C.MODE_AUTO_DENY || state.mode === C.MODE_AUTO_ALLOW) {
-            const isWide = StateManager.isWideByUrl(url);
-            const currentState = StateManager.isDesktopPreferred(tabId);
-            if (isWide !== currentState) {
-                log(`[webNavigation.onCompleted] Syncing state for tab ${tabId}. Expected: ${isWide}, Current: ${currentState}`);
-                await StateManager.updateDesktopPreferred(tabId, isWide);
-                await updateBadge(tabId);
-            }
-        }
-    }
-});
 
 browser.alarms.onAlarm.addListener(async(alarm) => {
     if (alarm.name === ALARM_NAME) {
