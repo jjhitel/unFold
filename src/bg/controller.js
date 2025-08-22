@@ -209,6 +209,7 @@ if (browser.webNavigation && browser.webNavigation.onCommitted) {
         if (details.frameId !== 0)
             return;
         const { tabId } = details;
+        clearRedirectGuard?.(tabId);
         await StateManager.updateFormDirty(tabId, false);
         await StateManager.loadInitialTabState(tabId);
         try {
