@@ -17,6 +17,11 @@ function setOrAddUAHeader(headers, ua) {
 }
 
 function shimUA(ua) {
+    if (window.FD_UA_SHIMMED) {
+        return;
+    }
+    window.FD_UA_SHIMMED = true;
+
     const rv = (ua.match(/rv:(\d+)/) || [])[1] || '0';
     const isWin = /Windows NT/i.test(ua);
     const isLinux = /Linux|X11/i.test(ua);
