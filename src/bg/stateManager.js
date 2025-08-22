@@ -162,7 +162,6 @@ const state = {
     customDesktopRedirectRules: [],
     customMobileRedirectRules: [],
     isWideByTab: new Map(),
-    stickyMobileByTab: new Map(),
     formDirtyByTab: new Map(),
     lastKnownWide: false,
 };
@@ -215,18 +214,6 @@ export const StateManager = {
         }
         return (typeof prevEffective === 'boolean') ? (prevEffective !== isWide) : false;
     },
-    updateStickyMobile: async(tabId, sticky) => {
-        if (sticky) {
-            state.stickyMobileByTab.set(tabId, true);
-        } else {
-            state.stickyMobileByTab.delete(tabId);
-        }
-        try {
-            await TabKV.set(tabId, 'fd_stickyMobile', !!sticky);
-        } catch (e) {
-            log('setTabValue(stickyMobile) failed', e);
-        }
-    },
     updateFormDirty: async(tabId, isDirty) => {
         if (isDirty) {
             state.formDirtyByTab.set(tabId, true);
@@ -260,12 +247,6 @@ export const StateManager = {
                 state.formDirtyByTab.set(tabId, true);
             else
                 state.formDirtyByTab.delete(tabId);
-
-            const s = await TabKV.get(tabId, 'fd_stickyMobile');
-            if (s === true)
-                state.stickyMobileByTab.set(tabId, true);
-            else
-                state.stickyMobileByTab.delete(tabId);
         } catch (e) {}
     },
     isHostInDenylist: (host) => {

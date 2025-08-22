@@ -204,7 +204,6 @@ browser.tabs.onRemoved.addListener((tabId) => {
     RELOAD_TIMES.delete(tabId);
     cleanupTabState(tabId).catch(() => {});
     StateManager.getState().isWideByTab.delete(tabId);
-    StateManager.getState().stickyMobileByTab.delete(tabId);
     StateManager.getState().formDirtyByTab.delete(tabId);
 });
 
