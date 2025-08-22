@@ -73,11 +73,7 @@ function getEffectiveWidth(msg) {
 }
 
 function getFoldState(width, tabId) {
-    const prevWide = StateManager.isDesktopPreferred(tabId);
-    const HYSTERESIS_PX = 100;
-    const thresholdUp = state.threshold;
-    const thresholdDown = Math.max(100, thresholdUp - HYSTERESIS_PX);
-    return prevWide ? (width >= thresholdDown) : (width >= thresholdUp);
+    return width >= state.threshold;
 }
 
 async function handleAutoRefresh(tabId, changed) {
