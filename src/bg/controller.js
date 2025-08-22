@@ -218,16 +218,16 @@ if (browser.webNavigation && browser.webNavigation.onCommitted) {
         if (details.frameId !== 0)
             return;
         const { tabId } = details;
+        if (!details.url || !details.url.startsWith('http')) {
+            return;
+        }
         clearRedirectGuard?.(tabId);
         await StateManager.updateFormDirty(tabId, false);
         await StateManager.loadInitialTabState(tabId);
         try {
-            const tab = await browser.tabs.get(tabId).catch(() => null);
-            if (tab && tab.url && tab.url.startsWith('http')) {
-                await browser.tabs.sendMessage(tabId, {
-                    type: C.MSG_VIEWPORT_CHECK
-                });
-            }
+            await browser.tabs.sendMessage(tabId, {
+                type: C.MSG_VIEWPORT_CHECK
+            });
         } catch (e) {
             log('Failed to send viewport check message on committed', e);
         }
