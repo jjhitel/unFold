@@ -72,7 +72,8 @@ export async function handleMessage(msg, sender) {
         }
         break;
     case C.MSG_RULES_UPDATED:
-        await Promise.all([updateRules(), updateLists(), Cache.clear()]);
+        await Promise.all([updateRules(), updateLists()]);
+        await Cache.clear();
         log('Rules, lists, and cache updated on demand.');
         return true;
     default:

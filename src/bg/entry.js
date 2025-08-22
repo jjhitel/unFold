@@ -86,8 +86,10 @@ const handleStorageChange = debounce(async(changes, area) => {
     const changedKeys = Object.keys(changes);
     const listKeys = [C.KEY_DENYLIST, C.KEY_ALLOWLIST];
     const ruleKeys = [C.KEY_DESKTOP_RULES, C.KEY_MOBILE_RULES, C.KEY_REMOTE_DESKTOP_RULE, C.KEY_REMOTE_MOBILE_RULE];
+    const generalKeys = [C.KEY_MODE, C.KEY_URL_REDIRECT];
 
     let needsListenerRefresh = false;
+    let needsCacheClear = false;
 
     let settingsChanged = false;
     let listsChanged = false;
@@ -99,10 +101,12 @@ const handleStorageChange = debounce(async(changes, area) => {
             needsListenerRefresh = true;
         } else if (ruleKeys.includes(key)) {
             rulesChanged = true;
+            needsCacheClear = true;
         } else {
             settingsChanged = true;
-            if (key === C.KEY_MODE) {
+            if (generalKeys.includes(key)) {
                 needsListenerRefresh = true;
+                needsCacheClear = true;
             }
         }
     }
@@ -117,6 +121,11 @@ const handleStorageChange = debounce(async(changes, area) => {
 
     await Promise.all(updatePromises);
     await updateAllBadges();
+
+    if (needsCacheClear) {
+        log('Clearing cache due to a relevant settings change.');
+        await Cache.clear();
+    }
 
     if (needsListenerRefresh) {
         log('Settings changed, refreshing listeners...');
