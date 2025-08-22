@@ -5,11 +5,6 @@ import { parse as tldtsParse } from 'tldts';
 import { Cache } from '../common/cache.js';
 
 const { log } = util;
-const REDIRECT_GUARD = new Map();
-const REDIRECT_LIMIT = {
-    windowMs: 2000,
-    maxRedirects: 5
-};
 
 function etld1(urlString) {
     try {
@@ -61,36 +56,6 @@ function shouldRedirect(tabId, fromUrl, toUrl) {
         log('Invalid URL for redirection safety check', e);
         return false;
     }
-
-    const from = normalize(fromUrl.href);
-    const to = normalize(toUrl.href);
-
-    const now = Date.now();
-    let history = REDIRECT_GUARD.get(tabId) || [];
-
-    history = history.filter(item => (now - item.ts) < REDIRECT_LIMIT.windowMs);
-
-    if (history.some(item => item.url === to)) {
-        log('Redirect suppressed (loop detected in history)', {
-            from: from,
-            to: to
-        });
-        return false;
-    }
-
-    if (history.length >= REDIRECT_LIMIT.maxRedirects) {
-        log('Redirect suppressed (limit exceeded)', {
-            from: from,
-            to: to
-        });
-        return false;
-    }
-
-    history.push({
-        url: to,
-        ts: now
-    });
-    REDIRECT_GUARD.set(tabId, history);
 
     return true;
 }
@@ -166,8 +131,4 @@ export async function onBeforeRequest(details) {
     }
 
     return {};
-}
-
-export function clearRedirectGuard(tabId) {
-    REDIRECT_GUARD.delete(tabId);
 }

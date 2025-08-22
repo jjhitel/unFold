@@ -4,7 +4,6 @@ import { StateManager, cleanupTabState } from './stateManager.js';
 import { util } from '../common/utils.js';
 import { Cache } from '../common/cache.js';
 import { onViewportMessage, RELOAD_TIMES } from './net.js';
-import { clearRedirectGuard } from './url-redirect.js';
 import { C } from '../common/constants.js';
 
 const { log, extractHostname } = util;
@@ -199,13 +198,9 @@ browser.tabs.onUpdated.addListener(async(tabId, changeInfo, tab) => {
     if (changeInfo.status === 'loading') {
         await updateBadge(tabId);
     }
-    if (changeInfo.status === 'complete' && tab.url) {
-        clearRedirectGuard?.(tabId);
-    }
 });
 
 browser.tabs.onRemoved.addListener((tabId) => {
-    clearRedirectGuard?.(tabId);
     RELOAD_TIMES.delete(tabId);
     cleanupTabState(tabId).catch(() => {});
     StateManager.getState().isWideByTab.delete(tabId);
@@ -221,7 +216,6 @@ if (browser.webNavigation && browser.webNavigation.onCommitted) {
         if (!details.url || !details.url.startsWith('http')) {
             return;
         }
-        clearRedirectGuard?.(tabId);
         await StateManager.updateFormDirty(tabId, false);
         await StateManager.loadInitialTabState(tabId);
         try {
