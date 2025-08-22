@@ -86,27 +86,34 @@ const handleStorageChange = debounce(async(changes, area) => {
     const changedKeys = Object.keys(changes);
     const listKeys = [C.KEY_DENYLIST, C.KEY_ALLOWLIST];
     const ruleKeys = [C.KEY_DESKTOP_RULES, C.KEY_MOBILE_RULES, C.KEY_REMOTE_DESKTOP_RULE, C.KEY_REMOTE_MOBILE_RULE];
-    const generalKeys = [C.KEY_MODE, C.KEY_URL_REDIRECT];
-
-    let needsListenerRefresh = false;
-    let needsCacheClear = false;
+    const generalKeys = [C.KEY_MODE, C.KEY_URL_REDIRECT, C.KEY_AUTO_REFRESH, C.KEY_THRESHOLD, C.KEY_DESKTOP_UA, C.KEY_UA_DYNAMIC, C.KEY_LAST_BROWSER_VERSION, C.KEY_DEBUG_MODE, C.KEY_AUTO_UPDATE_PERIOD, C.KEY_ZOOM_LEVEL, C.KEY_COMPAT_MODE, C.KEY_VERY_AGGRESSIVE_UA];
 
     let settingsChanged = false;
     let listsChanged = false;
     let rulesChanged = false;
+    let needsListenerRefresh = false;
+    let needsCacheClear = false;
 
     for (const key of changedKeys) {
         if (listKeys.includes(key)) {
-            listsChanged = true;
-            needsListenerRefresh = true;
-        } else if (ruleKeys.includes(key)) {
-            rulesChanged = true;
-            needsCacheClear = true;
-        } else {
-            settingsChanged = true;
-            if (generalKeys.includes(key)) {
+            if (changes[key].oldValue !== changes[key].newValue) {
+                listsChanged = true;
                 needsListenerRefresh = true;
+            }
+        } else if (ruleKeys.includes(key) || key.startsWith(C.KEY_RULE_LAST_MODIFIED_PREFIX)) {
+            if (changes[key].oldValue !== changes[key].newValue) {
+                rulesChanged = true;
                 needsCacheClear = true;
+            }
+        } else if (generalKeys.includes(key)) {
+            if (changes[key].oldValue !== changes[key].newValue) {
+                settingsChanged = true;
+                if ([C.KEY_MODE, C.KEY_URL_REDIRECT, C.KEY_COMPAT_MODE, C.KEY_DESKTOP_UA, C.KEY_UA_DYNAMIC].includes(key)) {
+                    needsListenerRefresh = true;
+                }
+                if ([C.KEY_MODE, C.KEY_URL_REDIRECT, C.KEY_COMPAT_MODE].includes(key)) {
+                    needsCacheClear = true;
+                }
             }
         }
     }

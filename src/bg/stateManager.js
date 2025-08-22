@@ -8,6 +8,7 @@ import { parse as tldtsParse } from 'tldts';
 const { log, normalizeList, debounce } = util;
 let _prevDenyText = null, _prevAllowText = null;
 let _prevDesktopRulesText = null, _prevMobileRulesText = null;
+let _prevRemoteDesktopRulesText = null, _prevRemoteMobileRulesText = null;
 
 const denylistTrie = new HNTrieContainer();
 const allowlistTrie = new HNTrieContainer();
@@ -303,8 +304,15 @@ export async function updateRules(data) {
             _prevMobileRulesText = customMobileRulesText;
         }
 
-        state.desktopRedirectRules = compileRules(remoteDesktopRulesText);
-        state.mobileRedirectRules = compileRules(remoteMobileRulesText);
+        if (remoteDesktopRulesText !== _prevRemoteDesktopRulesText) {
+            state.desktopRedirectRules = compileRules(remoteDesktopRulesText);
+            _prevRemoteDesktopRulesText = remoteDesktopRulesText;
+        }
+
+        if (remoteMobileRulesText !== _prevRemoteMobileRulesText) {
+            state.mobileRedirectRules = compileRules(remoteMobileRulesText);
+            _prevRemoteMobileRulesText = remoteMobileRulesText;
+        }
 
         log('Redirect rules compiled', {
             customDesktop: state.customDesktopRedirectRules.length,

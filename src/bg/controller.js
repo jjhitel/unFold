@@ -74,24 +74,27 @@ export async function updateCheckedRemoteRules() {
     const ruleUpdates = selectedRemoteRules.map(async id => {
         const ruleMeta = catalog.find(item => item.id === id);
         if (!ruleMeta)
-            return null;
+            return false;
 
-        try {
-            const ruleData = await fetchAndCacheRule(ruleMeta.url);
-            if (!ruleData)
-                return null;
+        const ruleData = await fetchAndCacheRule(ruleMeta.url);
+        if (!ruleData)
+            return false;
 
-            const textKey = ruleMeta.kind === 'mobile' ? 'mobileRedirectRule' : 'desktopRedirectRule';
+        const textKey = ruleMeta.kind === 'mobile' ? 'mobileRedirectRule' : 'desktopRedirectRule';
+
+        const currentStoredRule = (await browser.storage.local.get(textKey))?.[textKey] || '';
+
+        if (currentStoredRule !== ruleData.text) {
             const dateKey = util.getRuleLastModifiedKey(ruleMeta.id);
             await browser.storage.local.set({
                 [textKey]: ruleData.text,
                 [dateKey]: ruleData.lastModified
             });
             return true;
-        } catch (e) {
-            log(`Failed to update rule: ${ruleMeta.name}`, e);
-            return false;
         }
+
+        log(`Rule ${ruleMeta.name} is up to date, skipping storage write.`);
+        return false;
     });
 
     const results = await Promise.all(ruleUpdates);
@@ -100,6 +103,8 @@ export async function updateCheckedRemoteRules() {
             remoteRulesLastUpdated: Date.now()
         });
         log('Remote rules update finished successfully.');
+    } else {
+        log('All remote rules are already up to date.');
     }
 }
 
