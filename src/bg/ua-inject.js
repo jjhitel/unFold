@@ -1,5 +1,5 @@
 'use strict';
-import { StateManager, shouldApplyTransformation } from './stateManager.js';
+import { StateManager } from './stateManager.js';
 import { util } from '../common/utils.js';
 import { Headers } from 'headers-polyfill';
 
@@ -71,21 +71,28 @@ function shimUA(ua) {
 
 export async function onBeforeSendHeaders(details) {
     const { tabId, url } = details;
-    const state = StateManager.getState();
-
     if (tabId === browser.tabs.TAB_ID_NONE || !/^https?:/i.test(url)) {
         return {};
     }
-
+    const state = StateManager.getState();
+    if (state.mode === 'off')
+        return {};
     if (state.isWideByTab.get(tabId) === undefined) {
         await StateManager.loadInitialTabState(tabId);
     }
-
-    const isDesktop = shouldApplyTransformation(tabId, url);
-    if (!isDesktop) {
-        return {};
+    const host = extractHostname(url);
+    if (state.mode === 'autoDeny' || state.mode === 'always') {
+        if (StateManager.isHostInDenylist(host)) {
+            return {};
+        }
+    } else if (state.mode === 'autoAllow') {
+        if (!StateManager.isHostInAllowlist(host)) {
+            return {};
+        }
     }
-
+    const isDesktop = (state.mode === 'always') || StateManager.isDesktopPreferred(tabId);
+    if (!isDesktop)
+        return {};
     if (state.compatMode && (details.type === 'sub_frame' || details.type === 'xmlhttprequest')) {
         const host = extractHostname(url);
         const topUrl = details.documentUrl || details.originUrl || details.initiator || '';
