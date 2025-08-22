@@ -133,6 +133,11 @@ export function registerListeners({
     if (!patterns || patterns.length === 0)
         return;
 
+    const blockingOptions = ["blocking", "requestHeaders"];
+    if (browser.webRequest.OnBeforeSendHeadersOptions.hasOwnProperty('EXTRA_HEADERS')) {
+        blockingOptions.push('extraHeaders');
+    }
+
     if (shouldRegisterUA && !isUAListenerRegistered) {
         const headerListenerTypes = state.compatMode ?
             ["main_frame", "sub_frame", "xmlhttprequest"] :
@@ -141,7 +146,7 @@ export function registerListeners({
             onBeforeSendHeaders, {
             urls: patterns,
             types: headerListenerTypes
-        }, ["blocking", "requestHeaders"]);
+        }, blockingOptions);
         isUAListenerRegistered = true;
         log('UA injection listener registered.');
     }

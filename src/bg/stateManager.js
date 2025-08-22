@@ -167,7 +167,7 @@ const state = {
 };
 
 export async function getTargetHostPatterns() {
-    const { mode, denylistText = '', allowlistText = '' } = await browser.storage.local.get(['mode', 'denylistText', 'allowlistText']);
+    const { mode, allowlistText = '' } = await browser.storage.local.get(['mode', 'allowlistText']);
 
     if (mode === 'autoAllow') {
         const rawHosts = normalizeList(allowlistText);
