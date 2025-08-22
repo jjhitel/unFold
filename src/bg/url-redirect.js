@@ -33,29 +33,26 @@ function normalize(u) {
     }
 }
 
-function shouldRedirect(tabId, from, to) {
+function shouldRedirect(tabId, fromUrl, toUrl) {
     try {
-        const fromUrl = new URL(from);
-        const toUrl = new URL(to);
-
         if (fromUrl.protocol === 'https:' && toUrl.protocol === 'http:') {
             log('Redirect blocked (HTTPS to HTTP downgrade)', {
-                from,
-                to
+                from: fromUrl.href,
+                to: toUrl.href
             });
             return false;
         }
 
-        const fromSite = etld1(from, {
+        const fromSite = etld1(fromUrl.href, {
             icannOnly: true
         });
-        const toSite = etld1(to, {
+        const toSite = etld1(toUrl.href, {
             icannOnly: true
         });
         if (!fromSite || !toSite || fromSite !== toSite) {
             log('Redirect blocked (cross-origin target)', {
-                from,
-                to
+                from: fromUrl.href,
+                to: toUrl.href
             });
             return false;
         }
@@ -65,8 +62,8 @@ function shouldRedirect(tabId, from, to) {
         return false;
     }
 
-    from = normalize(from);
-    to = normalize(to);
+    const from = normalize(fromUrl.href);
+    const to = normalize(toUrl.href);
 
     const now = Date.now();
     let history = REDIRECT_GUARD.get(tabId) || [];
@@ -98,23 +95,26 @@ function shouldRedirect(tabId, from, to) {
     return true;
 }
 
-function processRules(url, tabId, rules) {
+function processRules(url, urlObj, tabId, rules) {
     for (const rule of rules) {
         try {
             if (rule.prefix && !url.startsWith(rule.prefix))
                 continue;
             if (!rule.re.test(url))
                 continue;
-            const scheme = new URL(url).protocol.replace(':', '');
+            const scheme = urlObj.protocol.replace(':', '');
             const to = url.replace(
                     rule.re,
                     String(rule.to || '').replace(/\{SCHEME\}/g, scheme));
-            if (to && to !== url && shouldRedirect(tabId, url, to)) {
-                log('Redirecting', {
-                    from: url,
-                    to
-                });
-                return to;
+            if (to && to !== url) {
+                const toUrlObj = new URL(to);
+                if (shouldRedirect(tabId, urlObj, toUrlObj)) {
+                    log('Redirecting', {
+                        from: url,
+                        to
+                    });
+                    return to;
+                }
             }
         } catch (e) {
             log('Redirect rule error', String(e));
@@ -131,19 +131,26 @@ export async function onBeforeRequest(details) {
         return {};
     }
 
+    let urlObj;
+    try {
+        urlObj = new URL(url);
+    } catch {
+        return {};
+    }
+
     const isEffectivelyMobile = StateManager.isMobilePreferred(tabId);
 
     let redirectUrl = null;
 
     const customBucket = isEffectivelyMobile ? state.customMobileRedirectRules : state.customDesktopRedirectRules;
     if (customBucket.length > 0) {
-        redirectUrl = processRules(url, tabId, customBucket);
+        redirectUrl = processRules(url, urlObj, tabId, customBucket);
     }
 
     if (!redirectUrl) {
         const remoteBucket = isEffectivelyMobile ? state.mobileRedirectRules : state.desktopRedirectRules;
         if (remoteBucket.length > 0) {
-            redirectUrl = processRules(url, tabId, remoteBucket);
+            redirectUrl = processRules(url, urlObj, tabId, remoteBucket);
         }
     }
 
