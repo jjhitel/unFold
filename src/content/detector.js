@@ -1,5 +1,6 @@
 'use strict';
 import debounce from 'just-debounce-it';
+import { C } from '../common/constants.js';
 
 (function () {
     try {
@@ -8,12 +9,6 @@ import debounce from 'just-debounce-it';
         }
 
         let isFormDirty = false;
-
-        const C = {
-            MSG_VIEWPORT_UPDATE: "FOLD_DESKTOP_VIEWPORT",
-            MSG_VIEWPORT_CHECK: "FOLD_DESKTOP_VIEWPORT_CHECK",
-            MSG_FORM_DIRTY_STATUS: "FD_FORM_DIRTY_STATUS",
-        };
 
         const setDirty = () => {
             if (!isFormDirty) {
