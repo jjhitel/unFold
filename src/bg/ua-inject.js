@@ -16,6 +16,17 @@ function setOrAddUAHeader(headers, ua) {
     headers.set('User-Agent', ua);
 }
 
+function getHeaderCI(headers, name) {
+    const n = String(name || '').toLowerCase();
+    const h = (headers || []).find(h => h?.name?.toLowerCase?.() === n);
+    return h ? h.value : undefined;
+}
+
+function hasAnyClientHints(headers) {
+    const set = new Set((headers || []).map(h => (h?.name || '').toLowerCase()));
+    return CLIENT_HINTS_HEADERS.some(h => set.has(h));
+}
+
 function shimUA(ua) {
     if (window.FD_UA_SHIMMED) {
         return;
@@ -101,6 +112,33 @@ export async function onBeforeSendHeaders(details) {
         }
     }
 
+    const desiredUA = state.desktopUA;
+    const currentUA = getHeaderCI(details.requestHeaders, UA_HEADER);
+    const hasCH = hasAnyClientHints(details.requestHeaders);
+    if (currentUA === desiredUA && !hasCH) {
+        if (state.compatMode) {
+            try {
+                if (details.type === 'main_frame' && details.frameId === 0 && tabId !== browser.tabs.TAB_ID_NONE) {
+                    browser.scripting.executeScript({
+                        target: {
+                            tabId,
+                            allFrames: true
+                        },
+                        injectImmediately: true,
+                        world: "MAIN",
+                        func: shimUA,
+                        args: [desiredUA]
+                    }).catch((e) => {
+                        log(`Failed to inject UA shim script into tab ${tabId}.`, e.message);
+                    });
+                }
+            } catch (e) {
+                log(`Error executing script for UA shim in tab ${tabId}.`, e);
+            }
+        }
+        return {};
+    }
+
     const headers = new Headers();
     (details.requestHeaders || []).forEach(({
             name,
@@ -109,10 +147,10 @@ export async function onBeforeSendHeaders(details) {
 
     CLIENT_HINTS_HEADERS.forEach(header => headers.delete(header));
 
-    setOrAddUAHeader(headers, state.desktopUA);
+    setOrAddUAHeader(headers, desiredUA);
     if (state.debugMode) {
         try {
-            console.debug('[FD] UA applied:', state.desktopUA);
+            console.debug('[FD] UA applied:', desiredUA, '(rewritten:', currentUA !== desiredUA, 'removeCH:', hasCH, ')');
         } catch {}
     }
 
@@ -127,7 +165,7 @@ export async function onBeforeSendHeaders(details) {
                     injectImmediately: true,
                     world: "MAIN",
                     func: shimUA,
-                    args: [state.desktopUA]
+                    args: [desiredUA]
                 }).catch((e) => {
                     log(`Failed to inject UA shim script into tab ${tabId}.`, e.message);
                 });
