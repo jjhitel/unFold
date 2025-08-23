@@ -10,6 +10,32 @@ import { C } from '../common/constants.js';
 const { log, extractHostname } = util;
 const ALARM_NAME = C.ALARM_REMOTE_RULES_UPDATE;
 
+try {
+    browser.runtime.onStartup.addListener(async() => {
+        try {
+            await StateManager.initialize?.();
+            await StateManager.ensureHydrated?.();
+            log('State pre-warmed onStartup.');
+        } catch (e) {
+            util.log('Pre-warm onStartup failed', e?.message || e);
+        }
+    });
+    browser.runtime.onInstalled.addListener(async() => {
+        try {
+            await StateManager.initialize?.();
+            await StateManager.ensureHydrated?.();
+            log('State pre-warmed onInstalled.');
+        } catch (e) {
+            util.log('Pre-warm onInstalled failed', e?.message || e);
+        }
+    });
+    (async() => {
+        try {
+            await StateManager.ensureHydrated?.();
+        } catch {}
+    })();
+} catch {}
+
 async function fetchAndCacheRule(url) {
     const cached = await Cache.get(url);
 
