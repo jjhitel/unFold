@@ -174,13 +174,6 @@ export async function initialize() {
     __hydrated = true;
 }
 
-try {
-    browser.storage.onChanged.addListener((changes, area) => {
-        if (area !== 'local')
-            return;
-        __hydrated = false;
-    });
-} catch {}
-
-
-
+export function invalidate() {
+    __hydrated = false;
+}
