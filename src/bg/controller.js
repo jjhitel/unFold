@@ -161,7 +161,9 @@ async function _updateBadge(tabId) {
             tabId,
             color
         });
-    } catch (e) {}
+    } catch (e) {
+        util.log(`Badge update failed for tab ${tabId}, likely already closed.`, e.message);
+    }
 }
 
 export const updateBadge = util.debounce(_updateBadge, 150);
@@ -172,7 +174,9 @@ export async function updateAllBadges() {
         for (const t of tabs) {
             await updateBadge(t.id);
         }
-    } catch {}
+    } catch (e) {
+        util.log('Failed during updateAllBadges, likely browser closing.', e);
+    }
 }
 
 browser.tabs.onActivated.addListener(async({
@@ -189,7 +193,7 @@ browser.tabs.onActivated.addListener(async({
             });
         }
     } catch (e) {
-        log('Failed to send viewport check message', e);
+        util.log(`Could not send viewport check to active tab ${tabId}, content script might not be ready.`, e.message);
     }
 });
 
@@ -218,7 +222,7 @@ if (browser.webNavigation && browser.webNavigation.onCommitted) {
                 type: C.MSG_VIEWPORT_CHECK
             });
         } catch (e) {
-            log('Failed to send viewport check message on committed', e);
+            util.log(`Content script not ready on committed for tab ${tabId}. This is normal.`);
         }
     });
 }

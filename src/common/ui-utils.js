@@ -65,7 +65,7 @@ export async function getActiveHttpTab() {
             host: util.extractHostname(t.url)
         };
     } catch (e) {
-        util.log('[FD] Failed to get active tab:', e);
+        util.log('Failed to get active tab, likely due to permissions or no active tab.', e);
         return null;
     }
 };
@@ -78,13 +78,13 @@ export async function openOptions(hash) {
             active: true
         });
     } catch (e) {
-        util.log('[FD] Failed to open options tab directly:', e);
+        util.log('Failed to open options tab directly.', e);
     }
 
     try {
         window.close();
     } catch (e) {
-        util.log('[FD] Failed to close popup:', e);
+        util.log('Failed to close popup window, which is fine if not in a popup context.');
     }
 };
 
@@ -95,9 +95,10 @@ export async function save(obj) {
             type: C.MSG_SETTINGS_UPDATE
         });
     } catch (e) {
-        util.log('[FD] Popup failed to save to storage:', e);
+        util.log('Popup failed to save to storage or send message.', e);
     }
 };
+
 const BINDING_MAP = {
     'mode': C.KEY_MODE,
     'autoRefresh': C.KEY_AUTO_REFRESH,

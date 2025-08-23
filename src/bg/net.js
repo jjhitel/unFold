@@ -89,7 +89,7 @@ async function handleAutoRefresh(tabId, changed) {
             try {
                 await browser.tabs.reload(tabId);
             } catch (e) {
-                log('Tab reload failed', e);
+                log(`Tab reload failed for tab ${tabId}, it might have been closed.`, e.message);
             }
         } else {
             log(`Auto-refresh blocked for tab ${tabId} due to a dirty form.`);
@@ -105,7 +105,7 @@ async function handleAutoRefresh(tabId, changed) {
                     args: [message]
                 });
             } catch (e) {
-                log('Failed to show in-page alert:', e);
+                log(`Failed to inject in-page alert for tab ${tabId}.`, e.message);
             }
         }
     }

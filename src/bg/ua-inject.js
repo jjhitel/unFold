@@ -127,9 +127,13 @@ export async function onBeforeSendHeaders(details) {
                     world: "MAIN",
                     func: shimUA,
                     args: [state.desktopUA]
-                }).catch(() => {});
+                }).catch((e) => {
+                    log(`Failed to inject UA shim script into tab ${tabId}.`, e.message);
+                });
             }
-        } catch (e) {}
+        } catch (e) {
+            log(`Error executing script for UA shim in tab ${tabId}.`, e);
+        }
     }
 
     const resultHeaders = [];
