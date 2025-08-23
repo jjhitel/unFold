@@ -1,10 +1,10 @@
-'use strict';
-import { util } from '../common/utils.js';
-import { StateManager } from './stateManager.js';
-import { onBeforeSendHeaders } from './ua-inject.js';
+﻿'use strict';
+import { util } from '../../shared/utils.js';
+import { StateManager } from '../state/stateManager.js';
+import { onBeforeSendHeaders } from '../ua/ua-inject.js';
 import { onBeforeRequest } from './url-redirect.js';
-import { updateBadge } from './controller.js';
-import { C } from '../common/constants.js';
+import { updateBadge } from '../controller.js';
+import { C } from '../../shared/constants.js';
 
 const { log } = util;
 const state = StateManager.getState();
@@ -172,3 +172,8 @@ export function unregisterListeners() {
     }
     log('Web request listeners unregistered');
 }
+
+
+
+
+

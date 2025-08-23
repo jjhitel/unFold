@@ -1,5 +1,5 @@
-'use strict';
-import { util } from '../common/utils.js';
+﻿'use strict';
+import { util } from '../../shared/utils.js';
 import { parse as tldtsParse } from 'tldts';
 
 const { log } = util;
@@ -119,3 +119,4 @@ export function shouldBlockRedirect(tabId, fromUrl, toUrl) {
         block: false
     };
 }
+

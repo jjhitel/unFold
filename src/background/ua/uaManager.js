@@ -1,6 +1,6 @@
-'use strict';
-import { util } from '../common/utils.js';
-import { C } from '../common/constants.js';
+﻿'use strict';
+import { util } from '../../shared/utils.js';
+import { C } from '../../shared/constants.js';
 
 const { log } = util;
 
@@ -101,3 +101,4 @@ export const UAManager = {
         };
     }
 };
+

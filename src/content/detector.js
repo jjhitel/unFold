@@ -1,6 +1,6 @@
-'use strict';
+﻿'use strict';
 import debounce from 'just-debounce-it';
-import { C } from '../common/constants.js';
+import { C } from '../shared/constants.js';
 
 (function () {
     try {
@@ -127,3 +127,4 @@ import { C } from '../common/constants.js';
 
     } catch (e) {}
 })();
+

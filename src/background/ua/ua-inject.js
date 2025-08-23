@@ -1,6 +1,6 @@
-'use strict';
-import { StateManager } from './stateManager.js';
-import { util } from '../common/utils.js';
+﻿'use strict';
+import { StateManager } from '../state/stateManager.js';
+import { util } from '../../shared/utils.js';
 import { Headers } from 'headers-polyfill';
 
 const { extractHostname } = util;
@@ -188,3 +188,5 @@ export async function onBeforeSendHeaders(details) {
         requestHeaders: resultHeaders
     };
 }
+
+

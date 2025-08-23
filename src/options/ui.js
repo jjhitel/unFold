@@ -1,10 +1,10 @@
-'use strict';
-import { uiStore, saveUrlRules, saveDenylist, saveAllowlist, loadRemoteCatalog, loadRemoteSelections, toggleRemoteRule } from '../common/storage.js';
-import { setSmallStatus, bindSetting } from '../common/ui-utils.js';
+﻿'use strict';
+import { uiStore, saveUrlRules, saveDenylist, saveAllowlist, loadRemoteCatalog, loadRemoteSelections, toggleRemoteRule } from '../shared/storage.js';
+import { setSmallStatus, bindSetting } from '../shared/ui-utils.js';
 import { activateTab } from './tabs.js';
-import { util } from '../common/utils.js';
+import { util } from '../shared/utils.js';
 import debounce from 'just-debounce-it';
-import { C } from '../common/constants.js';
+import { C } from '../shared/constants.js';
 
 const MODE_DESCRIPTIONS = {
     off: "options_modeDesc_off",
@@ -225,3 +225,4 @@ const handleStorageChange = debounce((changes, area) => {
 }, 100);
 
 browser.storage.onChanged.addListener(handleStorageChange);
+

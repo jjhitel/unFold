@@ -1,5 +1,5 @@
-'use strict';
-import '../common/env.js';
+﻿'use strict';
+import '../shared/env.js';
 import { initPopupUI } from './ui.js';
 
 const boot = () => {
@@ -11,3 +11,4 @@ if (document.readyState === 'loading') {
 } else {
     boot();
 }
+

@@ -1,11 +1,11 @@
-'use strict';
-import './msg-handler.js';
-import { StateManager, cleanupTabState } from './stateManager.js';
-import { util } from '../common/utils.js';
-import { Cache } from '../common/cache.js';
-import { onViewportMessage, RELOAD_TIMES } from './net.js';
-import { clearGuardForTab } from './redirect-guard.js';
-import { C } from '../common/constants.js';
+﻿'use strict';
+import './messaging/msg-handler.js';
+import { StateManager, cleanupTabState } from './state/stateManager.js';
+import { util } from '../shared/utils.js';
+import { Cache } from '../shared/cache.js';
+import { onViewportMessage, RELOAD_TIMES } from './net/net.js';
+import { clearGuardForTab } from './net/redirect-guard.js';
+import { C } from '../shared/constants.js';
 
 const { log, extractHostname } = util;
 const ALARM_NAME = C.ALARM_REMOTE_RULES_UPDATE;
@@ -262,3 +262,8 @@ browser.alarms.onAlarm.addListener(async(alarm) => {
         await updateCheckedRemoteRules();
     }
 });
+
+
+
+
+

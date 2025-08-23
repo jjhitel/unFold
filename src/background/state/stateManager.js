@@ -1,8 +1,8 @@
-'use strict';
-import { util } from '../common/utils.js';
-import { C } from '../common/constants.js';
-import { RuleManager, updateRules as ruleUpdateRules, updateLists as ruleUpdateLists, normalizeHost } from './ruleManager.js';
-import { UAManager } from './uaManager.js';
+﻿'use strict';
+import { util } from '../../shared/utils.js';
+import { C } from '../../shared/constants.js';
+import { RuleManager, updateRules as ruleUpdateRules, updateLists as ruleUpdateLists, normalizeHost } from '../rules/ruleManager.js';
+import { UAManager } from '../ua/uaManager.js';
 const { log, normalizeList } = util;
 let __hydrated = false;
 let __hydrating = null;
@@ -181,3 +181,6 @@ try {
         __hydrated = false;
     });
 } catch {}
+
+
+

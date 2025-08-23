@@ -1,9 +1,9 @@
-'use strict';
-import { StateManager } from './stateManager.js';
-import { util } from '../common/utils.js';
+﻿'use strict';
+import { StateManager } from '../state/stateManager.js';
+import { util } from '../../shared/utils.js';
 import { parse as tldtsParse } from 'tldts';
-import { Cache } from '../common/cache.js';
-import { normalizeHost } from './ruleManager.js';
+import { Cache } from '../../shared/cache.js';
+import { normalizeHost } from '../rules/ruleManager.js';
 import { shouldBlockRedirect } from './redirect-guard.js';
 
 const { log } = util;
@@ -142,3 +142,6 @@ export async function onBeforeRequest(details) {
 
     return {};
 }
+
+
+

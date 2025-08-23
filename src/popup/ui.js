@@ -1,10 +1,10 @@
-'use strict';
-import { util } from '../common/utils.js';
+﻿'use strict';
+import { util } from '../shared/utils.js';
 import debounce from 'just-debounce-it';
-import { getActiveHttpTab, openOptions, save, setOn, bindSetting } from '../common/ui-utils.js';
-import { uiStore } from '../common/storage.js';
-import * as storage from '../common/storage.js';
-import { C } from '../common/constants.js';
+import { getActiveHttpTab, openOptions, save, setOn, bindSetting } from '../shared/ui-utils.js';
+import { uiStore } from '../shared/storage.js';
+import * as storage from '../shared/storage.js';
+import { C } from '../shared/constants.js';
 
 const elements = {};
 
@@ -116,3 +116,4 @@ export async function initPopupUI() {
     bindStorageMirror();
     await syncAllUI();
 };
+

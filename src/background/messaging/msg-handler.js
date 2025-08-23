@@ -1,10 +1,10 @@
-'use strict';
-import { StateManager, updateRules, updateLists } from './stateManager.js';
-import { util } from '../common/utils.js';
-import { Cache } from '../common/cache.js';
-import { onViewportMessage } from './net.js';
-import { updateAllBadges, updateCheckedRemoteRules } from './controller.js';
-import { C } from '../common/constants.js';
+﻿'use strict';
+import { StateManager, updateRules, updateLists } from '../state/stateManager.js';
+import { util } from '../../shared/utils.js';
+import { Cache } from '../../shared/cache.js';
+import { onViewportMessage } from '../net/net.js';
+import { updateAllBadges, updateCheckedRemoteRules } from '../controller.js';
+import { C } from '../../shared/constants.js';
 
 const { log } = util;
 
@@ -82,3 +82,8 @@ export async function handleMessage(msg, sender) {
 }
 
 browser.runtime.onMessage.addListener(handleMessage);
+
+
+
+
+

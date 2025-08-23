@@ -1,7 +1,7 @@
-'use strict';
+﻿'use strict';
 
-import { util } from '../common/utils.js';
-import { compileRules } from '../common/rule-compiler.js';
+import { util } from '../../shared/utils.js';
+import { compileRules } from '../../shared/rule-compiler.js';
 import HNTrieContainer from '@gorhill/ubo-core/js/hntrie.js';
 import { parse as tldtsParse } from 'tldts';
 
@@ -176,3 +176,4 @@ export const RuleManager = {
     updateRules,
     updateLists
 };
+

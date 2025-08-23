@@ -1,7 +1,7 @@
-'use strict';
-import '../common/env.js';
-import { util } from '../common/utils.js';
-import { loadSettings, bindStorageMirror } from '../common/storage.js';
+﻿'use strict';
+import '../shared/env.js';
+import { util } from '../shared/utils.js';
+import { loadSettings, bindStorageMirror } from '../shared/storage.js';
 import { initUIBindings, renderRemoteRulesTable, refreshTabVisibility } from './ui.js';
 import './tabs.js';
 
@@ -38,3 +38,4 @@ if (document.readyState === 'loading') {
 window.addEventListener('focus', () => {
     util.localizePage();
 });
+

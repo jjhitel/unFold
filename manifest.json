@@ -18,7 +18,7 @@
         "https://*/*"
     ],
     "background": {
-        "page": "src/bg/background.html"
+        "page": "src/background/background.html"
     },
     "icons": {
         "96": "res/icons/icon96.png"

@@ -1,12 +1,12 @@
-'use strict';
-import '../common/env.js';
-import { initialize as initializeStateManager, StateManager, getTargetHostPatterns, refreshGeneralSettings, updateLists, updateRules } from './stateManager.js';
-import { util } from '../common/utils.js';
+﻿'use strict';
+import '../shared/env.js';
+import { initialize as initializeStateManager, StateManager, getTargetHostPatterns, refreshGeneralSettings, updateLists, updateRules } from './state/stateManager.js';
+import { util } from '../shared/utils.js';
 import debounce from 'just-debounce-it';
-import { registerListeners, unregisterListeners } from './net.js';
+import { registerListeners, unregisterListeners } from './net/net.js';
 import { createUpdateAlarm, updateAllBadges } from './controller.js';
-import { Cache } from '../common/cache.js';
-import { C } from '../common/constants.js';
+import { Cache } from '../shared/cache.js';
+import { C } from '../shared/constants.js';
 
 const { log } = util;
 
@@ -115,3 +115,6 @@ const handleStorageChange = debounce(async(changes, area) => {
 browser.storage.onChanged.addListener(handleStorageChange);
 
 boot();
+
+
+
