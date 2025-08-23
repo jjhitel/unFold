@@ -4,6 +4,7 @@ import { util } from '../common/utils.js';
 import { parse as tldtsParse } from 'tldts';
 import { Cache } from '../common/cache.js';
 import { normalizeHost } from './ruleManager.js';
+import { shouldBlockRedirect } from './redirect-guard.js';
 
 const { log } = util;
 
@@ -54,11 +55,13 @@ function processRules(url, urlObj, tabId, rulesData, host) {
     const hostSpecificRules = rulesData.hostMap.get(host) || [];
     const relevantRules = [...hostSpecificRules, ...rulesData.generic];
 
-    if (relevantRules.length === 0) return null;
+    if (relevantRules.length === 0)
+        return null;
 
     for (const rule of relevantRules) {
         try {
-            if (rule.prefix && !url.startsWith(rule.prefix)) continue;
+            if (rule.prefix && !url.startsWith(rule.prefix))
+                continue;
             if (!rule.re.test(url))
                 continue;
 
@@ -126,8 +129,13 @@ export async function onBeforeRequest(details) {
     await Cache.set(cacheKey, redirectUrl);
 
     if (redirectUrl) {
+        const guard = shouldBlockRedirect(tabId, url, redirectUrl);
+        if (guard.block) {
+            log('[redirect-guard] blocked:', guard.reason, 'tab=', tabId, 'from=', url, 'to=', redirectUrl);
+            return {};
+        }
         return {
-            redirectUrl: redirectUrl
+            redirectUrl
         };
     }
 

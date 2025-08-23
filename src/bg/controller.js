@@ -4,6 +4,7 @@ import { StateManager, cleanupTabState } from './stateManager.js';
 import { util } from '../common/utils.js';
 import { Cache } from '../common/cache.js';
 import { onViewportMessage, RELOAD_TIMES } from './net.js';
+import { clearGuardForTab } from './redirect-guard.js';
 import { C } from '../common/constants.js';
 
 const { log, extractHostname } = util;
@@ -206,6 +207,7 @@ browser.tabs.onUpdated.addListener(async(tabId, changeInfo, tab) => {
 browser.tabs.onRemoved.addListener((tabId) => {
     RELOAD_TIMES.delete(tabId);
     cleanupTabState(tabId);
+    clearGuardForTab(tabId);
 });
 
 if (browser.webNavigation && browser.webNavigation.onCommitted) {
@@ -216,6 +218,7 @@ if (browser.webNavigation && browser.webNavigation.onCommitted) {
         if (!details.url || !details.url.startsWith('http')) {
             return;
         }
+        clearGuardForTab(tabId);
         StateManager.updateFormDirty(tabId, false);
         try {
             await browser.tabs.sendMessage(tabId, {
