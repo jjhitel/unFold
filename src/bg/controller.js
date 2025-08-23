@@ -178,7 +178,6 @@ export async function updateAllBadges() {
 browser.tabs.onActivated.addListener(async({
         tabId
     }) => {
-    await StateManager.loadInitialTabState(tabId);
     await updateBadge(tabId);
     try {
         const tab = await browser.tabs.get(tabId).catch(() => null);
@@ -202,9 +201,7 @@ browser.tabs.onUpdated.addListener(async(tabId, changeInfo, tab) => {
 
 browser.tabs.onRemoved.addListener((tabId) => {
     RELOAD_TIMES.delete(tabId);
-    cleanupTabState(tabId).catch(() => {});
-    StateManager.getState().isWideByTab.delete(tabId);
-    StateManager.getState().formDirtyByTab.delete(tabId);
+    cleanupTabState(tabId);
 });
 
 if (browser.webNavigation && browser.webNavigation.onCommitted) {
@@ -215,8 +212,7 @@ if (browser.webNavigation && browser.webNavigation.onCommitted) {
         if (!details.url || !details.url.startsWith('http')) {
             return;
         }
-        await StateManager.updateFormDirty(tabId, false);
-        await StateManager.loadInitialTabState(tabId);
+        StateManager.updateFormDirty(tabId, false);
         try {
             await browser.tabs.sendMessage(tabId, {
                 type: C.MSG_VIEWPORT_CHECK

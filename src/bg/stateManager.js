@@ -15,10 +15,6 @@ const allowlistTrie = new HNTrieContainer();
 let denylistTrieRoot = 0;
 let allowlistTrieRoot = 0;
 
-const USING_SESSION_STORAGE = !!(browser.storage && browser.storage.session);
-const KV = USING_SESSION_STORAGE ? browser.storage.session : browser.storage.local;
-let SESSION_NS = '';
-
 function normalizeHost(host) {
     let h = String(host || '').trim().toLowerCase();
     if (!h)
@@ -31,84 +27,6 @@ function normalizeHost(host) {
         return h.replace(/^www\./, '');
     }
 }
-
-async function ensureSessionNamespace() {
-    if (USING_SESSION_STORAGE) {
-        SESSION_NS = '';
-        return;
-    }
-    const { kv_session_ns } = await browser.storage.local.get('kv_session_ns');
-    if (kv_session_ns) {
-        SESSION_NS = kv_session_ns;
-        return;
-    }
-    const ns = `${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
-    await browser.storage.local.set({
-        kv_session_ns: ns
-    });
-    SESSION_NS = ns;
-}
-
-async function cleanupOrphanTabKeysForCurrentSession() {
-    if (USING_SESSION_STORAGE)
-        return;
-    const all = await browser.storage.local.get(null);
-    const prefix = `s:${SESSION_NS}:tab:`;
-    const tabs = await browser.tabs.query({});
-    const alive = new Set(tabs.map(t => t.id));
-    const toRemove = Object.keys(all).filter(k => {
-        if (!k.startsWith(prefix))
-            return false;
-        const rest = k.slice(prefix.length);
-        const m = rest.match(/^(\d+):/);
-        if (!m)
-            return true;
-        return !alive.has(Number(m[1]));
-    });
-    if (toRemove.length)
-        await browser.storage.local.remove(toRemove);
-}
-
-export async function rotateSessionNamespace() {
-    if (USING_SESSION_STORAGE)
-        return;
-    const { kv_session_ns: oldNs } = await browser.storage.local.get('kv_session_ns');
-    const newNs = `${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
-    await browser.storage.local.set({
-        kv_session_ns: newNs
-    });
-    SESSION_NS = newNs;
-    const all = await browser.storage.local.get(null);
-    const oldPrefix = oldNs ? `s:${oldNs}:` : null;
-    const toRemove = oldPrefix ? Object.keys(all).filter(k => k.startsWith(oldPrefix)) : [];
-    if (toRemove.length)
-        await browser.storage.local.remove(toRemove);
-}
-
-const TabKV = {
-    _k(tabId, key) {
-        const p = USING_SESSION_STORAGE ? '' : `s:${SESSION_NS}:`;
-        return `${p}tab:${tabId}:${key}`;
-    },
-    async set(tabId, key, val) {
-        const k = this._k(tabId, key);
-        await KV.set({
-            [k]: val
-        });
-    },
-    async get(tabId, key) {
-        const k = this._k(tabId, key);
-        const obj = await KV.get(k);
-        return obj?.[k];
-    },
-    async removeAllForTab(tabId) {
-        const prefix = `tab:${tabId}:`;
-        const all = await KV.get(null);
-        const toRemove = Object.keys(all).filter(k => k.startsWith(prefix));
-        if (toRemove.length)
-            await KV.remove(toRemove);
-    }
-};
 
 function trieCreate(tc) {
     if (typeof tc.createOne === 'function')
@@ -207,11 +125,6 @@ export const StateManager = {
          : (typeof state.lastKnownWide === 'boolean' ? state.lastKnownWide : undefined);
         state.isWideByTab.set(tabId, isWide);
         state.lastKnownWide = isWide;
-        try {
-            TabKV.set(tabId, 'fd_isWide', !!isWide);
-        } catch (e) {
-            log('setTabValue(isWide) failed', e);
-        }
         return (typeof prevEffective === 'boolean') ? (prevEffective !== isWide) : false;
     },
     updateFormDirty: async(tabId, isDirty) => {
@@ -220,35 +133,11 @@ export const StateManager = {
         } else {
             state.formDirtyByTab.delete(tabId);
         }
-
-        try {
-            const tab = await browser.tabs.get(tabId).catch(() => null);
-            if (tab) {
-                await TabKV.set(tabId, 'fd_formDirty', !!isDirty);
-            }
-        } catch (e) {
-            log('setTabValue(formDirty) failed', e);
-        }
     },
     isFormDirty: (tabId) => {
         return state.formDirtyByTab.get(tabId) === true;
     },
 
-    loadInitialTabState: async(tabId) => {
-        try {
-            const w = await TabKV.get(tabId, 'fd_isWide');
-            if (typeof w === 'boolean') {
-                state.isWideByTab.set(tabId, w);
-                state.lastKnownWide = w;
-            }
-
-            const d = await TabKV.get(tabId, 'fd_formDirty');
-            if (d === true)
-                state.formDirtyByTab.set(tabId, true);
-            else
-                state.formDirtyByTab.delete(tabId);
-        } catch (e) {}
-    },
     isHostInDenylist: (host) => {
         if (!host || denylistTrieRoot === 0)
             return false;
@@ -261,10 +150,9 @@ export const StateManager = {
     },
 };
 
-export async function cleanupTabState(tabId) {
-    try {
-        await TabKV.removeAllForTab(tabId);
-    } catch (e) {}
+export function cleanupTabState(tabId) {
+    StateManager.getState().isWideByTab.delete(tabId);
+    StateManager.getState().formDirtyByTab.delete(tabId);
 }
 
 export async function updateRules(data) {
@@ -464,15 +352,6 @@ async function refreshAllSettings() {
     log('All settings refreshed');
 }
 
-async function normalizeThreshold(v) {
-    const n = Number(v);
-    if (!Number.isFinite(n))
-        return C.DEFAULT_THRESHOLD;
-    return Math.max(100, Math.min(5000, Math.round(n)));
-}
-
 export async function initialize() {
-    await ensureSessionNamespace();
-    await cleanupOrphanTabKeysForCurrentSession();
     await refreshAllSettings();
 }

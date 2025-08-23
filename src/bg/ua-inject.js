@@ -77,9 +77,6 @@ export async function onBeforeSendHeaders(details) {
     const state = StateManager.getState();
     if (state.mode === 'off')
         return {};
-    if (state.isWideByTab.get(tabId) === undefined) {
-        await StateManager.loadInitialTabState(tabId);
-    }
     const host = extractHostname(url);
     if (state.mode === 'autoDeny' || state.mode === 'always') {
         if (StateManager.isHostInDenylist(host)) {
