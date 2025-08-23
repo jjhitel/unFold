@@ -94,7 +94,7 @@ function parseFullRegexLine(raw, lineNum, unquote) {
             return null;
         }
 
-        const re = new RegExp(body, flags);
+        const re = new RegExp(body, (flags || '').replace(/[gy]/g, ''));
         const host = deriveHost(re);
 
         return {
