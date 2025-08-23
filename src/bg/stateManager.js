@@ -18,10 +18,26 @@ const state = {
     zoomLevel: C.DEFAULT_ZOOM_LEVEL,
     compatMode: C.DEFAULT_COMPAT_MODE,
     veryAggressiveUA: C.DEFAULT_VERY_AGGRESSIVE_UA,
-    desktopRedirectRules: [],
-    mobileRedirectRules: [],
-    customDesktopRedirectRules: [],
-    customMobileRedirectRules: [],
+    desktopRedirectRules: {
+        all: [],
+        hostMap: new Map(),
+        generic: []
+    },
+    mobileRedirectRules: {
+        all: [],
+        hostMap: new Map(),
+        generic: []
+    },
+    customDesktopRedirectRules: {
+        all: [],
+        hostMap: new Map(),
+        generic: []
+    },
+    customMobileRedirectRules: {
+        all: [],
+        hostMap: new Map(),
+        generic: []
+    },
     isWideByTab: new Map(),
     formDirtyByTab: new Map(),
     lastKnownWide: false,

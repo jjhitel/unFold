@@ -20,6 +20,19 @@ function deriveLiteralPrefix(re) {
     }
 }
 
+function deriveHost(re) {
+    if (!re)
+        return null;
+    try {
+        const source = re.source;
+        const match = source.match(/^(?:\\^)?(?:https?:\\\/\\\/)?(?:www\\.)?([a-z0-9_.-]+\\.[a-z]{2,})/i);
+        if (match && match[1]) {
+            return match[1].replace(/\\\./g, '.');
+        }
+    } catch {}
+    return null;
+}
+
 function isSafeRegex(pattern) {
     return safeRegex(pattern);
 }
@@ -51,9 +64,13 @@ function parseSimpleLine(raw, lineNum, unquote) {
     }
 
     const re = new RegExp(body, 'i');
+    const hostPart = from.split('/')[0];
+    const host = hostPart.replace(/^\*\./, '').replace(/\*$/, '');
+
     return {
         re,
-        to
+        to,
+        host
     };
 }
 
@@ -78,9 +95,12 @@ function parseFullRegexLine(raw, lineNum, unquote) {
         }
 
         const re = new RegExp(body, flags);
+        const host = deriveHost(re);
+
         return {
             re,
-            to
+            to,
+            host
         };
 
     } catch (e) {
@@ -103,7 +123,7 @@ function parseRegexLine(line, lineNum) {
         return s;
     };
 
-    if (raw.startsWith('/') && raw.endsWith('/') || raw.match(/^\/(?:\\.|[^\/])+\/[a-z]*/i)) {
+    if (raw.startsWith('/') && (raw.includes('/') && raw.lastIndexOf('/') > 0)) {
         return parseFullRegexLine(raw, lineNum, unquote);
     } else {
         return parseSimpleLine(raw, lineNum, unquote);
@@ -119,12 +139,12 @@ export function compileRules(text) {
     for (let i = 0; i < lines.length; i++) {
         const rule = parseRegexLine(lines[i], i + 1);
         if (rule) {
-            rules.push(rule);
             if (rule && rule.re && !('prefix' in rule)) {
                 try {
                     rule.prefix = deriveLiteralPrefix(rule.re);
                 } catch {}
             }
+            rules.push(rule);
         }
     }
     return rules;

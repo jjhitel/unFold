@@ -3,6 +3,7 @@ import { StateManager } from './stateManager.js';
 import { util } from '../common/utils.js';
 import { parse as tldtsParse } from 'tldts';
 import { Cache } from '../common/cache.js';
+import { normalizeHost } from './ruleManager.js';
 
 const { log } = util;
 
@@ -14,17 +15,6 @@ function etld1(urlString) {
         return p.publicSuffix ? `${p.domain}.${p.publicSuffix}` : p.domain;
     } catch {
         return null;
-    }
-}
-
-function normalize(u) {
-    try {
-        const url = new URL(u);
-        return `${url.protocol}//${url.host}${url.pathname}`.replace(/\/+$/, '');
-    } catch {
-        return String(u || '')
-        .replace(/[?#].*$/, '')
-        .replace(/\/+$/, '');
     }
 }
 
@@ -60,22 +50,30 @@ function shouldRedirect(tabId, fromUrl, toUrl) {
     return true;
 }
 
-function processRules(url, urlObj, tabId, rules) {
-    for (const rule of rules) {
+function processRules(url, urlObj, tabId, rulesData, host) {
+    const hostSpecificRules = rulesData.hostMap.get(host) || [];
+    const relevantRules = [...hostSpecificRules, ...rulesData.generic];
+
+    if (relevantRules.length === 0) return null;
+
+    for (const rule of relevantRules) {
         try {
             if (rule.prefix && !url.startsWith(rule.prefix)) continue;
             if (!rule.re.test(url))
                 continue;
+
             const scheme = urlObj.protocol.replace(':', '');
             const to = url.replace(
                     rule.re,
                     String(rule.to || '').replace(/\{SCHEME\}/g, scheme));
+
             if (to && to !== url) {
                 const toUrlObj = new URL(to);
                 if (shouldRedirect(tabId, urlObj, toUrlObj)) {
                     log('Redirecting', {
                         from: url,
-                        to
+                        to,
+                        rule: rule.re.source
                     });
                     return to;
                 }
@@ -102,22 +100,25 @@ export async function onBeforeRequest(details) {
     }
 
     const host = util.extractHostname(url);
+    if (!host)
+        return {};
+
+    const lowerCaseHost = host.toLowerCase();
 
     const isDenied = (state.mode === 'autoDeny' || state.mode === 'always') && StateManager.isHostInDenylist(host);
-
     const isEffectivelyMobile = StateManager.isMobilePreferred(tabId) || isDenied;
 
     let redirectUrl = null;
 
     const customBucket = isEffectivelyMobile ? state.customMobileRedirectRules : state.customDesktopRedirectRules;
-    if (customBucket.length > 0) {
-        redirectUrl = processRules(url, urlObj, tabId, customBucket);
+    if (customBucket.all.length > 0) {
+        redirectUrl = processRules(url, urlObj, tabId, customBucket, lowerCaseHost);
     }
 
     if (!redirectUrl && !isDenied) {
         const remoteBucket = isEffectivelyMobile ? state.mobileRedirectRules : state.desktopRedirectRules;
-        if (remoteBucket.length > 0) {
-            redirectUrl = processRules(url, urlObj, tabId, remoteBucket);
+        if (remoteBucket.all.length > 0) {
+            redirectUrl = processRules(url, urlObj, tabId, remoteBucket, lowerCaseHost);
         }
     }
 

@@ -18,10 +18,10 @@ async function refreshListeners() {
     unregisterListeners();
     const state = StateManager.getState();
     const shouldRegisterUA = state.mode !== 'off';
-    const hasRedirectRules = state.desktopRedirectRules.length > 0 ||
-        state.mobileRedirectRules.length > 0 ||
-        state.customDesktopRedirectRules.length > 0 ||
-        state.customMobileRedirectRules.length > 0;
+    const hasRedirectRules = state.desktopRedirectRules.all.length > 0 ||
+        state.mobileRedirectRules.all.length > 0 ||
+        state.customDesktopRedirectRules.all.length > 0 ||
+        state.customMobileRedirectRules.all.length > 0;
     const shouldRegisterRedirect = state.urlRedirect && hasRedirectRules;
 
     if (shouldRegisterUA || shouldRegisterRedirect) {

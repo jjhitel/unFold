@@ -77,6 +77,29 @@ export function isHostInAllowlist(host) {
     return trieMatches(allowlistTrie, allowlistTrieRoot, host) !== -1;
 }
 
+function compileAndMapRules(rulesText) {
+    const allRules = compileRules(rulesText);
+    const hostMap = new Map();
+    const genericRules = [];
+
+    for (const rule of allRules) {
+        if (rule.host) {
+            const specificHost = rule.host.toLowerCase();
+            if (!hostMap.has(specificHost)) {
+                hostMap.set(specificHost, []);
+            }
+            hostMap.get(specificHost).push(rule);
+        } else {
+            genericRules.push(rule);
+        }
+    }
+    return {
+        all: allRules,
+        hostMap,
+        generic: genericRules
+    };
+}
+
 export async function updateRules(state, data) {
     try {
         const g = data || await browser.storage.local.get(['desktopRegexText', 'mobileRegexText', 'desktopRedirectRule', 'mobileRedirectRule']);
@@ -87,29 +110,29 @@ export async function updateRules(state, data) {
         const remoteMobileRulesText = (g.mobileRedirectRule || '').trim();
 
         if (customDesktopRulesText !== _prevDesktopRulesText) {
-            state.customDesktopRedirectRules = compileRules(customDesktopRulesText);
+            state.customDesktopRedirectRules = compileAndMapRules(customDesktopRulesText);
             _prevDesktopRulesText = customDesktopRulesText;
         }
         if (customMobileRulesText !== _prevMobileRulesText) {
-            state.customMobileRedirectRules = compileRules(customMobileRulesText);
+            state.customMobileRedirectRules = compileAndMapRules(customMobileRulesText);
             _prevMobileRulesText = customMobileRulesText;
         }
 
         if (remoteDesktopRulesText !== _prevRemoteDesktopRulesText) {
-            state.desktopRedirectRules = compileRules(remoteDesktopRulesText);
+            state.desktopRedirectRules = compileAndMapRules(remoteDesktopRulesText);
             _prevRemoteDesktopRulesText = remoteDesktopRulesText;
         }
 
         if (remoteMobileRulesText !== _prevRemoteMobileRulesText) {
-            state.mobileRedirectRules = compileRules(remoteMobileRulesText);
+            state.mobileRedirectRules = compileAndMapRules(remoteMobileRulesText);
             _prevRemoteMobileRulesText = remoteMobileRulesText;
         }
 
-        log('Redirect rules compiled', {
-            customDesktop: state.customDesktopRedirectRules.length,
-            customMobile: state.customMobileRedirectRules.length,
-            remoteDesktop: state.desktopRedirectRules.length,
-            remoteMobile: state.mobileRedirectRules.length
+        log('Redirect rules compiled and mapped', {
+            customDesktop: state.customDesktopRedirectRules.all.length,
+            customMobile: state.customMobileRedirectRules.all.length,
+            remoteDesktop: state.desktopRedirectRules.all.length,
+            remoteMobile: state.mobileRedirectRules.all.length
         });
     } catch (e) {
         console.error('[FD] Failed to compile redirect rules:', e);
