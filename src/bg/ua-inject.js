@@ -114,20 +114,24 @@ export async function onBeforeSendHeaders(details) {
             console.debug('[FD] UA applied:', state.desktopUA);
         } catch {}
     }
-    try {
-        if (details.type === 'main_frame' && details.frameId === 0 && tabId !== browser.tabs.TAB_ID_NONE) {
-            browser.scripting.executeScript({
-                target: {
-                    tabId,
-                    allFrames: state.compatMode
-                },
-                injectImmediately: true,
-                world: "MAIN",
-                func: shimUA,
-                args: [state.desktopUA]
-            }).catch(() => {});
-        }
-    } catch (e) {}
+
+    if (state.compatMode) {
+        try {
+            if (details.type === 'main_frame' && details.frameId === 0 && tabId !== browser.tabs.TAB_ID_NONE) {
+                browser.scripting.executeScript({
+                    target: {
+                        tabId,
+                        allFrames: true
+                    },
+                    injectImmediately: true,
+                    world: "MAIN",
+                    func: shimUA,
+                    args: [state.desktopUA]
+                }).catch(() => {});
+            }
+        } catch (e) {}
+    }
+
     const resultHeaders = [];
     headers.forEach((value, name) => {
         resultHeaders.push({
