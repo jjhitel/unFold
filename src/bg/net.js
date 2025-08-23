@@ -138,7 +138,7 @@ export function registerListeners({
     if (shouldRegisterUA && !isUAListenerRegistered) {
         const headerListenerTypes = state.compatMode ?
             ["main_frame", "sub_frame", "xmlhttprequest"] :
-            ["main_frame", "xmlhttprequest"];
+            ["main_frame"];
         browser.webRequest.onBeforeSendHeaders.addListener(
             onBeforeSendHeaders, {
             urls: patterns,

@@ -145,7 +145,9 @@ export async function onBeforeSendHeaders(details) {
             value
         }) => headers.set(name, value));
 
-    CLIENT_HINTS_HEADERS.forEach(header => headers.delete(header));
+    if (state.compatMode || details.type === 'main_frame') {
+        CLIENT_HINTS_HEADERS.forEach(header => headers.delete(header));
+    }
 
     setOrAddUAHeader(headers, desiredUA);
     if (state.debugMode) {
