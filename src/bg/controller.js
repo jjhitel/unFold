@@ -10,57 +10,6 @@ import { C } from '../common/constants.js';
 const { log, extractHostname } = util;
 const ALARM_NAME = C.ALARM_REMOTE_RULES_UPDATE;
 
-const DEBOUNCE_MS = 200;
-const lastTriggers = new Map();
-const timers = new Map();
-
-async function isActiveTopFrame(details) {
-    if (details.frameId !== 0)
-        return false;
-    try {
-        const tab = await browser.tabs.get(details.tabId);
-        if (!tab || !tab.active)
-            return false;
-        if (typeof tab.windowId === 'number') {
-            const win = await browser.windows.get(tab.windowId);
-            if (win && win.focused === false)
-                return false;
-        }
-        return true;
-    } catch {
-        return false;
-    }
-}
-
-function scheduleViewportCheck(tabId, url, source) {
-    const now = Date.now();
-    const prev = lastTriggers.get(tabId);
-    if (prev && prev.url === url && (now - prev.t) < DEBOUNCE_MS) {
-        return;
-    }
-    if (timers.has(tabId)) {
-        clearTimeout(timers.get(tabId));
-    }
-    const tid = setTimeout(async() => {
-        try {
-            await browser.tabs.sendMessage(tabId, {
-                type: C.MSG_VIEWPORT_CHECK,
-                url,
-                source
-            });
-            lastTriggers.set(tabId, {
-                url,
-                t: Date.now(),
-                source
-            });
-            log('[nav-trigger]', source, '→', url);
-        } catch (e) {
-            log('[nav-trigger] sendMessage failed:', e && e.message);
-        }
-    }, 0);
-    timers.set(tabId, tid);
-}
-
 async function fetchAndCacheRule(url) {
     const cached = await Cache.get(url);
 
@@ -259,43 +208,25 @@ browser.tabs.onRemoved.addListener((tabId) => {
     RELOAD_TIMES.delete(tabId);
     cleanupTabState(tabId);
     clearGuardForTab(tabId);
-    lastTriggers.delete(tabId);
-    const t = timers.get(tabId);
-    if (t)
-        clearTimeout(t);
-    timers.delete(tabId);
 });
 
 if (browser.webNavigation && browser.webNavigation.onCommitted) {
     browser.webNavigation.onCommitted.addListener(async(details) => {
-        if (!(await isActiveTopFrame(details)))
+        if (details.frameId !== 0)
             return;
-        if (!details.url || !/^https?:/i.test(details.url))
+        const { tabId } = details;
+        if (!details.url || !details.url.startsWith('http')) {
             return;
-        const { tabId, url } = details;
+        }
+        clearGuardForTab(tabId);
         StateManager.updateFormDirty(tabId, false);
-        scheduleViewportCheck(tabId, url, 'onCommitted');
-    }, {
-        url: [{
-                schemes: ['http', 'https']
-            }
-        ]
-    });
-}
-
-if (browser.webNavigation && browser.webNavigation.onHistoryStateUpdated) {
-    browser.webNavigation.onHistoryStateUpdated.addListener(async(details) => {
-        if (!(await isActiveTopFrame(details)))
-            return;
-        if (!details.url || !/^https?:/i.test(details.url))
-            return;
-        const { tabId, url } = details;
-        scheduleViewportCheck(tabId, url, 'onHistoryStateUpdated');
-    }, {
-        url: [{
-                schemes: ['http', 'https']
-            }
-        ]
+        try {
+            await browser.tabs.sendMessage(tabId, {
+                type: C.MSG_VIEWPORT_CHECK
+            });
+        } catch (e) {
+            util.log(`Content script not ready on committed for tab ${tabId}. This is normal.`);
+        }
     });
 }
 
