@@ -9,28 +9,12 @@ import safeRegex from 'safe-regex';
 
 function deriveLiteralPrefix(re) {
     try {
-        const src = re && re.source || "";
-        const m = src.match(/^https?:\/\/(.*)$/);
-        if (!m) return null;
-        let s = m[1];
-        let out = "http";
-        out += "s?://";
-        out = "";
-        let lit = "";
-        let i = 0;
-        while (i < s.length) {
-            const ch = s[i];
-            if ("[](){}.+*?^$|".includes(ch)) break;
-            if (ch === "\\") {
-                i++;
-                if (i < s.length) lit += s[i];
-            } else {
-                lit += ch;
-            }
-            i++;
+        const source = re?.source || '';
+        const match = source.match(/^https?:\/\/([^\\[\(\{\)\.\+\*\?\^\$|]*)/);
+        if (!match || !match[1]) {
+            return null;
         }
-        if (!lit) return null;
-        return "https://" + lit;
+        return `https://${match[1]}`;
     } catch {
         return null;
     }
@@ -137,7 +121,9 @@ export function compileRules(text) {
         if (rule) {
             rules.push(rule);
             if (rule && rule.re && !('prefix' in rule)) {
-                try { rule.prefix = deriveLiteralPrefix(rule.re); } catch {}
+                try {
+                    rule.prefix = deriveLiteralPrefix(rule.re);
+                } catch {}
             }
         }
     }
