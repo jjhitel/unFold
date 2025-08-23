@@ -2,6 +2,7 @@
 import { util } from '../common/utils.js';
 import { C } from '../common/constants.js';
 import { RuleManager, updateRules as ruleUpdateRules, updateLists as ruleUpdateLists, normalizeHost } from './ruleManager.js';
+import { UAManager } from './uaManager.js';
 const { log, normalizeList } = util;
 
 const state = {
@@ -97,94 +98,10 @@ export async function updateLists(data) {
     return ruleUpdateLists(data);
 }
 
-async function withTimeout(promise, ms) {
-    return Promise.race([
-            promise,
-            new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), ms)),
-        ]);
-}
-
-async function buildDynamicDesktopUA() {
-    try {
-        const info = await withTimeout(browser.runtime.getBrowserInfo(), 150);
-        const ver = String(info?.version || '');
-        const m = ver.match(/^(\d+)(?:\.(\d+))?/);
-        const major = m?.[1] ?? '141';
-        const minor = m?.[2] ?? '0';
-        const v = `${major}.${minor}`;
-        return {
-            ua: `Mozilla/5.0 (X11; Linux x86_64; rv:${v}) Gecko/20100101 Firefox/${v}`,
-            version: v
-        };
-    } catch {
-        return {
-            ua: C.DEFAULT_DESKTOP_UA,
-            version: '141.0'
-        };
-    }
-}
-
-function toBool(v, fallback = false) {
-    if (typeof v === 'boolean')
-        return v;
-    if (typeof v === 'string') {
-        const s = v.trim().toLowerCase();
-        if (s === 'true')
-            return true;
-        if (s === 'false')
-            return false;
-    }
-    return fallback;
-}
-
-function _determineEffectiveUA(s, dynamicUA) {
-    const rawUaDyn = s[C.KEY_UA_DYNAMIC];
-    let uaDynamic = toBool(rawUaDyn, C.DEFAULT_UA_DYNAMIC);
-    const storedUA = typeof s[C.KEY_DESKTOP_UA] === 'string' ? s[C.KEY_DESKTOP_UA].trim() : '';
-
-    const keyMissing = (rawUaDyn === undefined);
-    const hasCustomUA = !!storedUA && storedUA !== C.DEFAULT_DESKTOP_UA && storedUA !== dynamicUA.ua;
-
-    if (keyMissing && hasCustomUA) {
-        uaDynamic = false;
-    }
-
-    const desktopUA = (uaDynamic === false && hasCustomUA) ? storedUA : dynamicUA.ua;
-
-    return {
-        desktopUA,
-        uaDynamic,
-        storedUA,
-        hasCustomUA
-    };
-}
-
-async function _persistUAChanges(s, dynamicUA, determinedUA) {
-    const { uaDynamic, storedUA, hasCustomUA } = determinedUA;
-    const lastStoredVersion = s[C.KEY_LAST_BROWSER_VERSION];
-
-    if (uaDynamic) {
-        const needsPersist = (storedUA !== dynamicUA.ua) || (lastStoredVersion !== dynamicUA.version) || (s[C.KEY_UA_DYNAMIC] !== true);
-        if (needsPersist) {
-            await browser.storage.local.set({
-                [C.KEY_DESKTOP_UA]: dynamicUA.ua,
-                [C.KEY_UA_DYNAMIC]: true,
-                [C.KEY_LAST_BROWSER_VERSION]: dynamicUA.version
-            });
-        }
-    } else if (!hasCustomUA && storedUA) {
-        await browser.storage.local.set({
-            [C.KEY_UA_DYNAMIC]: false
-        });
-    }
-}
-
 export async function refreshGeneralSettings(settings) {
     try {
         const s = settings || await browser.storage.local.get(null);
-        const dynamicUA = await buildDynamicDesktopUA();
-
-        const determinedUA = _determineEffectiveUA(s, dynamicUA);
+        const { dynamicUA, determinedUA } = await UAManager.resolve(s);
         state.desktopUA = determinedUA.desktopUA;
         state.uaDynamic = determinedUA.uaDynamic;
         state.runtimeUA = dynamicUA.ua;
@@ -198,8 +115,6 @@ export async function refreshGeneralSettings(settings) {
         state.zoomLevel = s[C.KEY_ZOOM_LEVEL] ?? C.DEFAULT_ZOOM_LEVEL;
         state.compatMode = s[C.KEY_COMPAT_MODE] ?? C.DEFAULT_COMPAT_MODE;
         state.veryAggressiveUA = s[C.KEY_VERY_AGGRESSIVE_UA] ?? C.DEFAULT_VERY_AGGRESSIVE_UA;
-
-        await _persistUAChanges(s, dynamicUA, determinedUA);
 
         if (state.threshold !== s[C.KEY_THRESHOLD]) {
             await browser.storage.local.set({
