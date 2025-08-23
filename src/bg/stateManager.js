@@ -4,6 +4,8 @@ import { C } from '../common/constants.js';
 import { RuleManager, updateRules as ruleUpdateRules, updateLists as ruleUpdateLists, normalizeHost } from './ruleManager.js';
 import { UAManager } from './uaManager.js';
 const { log, normalizeList } = util;
+let __hydrated = false;
+let __hydrating = null;
 
 const state = {
     mode: C.DEFAULT_MODE,
@@ -68,6 +70,18 @@ export async function getTargetHostPatterns() {
 export const StateManager = {
     getState: () => state,
     get: (key) => state[key],
+    ensureHydrated: async() => {
+        if (__hydrated)
+            return;
+        if (__hydrating)
+            return __hydrating;
+        __hydrating = (async() => {
+            await refreshAllSettings();
+            __hydrated = true;
+            __hydrating = null;
+        })();
+        return __hydrating;
+    },
     isDesktopPreferred: (tabId) => {
         const wide = state.isWideByTab.get(tabId);
         if (wide === true)
@@ -157,4 +171,13 @@ async function refreshAllSettings() {
 
 export async function initialize() {
     await refreshAllSettings();
+    __hydrated = true;
 }
+
+try {
+    browser.storage.onChanged.addListener((changes, area) => {
+        if (area !== 'local')
+            return;
+        __hydrated = false;
+    });
+} catch {}

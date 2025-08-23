@@ -70,6 +70,7 @@ function shimUA(ua) {
 }
 
 export async function onBeforeSendHeaders(details) {
+    await StateManager.ensureHydrated();
     const { tabId, url } = details;
     if (tabId === browser.tabs.TAB_ID_NONE || !/^https?:/i.test(url)) {
         return {};

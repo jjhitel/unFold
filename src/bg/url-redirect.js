@@ -89,6 +89,7 @@ function processRules(url, urlObj, tabId, rulesData, host) {
 }
 
 export async function onBeforeRequest(details) {
+    await StateManager.ensureHydrated();
     const { tabId, url } = details;
     const state = StateManager.getState();
     if (!state.urlRedirect || state.mode === 'off' || !/^https?:/i.test(url)) {
