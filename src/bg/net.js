@@ -113,6 +113,10 @@ async function handleAutoRefresh(tabId, changed) {
 
 export async function onViewportMessage(msg, sender) {
     const tabId = sender.tab.id;
+    if (!sender.tab.active) {
+        return;
+    }
+
     const effectiveWidth = getEffectiveWidth(msg);
     const isNowWide = getFoldState(effectiveWidth, tabId);
 
