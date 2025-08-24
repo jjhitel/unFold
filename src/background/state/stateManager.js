@@ -92,13 +92,11 @@ export const StateManager = {
     },
     isMobilePreferred: (tabId) => !StateManager.isDesktopPreferred(tabId),
     updateTabWidth: (tabId, isWide) => {
+        const hadPrev = state.isWideByTab.has(tabId);
         const prev = state.isWideByTab.get(tabId);
-        const prevEffective = (typeof prev === 'boolean')
-         ? prev
-         : (typeof state.lastKnownWide === 'boolean' ? state.lastKnownWide : undefined);
         state.isWideByTab.set(tabId, isWide);
         state.lastKnownWide = isWide;
-        return (typeof prevEffective === 'boolean') ? (prevEffective !== isWide) : false;
+        return hadPrev ? (prev !== isWide) : false;
     },
     updateFormDirty: async(tabId, isDirty) => {
         if (isDirty) {
