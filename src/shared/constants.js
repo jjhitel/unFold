@@ -43,7 +43,7 @@ export const C = {
     DEFAULT_THRESHOLD: 724,
     DEFAULT_DESKTOP_UA: 'Mozilla/5.0 (X11; Linux x86_64; rv:141.0) Gecko/20100101 Firefox/141.0',
     DEFAULT_UA_DYNAMIC: true,
-    DEFAULT_AUTO_REFRESH: true,
+    DEFAULT_AUTO_REFRESH: false,
     DEFAULT_URL_REDIRECT: false,
     DEFAULT_DEBUG_MODE: false,
     DEFAULT_AUTO_UPDATE_PERIOD: 1440,
