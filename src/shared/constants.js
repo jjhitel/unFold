@@ -39,7 +39,7 @@ export const C = {
     MODE_AUTO_ALLOW: 'autoAllow',
     MODE_ALWAYS: 'always',
 
-    DEFAULT_MODE: 'autoDeny',
+    DEFAULT_MODE: 'off',
     DEFAULT_THRESHOLD: 724,
     DEFAULT_DESKTOP_UA: 'Mozilla/5.0 (X11; Linux x86_64; rv:141.0) Gecko/20100101 Firefox/141.0',
     DEFAULT_UA_DYNAMIC: true,
